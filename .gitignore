@@ -1,0 +1,17 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# Environment variables and secrets
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Keystore files (used for Android signing)
+*.keystore
+*.jks
