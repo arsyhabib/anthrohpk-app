@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+gradio
+numpy
+pandas
+scipy
+matplotlib
+reportlab
+qrcode
+pillow
+pygrowup
