@@ -7,4 +7,4 @@ matplotlib==3.7.3
 pillow==10.4.0
 reportlab==4.2.2
 qrcode==7.4.2
-pygrowup==0.8.2
+six==1.16.0
