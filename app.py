@@ -113,28 +113,65 @@ def _safe_z(fn, *args):
         return float(z)
     except Exception:
         return None
+# Pengganti sederhana untuk brentq (tanpa SciPy)
+def brentq_simple(f, a, b, xtol=1e-6, maxiter=80):
+    fa = f(a); fb = f(b)
+    # Jika nilai awal tidak valid, kembalikan titik tengah sebagai fallback
+    if fa is None or fb is None:
+        return (a + b) / 2.0
+    if fa == 0:
+        return a
+    if fb == 0:
+        return b
+    # Jika tidak ada perubahan tanda, fallback titik tengah
+    if fa * fb > 0:
+        return (a + b) / 2.0
+    # Bisection
+    for _ in range(maxiter):
+        m = 0.5 * (a + b)
+        fm = f(m)
+        if fm is None:
+            return m
+        if abs(fm) < 1e-8 or (b - a) / 2 < xtol:
+            return m
+        if fa * fm < 0:
+            b, fb = m, fm
+        else:
+            a, fa = m, fm
+    return 0.5 * (a + b)
 
-def invert_z_with_scan(z_of_m, target_z, lo, hi, samples=120):
+def invert_z_with_scan(z_of_m, target_z, lo, hi, samples=120, eps=1e-9):
+    """Cari m di [lo,hi] sehingga z_of_m(m) ≈ target_z.
+    1) Scan kasar untuk dapat bracket (perubahan tanda)
+    2) Root finding (bisection simple) pada bracket tsb
+    3) Jika gagal, ambil sampel terdekat
+    """
     xs = np.linspace(lo, hi, samples)
     zs = []
     for x in xs:
         z = z_of_m(x)
         zs.append(None if z is None else (z - target_z))
+
     last_x, last_f = None, None
     best_x, best_abs = None, float('inf')
+
     for x, f in zip(xs, zs):
         if f is not None:
             af = abs(f)
             if af < best_abs:
                 best_x, best_abs = x, af
             if last_f is not None and f * last_f < 0:
+                # bracket ditemukan → pakai bisection sederhana
                 try:
-                    root = brentq(lambda t: (z_of_m(t) or 0.0) - target_z, last_x, x, xtol=1e-6, rtol=1e-6, maxiter=100)
+                    root = brentq_simple(lambda t: (z_of_m(t) or 0.0) - target_z, last_x, x, xtol=1e-6, maxiter=100)
                     return float(root)
                 except Exception:
                     pass
             last_x, last_f = x, f
+
+    # Tidak ada bracket yang bersih → kembalikan sampel terdekat
     return float(best_x if best_x is not None else (lo + hi) / 2.0)
+
 
 def wfa_curve_smooth(sex, z):
     lo, hi = BOUNDS['wfa']
