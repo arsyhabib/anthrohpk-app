@@ -27,7 +27,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pygrowup import Calculator
-from scipy.optimize import brentq
 import gradio as gr
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
