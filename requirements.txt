@@ -6,4 +6,6 @@ pillow==10.4.0
 reportlab==4.2.2
 qrcode==7.4.2
 six==1.16.0
+huggingface_hub==0.20.3
+
 # TANPA numpy/pandas/pygrowup di file ini (kita pasang di Build Command)
