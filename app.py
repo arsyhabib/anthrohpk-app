@@ -42,6 +42,20 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import warnings
 warnings.filterwarnings('ignore')
+from decimal import Decimal
+
+def as_float(x):
+    """Konversi apa pun (Decimal/str/int/float) -> float; kosong -> None."""
+    if x is None:
+        return None
+    if isinstance(x, Decimal):
+        return float(x)
+    if isinstance(x, (int, float)):
+        return float(x)
+    try:
+        return float(str(x).replace(",", "."))
+    except Exception:
+        return None
 
 # Initialise growth calculator
 try:
@@ -372,19 +386,37 @@ def apply_matplotlib_theme(theme_name="pastel"):
 
 # Core computation
 
-def compute_all(sex_text, age_mode, dob_str, dom_str, age_months_input,
-                weight_kg, height_cm, headcirc_cm, name_child, name_parent,
-                lang_mode, theme_name):
+def compute_all(
+    sex_text, age_mode, dob_str, dom_str, age_months_input,
+    weight_kg, height_cm, headcirc_cm, name_child, name_parent,
+    lang_mode, theme_name
+):
+    """
+    Versi aman (Decimal-safe) + guard init kalkulator.
+    Mengembalikan: (markdown_report, payload_dict) atau (error_md, None)
+    """
     try:
-        w = safe_float(weight_kg)
-        h = safe_float(height_cm)
+        # --- Guard: pastikan kalkulator siap ---
+        if calc is None:
+            return ("❌ **Error:** Modul pertumbuhan WHO tidak siap (init gagal). Muat ulang aplikasi / periksa log.", None)
+
+        # --- Normalisasi input numerik (Decimal → float) ---
+        w = as_float(weight_kg)
+        h = as_float(height_cm)
+        hc = as_float(headcirc_cm)
+
+        # Validasi awal berat & tinggi
         if w is None or h is None:
             return ("❌ **Error:** Berat & Tinggi wajib diisi (angka valid).\n\nContoh: Berat=8.5 kg, Tinggi=72.0 cm", None)
         if w <= 0:
             return ("❌ **Error:** Berat badan harus > 0 kg.", None)
         if h <= 0:
             return ("❌ **Error:** Panjang/Tinggi badan harus > 0 cm.", None)
-        sex = 'M' if sex_text.lower().startswith('l') else 'F'
+
+        # --- Jenis kelamin ke kode WHO ---
+        sex = 'M' if str(sex_text).lower().startswith('l') else 'F'
+
+        # --- Hitung usia ---
         if age_mode == "Tanggal":
             dob = parse_date(dob_str)
             dom = parse_date(dom_str)
@@ -399,69 +431,90 @@ def compute_all(sex_text, age_mode, dob_str, dom_str, age_months_input,
                 return ("❌ **Error:** Gagal menghitung usia dari tanggal.", None)
             age_mo, age_days = age_result
         else:
-            age_mo = safe_float(age_months_input)
+            age_mo = as_float(age_months_input)
             if age_mo is None:
                 return ("❌ **Error:** Usia (bulan) harus berupa angka.", None)
-            age_days = int(age_mo * 30.4375)
-        age_mo = max(0.0, min(age_mo, 60.0))
-        hc = safe_float(headcirc_cm)
+            age_days = int(float(age_mo) * 30.4375)
+
+        # Clamp usia ke 0–60 bln (standar WHO)
+        age_mo = max(0.0, min(float(age_mo), 60.0))
+
+        # --- Z-score dengan proteksi Exception ---
         z_scores = {}
         try:
-            z_scores['waz'] = calc.wfa(w, age_mo, sex)
+            z_scores['waz'] = calc.wfa(float(w), float(age_mo), sex)
         except Exception:
             z_scores['waz'] = float('nan')
+
         try:
-            z_scores['haz'] = calc.lhfa(h, age_mo, sex)
+            z_scores['haz'] = calc.lhfa(float(h), float(age_mo), sex)
         except Exception:
             z_scores['haz'] = float('nan')
+
         try:
-            z_scores['whz'] = calc.wfl(w, age_mo, sex, h)
+            z_scores['whz'] = calc.wfl(float(w), float(age_mo), sex, float(h))
         except Exception:
             z_scores['whz'] = float('nan')
+
         try:
-            bmi = w / ((h / 100.0) ** 2)
-            z_scores['baz'] = calc.bmifa(bmi, age_mo, sex)
+            bmi = float(w) / ((float(h) / 100.0) ** 2)   # <- Decimal-safe
+            z_scores['baz'] = calc.bmifa(float(bmi), float(age_mo), sex)
         except Exception:
             z_scores['baz'] = float('nan')
+
         try:
-            z_scores['hcz'] = calc.hcfa(hc, age_mo, sex) if hc is not None else float('nan')
+            if hc is not None:
+                z_scores['hcz'] = calc.hcfa(float(hc), float(age_mo), sex)
+            else:
+                z_scores['hcz'] = float('nan')
         except Exception:
             z_scores['hcz'] = float('nan')
+
+        # --- Persentil dari Z ---
         percentiles = {k: z_to_percentile(v) for k, v in z_scores.items()}
+
+        # --- Klasifikasi Permenkes & WHO (pakai fungsi yang sudah ada) ---
         classifications = {
             'permenkes': {
                 'waz': permenkes_waz(z_scores['waz']),
                 'haz': permenkes_haz(z_scores['haz']),
                 'whz': permenkes_whz(z_scores['whz']),
                 'baz': permenkes_baz(z_scores['baz']),
-                'hcz': hcz_text(z_scores['hcz'])[0]
+                'hcz': hcz_text(z_scores['hcz'])[0],
             },
             'who': {
                 'waz': who_waz(z_scores['waz']),
                 'haz': who_haz(z_scores['haz']),
                 'whz': who_whz(z_scores['whz']),
                 'baz': who_baz(z_scores['baz']),
-                'hcz': hcz_text(z_scores['hcz'])[1]
+                'hcz': hcz_text(z_scores['hcz'])[1],
             }
         }
+
+        # --- Validasi range & BIV warnings (fungsi Anda yang lama) ---
         errors, warns = biv_warnings(
-            age_mo, sex, w, h, hc,
+            age_mo, sex, float(w), float(h), None if hc is None else float(hc),
             z_scores['waz'], z_scores['haz'], z_scores['whz'],
             z_scores['baz'], z_scores['hcz']
         )
+
+        # --- Build laporan markdown (fungsi Anda yang lama) ---
         md = build_markdown_report(
-            name_child, name_parent, age_mo, age_days, sex_text,
-            w, h, hc, z_scores, percentiles, classifications,
+            name_child, name_parent, float(age_mo), age_days, sex_text,
+            float(w), float(h), None if hc is None else float(hc),
+            z_scores, percentiles, classifications,
             lang_mode, errors, warns
         )
+
+        # --- Payload lengkap untuk plotting/exports ---
         payload = {
             'sex': sex,
             'sex_text': sex_text,
-            'age_mo': age_mo,
+            'age_mo': float(age_mo),
             'age_days': age_days,
-            'w': w,
-            'h': h,
-            'hc': hc,
+            'w': float(w),
+            'h': float(h),
+            'hc': None if hc is None else float(hc),
             'name_child': name_child,
             'name_parent': name_parent,
             'z': z_scores,
@@ -473,11 +526,16 @@ def compute_all(sex_text, age_mode, dob_str, dom_str, age_months_input,
             'errors': errors,
             'warns': warns
         }
+
         return (md, payload)
+
     except Exception as e:
-        error_trace = traceback.format_exc()
-        print("Computation error", error_trace)
-        return (f"❌ **Error tidak terduga:**\n\n````\n{str(e)}\n````\n\nSilakan periksa input Anda.", None)
+        # Log trace agar mudah debug di Render
+        import traceback
+        print("Computation error:", repr(e))
+        traceback.print_exc()
+        return (f"❌ **Error tidak terduga:**\n\n```\n{str(e)}\n```\n\nSilakan periksa input Anda.", None)
+
 
 def build_markdown_report(name_child, name_parent, age_mo, age_days, sex_text,
                          w, h, hc, z_scores, percentiles, classifications,
