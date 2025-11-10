@@ -82,54 +82,14 @@ except Exception as e:
 
 # -------------------- KPSP DATA --------------------
 KPSP_QUESTIONS = {
-    3: {"judul": "KPSP 3 Bulan", "q": [
-        "Apakah bayi Anda tersenyum kepada orang lain?",
-        "Apakah bayi Anda dapat mengangkat kepalanya ketika telungkup?",
-        "Apakah bayi Anda mengoceh atau berbicara dengan suara yang menyenangkan?",
-        "Apakah bayi Anda menoleh ketika dipanggil atau ada suara?"
-    ]},
-    6: {"judul": "KPSP 6 Bulan", "q": [
-        "Apakah bayi dapat berguling dari telungkup ke telentang?",
-        "Apakah bayi tertawa keras dan berisik?",
-        "Apakah bayi mencoba meraih mainan yang diletakkan di dekatnya?",
-        "Apakah bayi mengenali ibu atau pengasuh?"
-    ]},
-    9: {"judul": "KPSP 9 Bulan", "q": [
-        "Apakah bayi dapat duduk tanpa bantuan?",
-        "Apakah bayi dapat mengambil benda kecil dengan jari?",
-        "Apakah bayi mengucapkan suku kata yang berulang (ma-ma, ba-ba)?",
-        "Apakah bayi takut pada orang asing?"
-    ]},
-    12: {"judul": "KPSP 12 Bulan", "q": [
-        "Apakah anak dapat berdiri dengan berpegangan?",
-        "Apakah anak mengucapkan 2-3 kata selain ma-ma/pa-pa?",
-        "Apakah anak dapat minum sendiri dari cangkir?",
-        "Apakah anak bermain tepuk tangan?"
-    ]},
-    15: {"judul": "KPSP 15 Bulan", "q": [
-        "Apakah anak dapat berjalan sendiri?",
-        "Apakah anak dapat mengatakan 4-6 kata?",
-        "Apakah anak dapat mengikuti perintah sederhana?",
-        "Apakah anak menunjuk apa yang diinginkan?"
-    ]},
-    18: {"judul": "KPSP 18 Bulan", "q": [
-        "Apakah anak dapat naik tangga dengan bantuan?",
-        "Apakah anak dapat mengatakan 10 kata atau lebih?",
-        "Apakah anak dapat makan sendiri dengan sendok?",
-        "Apakah anak meniru aktivitas orang dewasa?"
-    ]},
-    21: {"judul": "KPSP 21 Bulan", "q": [
-        "Apakah anak dapat berlari?",
-        "Apakah anak dapat mengucapkan kalimat 2 kata?",
-        "Apakah anak dapat menggambar garis?",
-        "Apakah anak suka bermain dengan teman sebayanya?"
-    ]},
-    24: {"judul": "KPSP 24 Bulan", "q": [
-        "Apakah anak dapat menendang bola tanpa jatuh?",
-        "Apakah anak dapat mengucapkan kalimat 3 kata?",
-        "Apakah anak dapat melepas pakaian sendiri?",
-        "Apakah anak dapat ikut membantu?"
-    ]}
+    3: {"judul": "KPSP 3 Bulan", "q": ["Apakah bayi Anda tersenyum kepada orang lain?", "Apakah bayi Anda dapat mengangkat kepalanya ketika telungkup?", "Apakah bayi Anda mengoceh atau berbicara dengan suara yang menyenangkan?", "Apakah bayi Anda menoleh ketika dipanggil atau ada suara?"]},
+    6: {"judul": "KPSP 6 Bulan", "q": ["Apakah bayi dapat berguling dari telungkup ke telentang?", "Apakah bayi tertawa keras dan berisik?", "Apakah bayi mencoba meraih mainan yang diletakkan di dekatnya?", "Apakah bayi mengenali ibu atau pengasuh?"]},
+    9: {"judul": "KPSP 9 Bulan", "q": ["Apakah bayi dapat duduk tanpa bantuan?", "Apakah bayi dapat mengambil benda kecil dengan jari?", "Apakah bayi mengucapkan suku kata yang berulang (ma-ma, ba-ba)?", "Apakah bayi takut pada orang asing?"]},
+    12: {"judul": "KPSP 12 Bulan", "q": ["Apakah anak dapat berdiri dengan berpegangan?", "Apakah anak mengucapkan 2-3 kata selain ma-ma/pa-pa?", "Apakah anak dapat minum sendiri dari cangkir?", "Apakah anak bermain tepuk tangan?"]},
+    15: {"judul": "KPSP 15 Bulan", "q": ["Apakah anak dapat berjalan sendiri?", "Apakah anak dapat mengatakan 4-6 kata?", "Apakah anak dapat mengikuti perintah sederhana?", "Apakah anak menunjuk apa yang diinginkan?"]},
+    18: {"judul": "KPSP 18 Bulan", "q": ["Apakah anak dapat naik tangga dengan bantuan?", "Apakah anak dapat mengatakan 10 kata atau lebih?", "Apakah anak dapat makan sendiri dengan sendok?", "Apakah anak meniru aktivitas orang dewasa?"]},
+    21: {"judul": "KPSP 21 Bulan", "q": ["Apakah anak dapat berlari?", "Apakah anak dapat mengucapkan kalimat 2 kata?", "Apakah anak dapat menggambar garis?", "Apakah anak suka bermain dengan teman sebayanya?"]},
+    24: {"judul": "KPSP 24 Bulan", "q": ["Apakah anak dapat menendang bola tanpa jatuh?", "Apakah anak dapat mengucapkan kalimat 3 kata?", "Apakah anak dapat melepas pakaian sendiri?", "Apakah anak dapat ikut membantu?"]}
 }
 
 def hitung_kpsp(bulan, jawaban):
@@ -171,25 +131,11 @@ FEEDING_GUIDE = {
 
 # -------------------- RED FLAGS --------------------
 RED_FLAGS = {
-    "neonatus": [
-        "Demam >37.5°C atau hipotermia <36°C",
-        "Malas minum/ menyusu",
-        "Kejang",
-        "Napas cepat/tarikan dinding dada",
-        "Kuning menyeluruh (dan <24 jam)",
-        "Muntah hijau"
-    ],
-    "infant": [
-        "Demam >38°C pada <3 bulan",
-        "Sesak napas",
-        "Diare berdarah",
-        "Dehidrasi (jarang pipis, mengantuk)",
-        "Kejang",
-        "Penurunan kesadaran"
-    ]
+    "neonatus": ["Demam >37.5°C atau hipotermia <36°C", "Malas minum/ menyusu", "Kejang", "Napas cepat/tarikan dinding dada", "Kuning menyeluruh (dan <24 jam)", "Muntah hijau"],
+    "infant": ["Demam >38°C pada <3 bulan", "Sesak napas", "Diare berdarah", "Dehidrasi (jarang pipis, mengantuk)", "Kejang", "Penurunan kesadaran"]
 }
 
-# -------------------- Grid & inversi kurva (TETAP SAMA) --------------------
+# -------------------- Grid & inversi kurva --------------------
 AGE_GRID = np.arange(0.0, 60.0 + 1e-9, 0.25)
 BOUNDS = {'wfa':(1.0,30.0),'hfa':(45.0,125.0),'hcfa':(30.0,55.0),'wfl_w':(1.0,30.0),'wfl_l':(45.0,110.0)}
 
@@ -248,7 +194,7 @@ def wfl_curve_smooth(sex, age_mo, z, lengths=None):
     weights = [invert_z_with_scan(lambda w: _safe_z(calc.wfl, w, age_mo, sex, L), z, lo_w, hi_w) for L in lengths]
     return np.asarray(lengths), np.asarray(weights)
 
-# -------------------- Klasifikasi (TETAP SAMA) --------------------
+# -------------------- Klasifikasi --------------------
 def permenkes_waz(z):
     if z is None or (isinstance(z, float) and math.isnan(z)): return "Tidak diketahui"
     if z < -3: return "Gizi buruk (BB sangat kurang)"
@@ -334,7 +280,7 @@ def biv_warnings(age_mo, sex, w, h, hc, z_waz, z_haz, z_whz, z_baz, z_hcz):
     except: pass
     return errors, warns
 
-# -------------------- THEMATIC PLOT (TETAP SAMA) --------------------
+# -------------------- THEMATIC PLOT --------------------
 THEMES = {
     "pastel": {"primary":"#f6a5c0","secondary":"#9ee0c8","accent":"#ffd4a3","neutral":"#ffffff","text":"#2c3e50","grid":"#e0e0e0"},
     "dark":   {"primary":"#ff6b9d","secondary":"#4ecdc4","accent":"#ffe66d","neutral":"#1a1a2e","text":"#eaeaea","grid":"#444444"},
@@ -385,9 +331,7 @@ def generate_checklist_payload(payload):
     imun_text = "\n".join(imun_due) if imun_due else "Tidak ada jadwal imunisasi bulan ini."
     
     # Do Now, Saran, Warning
-    do_now = []
-    saran = []
-    warnings = []
+    do_now = []; saran = []; warnings = []
     
     # Berdasarkan Z-score
     if z['waz'] and z['waz'] < -2:
@@ -702,7 +646,7 @@ def plot_bars(payload):
     ax.legend(loc='upper right', frameon=True, edgecolor='black', fontsize=8, title='Referensi WHO', title_fontsize=9)
     plt.tight_layout(); return fig
 
-# -------------------- Export helpers (TETAP SAMA) --------------------
+# -------------------- Export helpers --------------------
 def export_png(fig, filename):
     try: fig.savefig(filename, dpi=200, bbox_inches='tight', facecolor='white'); return filename
     except: return None
@@ -756,11 +700,8 @@ def export_pdf(payload, md_text, figs, filename):
         c.drawString(40, y, f"Panjang/Tinggi: {payload['h']:.1f} cm"); y -= 15
         if payload.get('hc'): c.drawString(40, y, f"Lingkar Kepala: {payload['hc']:.1f} cm"); y -= 20
         else: y -= 5
-        y -= 10; c.setFont("Helvetica-Bold", 12); c.drawString(30, y, "HASIL ANALISIS"); y -= 20
-        c.setFont("Helvetica-Bold", 9)
-        c.drawString(40, y, "Indeks"); c.draw
-
-String(120, y, "Z-score"); c.drawString(180, y, "Persentil"); c.drawString(250, y, "Status (Permenkes)"); c.drawString(400, y, "Status (WHO)")
+        y -= 10; c.setFont("Helvetica-Bold", 12); c.drawString(30, y, "HASIL ANALISIS"); y -= 20; c.setFont("Helvetica-Bold", 9)
+        c.drawString(40, y, "Indeks"); c.drawString(120, y, "Z-score"); c.drawString(180, y, "Persentil"); c.drawString(250, y, "Status (Permenkes)"); c.drawString(400, y, "Status (WHO)")
         y -= 3; c.line(35, y, W - 35, y); y -= 12; c.setFont("Helvetica", 9)
         for key, label in [('waz','WAZ (BB/U)'),('haz','HAZ (TB/U)'),('whz','WHZ (BB/TB)'),('baz','BAZ (IMT/U)'),('hcz','HCZ (LK/U)')]:
             pct_val = payload['pct'][key]
@@ -795,53 +736,7 @@ String(120, y, "Z-score"); c.drawString(180, y, "Persentil"); c.drawString(250, 
         c.save(); return filename
     except: return None
 
-# -------------------- NEW: Export Checklist PDF --------------------
-def export_checklist_pdf(payload, checklist_data, filename):
-    try:
-        c = canvas.Canvas(filename, pagesize=A4); W, H = A4
-        now = datetime.datetime.now().strftime("%d %B %Y, %H:%M WIB")
-        # Header
-        c.setFillColorRGB(0.965, 0.647, 0.753); c.rect(0, H - 50, W, 50, stroke=0, fill=1)
-        c.setFillColor(colors.black); c.setFont("Helvetica-Bold", 16)
-        c.drawString(30, H - 32, "📋 Checklist Sehat Bulanan - Buku KIA")
-        c.setFont("Helvetica", 10); c.drawRightString(W - 30, H - 32, now)
-        # Data Anak
-        y = H - 80; c.setFont("Helvetica-Bold", 12); c.drawString(30, y, "INFORMASI ANAK"); y -= 20; c.setFont("Helvetica", 10)
-        if payload.get('name_child'): c.drawString(40, y, f"Nama: {payload['name_child']}"); y -= 15
-        c.drawString(40, y, f"Jenis Kelamin: {payload['sex_text']}"); y -= 15
-        c.drawString(40, y, f"Usia: {checklist_data['usia']} bulan"); y -= 25
-        # Hasil
-        c.setFont("Helvetica-Bold", 12); c.drawString(30, y, "HASIL CHECKLIST BULAN INI"); y -= 20
-        sections = [
-            ("📏 Pertumbuhan", checklist_data['growth_status']),
-            ("🍼 Pemberian Makan", checklist_data['feeding']),
-            ("🧠 Skrining Perkembangan", f"{checklist_data['kpsp_age']}: {checklist_data['kpsp_result']}"),
-            ("💉 Imunisasi", checklist_data['imunisasi']),
-        ]
-        c.setFont("Helvetica", 10)
-        for title, content in sections:
-            c.setFont("Helvetica-Bold", 10); c.drawString(40, y, title); y -= 12
-            c.setFont("Helvetica", 9); c.drawString(50, y, content); y -= 15
-        # Do Now
-        y -= 10; c.setFont("Helvetica-Bold", 12); c.drawString(30, y, "✅ DO NOW"); y -= 15; c.setFont("Helvetica", 9)
-        for item in checklist_data['do_now'][:3]:
-            c.drawString(40, y, f"• {item}"); y -= 12
-        # Saran
-        y -= 10; c.setFont("Helvetica-Bold", 12); c.drawString(30, y, "💡 SARAN PERBAIKAN"); y -= 15; c.setFont("Helvetica", 9)
-        for item in checklist_data['saran'][:3]:
-            c.drawString(40, y, f"• {item}"); y -= 12
-        # Warnings
-        y -= 10; c.setFont("Helvetica-Bold", 12); c.drawString(30, y, "⚠️ WARNINGS"); y -= 15; c.setFont("Helvetica", 9)
-        for item in checklist_data['warnings'][:3]:
-            c.drawString(40, y, f"• {item}"); y -= 12
-        # Footer
-        c.setFont("Helvetica-Oblique", 8); c.drawString(30, 30, "Skrining edukatif - bukan diagnosis. Konsultasi ke tenaga kesehatan.")
-        c.showPage(); c.save(); return filename
-    except Exception as e:
-        print(f"PDF Checklist error: {e}")
-        return None
-
-# -------------------- CALLBACKS (TETAP SAMA) --------------------
+# -------------------- CALLBACKS --------------------
 def do_prefill(sex_text, age_mode, dob, dom, age_mo):
     try:
         w, h, hc = median_values_for(sex_text, age_mode, dob, dom, age_mo)
@@ -858,7 +753,6 @@ def update_age_input_visibility(age_mode_selected):
     else:
         return (gr.update(visible=False, interactive=False), gr.update(visible=False, interactive=False), gr.update(visible=True, interactive=True))
 
-# -------------------- NEW: KPSP CALLBACK --------------------
 def run_kpsp(bulan, q1, q2, q3, q4):
     if bulan not in KPSP_QUESTIONS: return "⚠️ Belum ada paket KPSP untuk bulan ini.", gr.update(visible=False)
     jawaban = [q1, q2, q3, q4]
@@ -887,7 +781,6 @@ def generate_monthly_checklist(payload):
 {chr(10).join(f"- {item}" for item in checklist['warnings'])}
 """
 
-# -------------------- RUN ALL (TETAP SAMA) --------------------
 def run_all(sex_text, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme):
     try:
         md, payload = compute_all(sex_text, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme)
