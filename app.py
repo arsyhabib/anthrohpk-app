@@ -28,6 +28,8 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import os, sys
+sys.path.insert(0, os.path.dirname(__file__))
 from pygrowup import Calculator
 import gradio as gr
 from reportlab.lib.pagesizes import A4
