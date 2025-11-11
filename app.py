@@ -29,9 +29,9 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import warnings
 from decimal import Decimal
+from checklist_ui import create_checklist_ui
 
 warnings.filterwarnings('ignore')
-from checklist_ui import create_checklist_ui
 
 # -------------------- Helpers umum --------------------
 def as_float(x):
@@ -881,6 +881,13 @@ with gr.Blocks(
                     name_child = gr.Textbox(label="Nama Anak (opsional)", placeholder="Budi Santoso")
                     name_parent = gr.Textbox(label="Nama Orang Tua/Wali (opsional)", placeholder="Ibu Siti")
                 sex = gr.Radio(["Laki-laki","Perempuan"], label="Jenis Kelamin", value="Laki-laki")
+    with gr.Tabs():
+    with gr.TabItem("📊 Analisis Antropometri"):
+        # ... kode UI antropometri yang sudah ada ...
+    
+    with gr.TabItem("📋 Checklist Bulanan"):  # ← TAB BARU
+        checklist_tab = create_checklist_ui()
+    
             with gr.Group():
                 gr.Markdown("### 📅 Usia")
                 age_mode = gr.Radio(["Tanggal","Usia (bulan)"], label="Mode Input Usia", value="Tanggal")
