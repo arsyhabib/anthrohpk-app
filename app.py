@@ -29,7 +29,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import warnings
 from decimal import Decimal
-from checklist_ui import create_checklist_ui
+from checklist_bulanan import create_checklist_ui
 
 warnings.filterwarnings('ignore')
 
@@ -855,116 +855,138 @@ custom_css = """
 .status-error   { color: #dc3545; font-weight: bold; }
 .big-button     { font-size: 18px !important; font-weight: bold !important; padding: 20px !important; }
 """
+# -------------------- Gradio UI --------------------
+custom_css = """
+.gradio-container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+.status-success { color: #28a745; font-weight: bold; }
+.status-warning { color: #ffc107; font-weight: bold; }
+.status-error   { color: #dc3545; font-weight: bold; }
+.big-button     { font-size: 18px !important; font-weight: bold !important; padding: 20px !important; }
+"""
+
 with gr.Blocks(
     title="AnthroHPK - Kalkulator Status Gizi Anak (0-5 tahun)",
     theme=gr.themes.Soft(primary_hue="pink", secondary_hue="teal", neutral_hue="slate"),
-    css=custom_css
-    with gr.Tabs():
-    with gr.TabItem("📊 Analisis Antropometri"):
-        # ... kode UI antropometri yang sudah ada ...
-    
-    with gr.TabItem("📋 Checklist Bulanan"):  # ← TAB BARU
-        checklist_tab = create_checklist_ui()
+    css=custom_css,
 ) as demo:
-    gr.Markdown("""
-    # 🏥 **AnthroHPK** - Kalkulator Status Gizi Anak Profesional
-    ### 📊 WHO Child Growth Standards + Permenkes 2020 | Usia 0-60 Bulan
-    > 🔒 **Privasi Terjaga** | ⚕️ **Standar Resmi** | 📱 **Mudah Digunakan**
-    """)
-    gr.Markdown("---")
-    with gr.Row():
-        with gr.Column(scale=5):
-            gr.Markdown("## 📝 Input Data Anak")
-            with gr.Group():
-                gr.Markdown("### 👤 Identitas")
-                with gr.Row():
-                    name_child = gr.Textbox(label="Nama Anak (opsional)", placeholder="Budi Santoso")
-                    name_parent = gr.Textbox(label="Nama Orang Tua/Wali (opsional)", placeholder="Ibu Siti")
-                sex = gr.Radio(["Laki-laki","Perempuan"], label="Jenis Kelamin", value="Laki-laki")
+
     with gr.Tabs():
-    with gr.TabItem("📊 Analisis Antropometri"):
-        # ... kode UI antropometri yang sudah ada ...
-    
-    with gr.TabItem("📋 Checklist Bulanan"):  # ← TAB BARU
-        checklist_tab = create_checklist_ui()
-    
-            with gr.Group():
-                gr.Markdown("### 📅 Usia")
-                age_mode = gr.Radio(["Tanggal","Usia (bulan)"], label="Mode Input Usia", value="Tanggal")
-                with gr.Row():
-                    dob = gr.Textbox(label="Tanggal Lahir", placeholder="2023-06-15 atau 15/06/2023", info="YYYY-MM-DD atau DD/MM/YYYY", visible=True)
-                    dom = gr.Textbox(label="Tanggal Pengukuran", placeholder="2025-11-10 atau 10/11/2025", info="Tanggal ukur", visible=True)
-                age_mo = gr.Number(label="Usia (bulan)", value=12.0, precision=1, visible=False)
-            with gr.Group():
-                gr.Markdown("### 📏 Data Antropometri")
-                gr.Markdown("*Gunakan **kg** untuk berat & **cm** untuk panjang/tinggi*")
-                with gr.Row():
-                    w = gr.Number(label="Berat Badan (kg)", value=10.0, precision=2)
-                    h = gr.Number(label="Panjang/Tinggi Badan (cm)", value=75.0, precision=1)
-                hc = gr.Number(label="Lingkar Kepala (cm) - Opsional", value=None, precision=1)
-            with gr.Group():
-                gr.Markdown("### ⚙️ Pengaturan Tampilan")
-                with gr.Row():
-                    lang_mode = gr.Radio(["Orang tua","Nakes"], label="Mode Bahasa Output", value="Orang tua")
-                    theme = gr.Radio(["pastel","dark","colorblind"], label="Tema Grafik", value="pastel")
+        # ===================== Tab 1: Analisis Antropometri =====================
+        with gr.TabItem("📊 Analisis Antropometri"):
+            gr.Markdown("""
+            # 🏥 **AnthroHPK** - Kalkulator Status Gizi Anak Profesional
+            ### 📊 WHO Child Growth Standards + Permenkes 2020 | Usia 0-60 Bulan
+            > 🔒 **Privasi Terjaga** | ⚕️ **Standar Resmi** | 📱 **Mudah Digunakan**
+            """)
+            gr.Markdown("---")
+
+            with gr.Row():
+                # -------- Kiri: Input --------
+                with gr.Column(scale=5):
+                    gr.Markdown("## 📝 Input Data Anak")
+
+                    with gr.Group():
+                        gr.Markdown("### 👤 Identitas")
+                        with gr.Row():
+                            name_child  = gr.Textbox(label="Nama Anak (opsional)", placeholder="Budi Santoso")
+                            name_parent = gr.Textbox(label="Nama Orang Tua/Wali (opsional)", placeholder="Ibu Siti")
+                        sex = gr.Radio(["Laki-laki","Perempuan"], label="Jenis Kelamin", value="Laki-laki")
+
+                    with gr.Group():
+                        gr.Markdown("### 📅 Usia")
+                        age_mode = gr.Radio(["Tanggal","Usia (bulan)"], label="Mode Input Usia", value="Tanggal")
+                        with gr.Row():
+                            dob = gr.Textbox(label="Tanggal Lahir", placeholder="2023-06-15 atau 15/06/2023",
+                                             info="YYYY-MM-DD atau DD/MM/YYYY", visible=True)
+                            dom = gr.Textbox(label="Tanggal Pengukuran", placeholder="2025-11-10 atau 10/11/2025",
+                                             info="Tanggal ukur", visible=True)
+                        age_mo = gr.Number(label="Usia (bulan)", value=12.0, precision=1, visible=False)
+
+                    with gr.Group():
+                        gr.Markdown("### 📏 Data Antropometri")
+                        gr.Markdown("*Gunakan **kg** untuk berat & **cm** untuk panjang/tinggi*")
+                        with gr.Row():
+                            w = gr.Number(label="Berat Badan (kg)", value=10.0, precision=2)
+                            h = gr.Number(label="Panjang/Tinggi Badan (cm)", value=75.0, precision=1)
+                        hc = gr.Number(label="Lingkar Kepala (cm) - Opsional", value=None, precision=1)
+
+                    with gr.Group():
+                        gr.Markdown("### ⚙️ Pengaturan Tampilan")
+                        with gr.Row():
+                            lang_mode = gr.Radio(["Orang tua","Nakes"], label="Mode Bahasa Output", value="Orang tua")
+                            theme     = gr.Radio(["pastel","dark","colorblind"], label="Tema Grafik", value="pastel")
+
+                    gr.Markdown("---")
+                    with gr.Row():
+                        prefill_btn = gr.Button("📊 Isi Nilai Median WHO (Z=0)", variant="secondary")
+                        demo_btn    = gr.Button("🎬 Coba Demo", variant="secondary")
+                    status_msg = gr.Markdown("💡 **Tip**: Klik 'Coba Demo' lalu 'Analisis Sekarang'")
+                    run_btn = gr.Button("🔍 Analisis Sekarang", variant="primary", elem_classes="big-button")
+
+                # -------- Kanan: Panduan --------
+                with gr.Column(scale=2):
+                    gr.Markdown("## 💡 Panduan Cepat")
+                    with gr.Accordion("📏 Tips Pengukuran", open=True):
+                        gr.Markdown("**Berat:** tanpa sepatu, pakaian minimal. **Tinggi:** <24 bln terlentang, ≥24 bln berdiri. **LK:** ukur 3x, ambil terbesar.")
+                    with gr.Accordion("🎯 Interpretasi Z-Score", open=False):
+                        gr.Markdown("""
+                        | Z | Status |
+                        |---|--------|
+                        | < -3 | 🔴 Sangat kurang |
+                        | -3 s/d -2 | 🟡 Kurang |
+                        | -2 s/d +2 | 🟢 Normal |
+                        | +2 s/d +3 | 🟡 Risiko lebih |
+                        | > +3 | 🔴 Obesitas |
+                        """)
+                    with gr.Accordion("⚠️ Peringatan", open=False):
+                        gr.Markdown("Skrining edukatif; konsultasi nakes bila ada masalah. Pastikan satuan benar.")
+
             gr.Markdown("---")
             with gr.Row():
-                prefill_btn = gr.Button("📊 Isi Nilai Median WHO (Z=0)", variant="secondary", size="sm")
-                demo_btn   = gr.Button("🎬 Coba Demo", variant="secondary", size="sm")
-            status_msg = gr.Markdown("💡 **Tip**: Klik 'Coba Demo' lalu 'Analisis Sekarang'")
-            run_btn = gr.Button("🔍 Analisis Sekarang", variant="primary", size="lg", elem_classes="big-button")
-        with gr.Column(scale=2):
-            gr.Markdown("## 💡 Panduan Cepat")
-            with gr.Accordion("📏 Tips Pengukuran", open=True):
-                gr.Markdown("**Berat:** tanpa sepatu, pakaian minimal. **Tinggi:** <24 bln terlentang, ≥24 bln berdiri. **LK:** ukur 3x, ambil terbesar.")
-            with gr.Accordion("🎯 Interpretasi Z-Score", open=False):
-                gr.Markdown("""
-                | Z | Status |
-                |---|--------|
-                | < -3 | 🔴 Sangat kurang |
-                | -3 s/d -2 | 🟡 Kurang |
-                | -2 s/d +2 | 🟢 Normal |
-                | +2 s/d +3 | 🟡 Risiko lebih |
-                | > +3 | 🔴 Obesitas |
-                """)
-            with gr.Accordion("⚠️ Peringatan", open=False):
-                gr.Markdown("Skrining edukatif; konsultasi nakes bila ada masalah. Pastikan satuan benar.")
-    gr.Markdown("---")
-    with gr.Row():
-        with gr.Column():
-            gr.Markdown("## 📊 Hasil Analisis")
-            out_md = gr.Markdown("*Hasil akan tampil setelah klik 'Analisis Sekarang'*")
-    gr.Markdown("---")
-    gr.Markdown("## 📈 Grafik Pertumbuhan")
-    with gr.Tabs():
-        with gr.TabItem("📊 BB menurut Umur (WFA)"): plt1 = gr.Plot(label="Weight-for-Age")
-        with gr.TabItem("📏 TB/PB menurut Umur (HFA)"): plt2 = gr.Plot(label="Height-for-Age")
-        with gr.TabItem("🧠 Lingkar Kepala (HCFA)"):     plt3 = gr.Plot(label="Head Circumference-for-Age")
-        with gr.TabItem("🎯 BB menurut TB/PB (WFL)"):    plt4 = gr.Plot(label="Weight-for-Length")
-        with gr.TabItem("📊 Ringkasan (Bar)"):           plt5 = gr.Plot(label="Summary Bar Chart")
-    gr.Markdown("---")
-    gr.Markdown("## 💾 Unduh Laporan")
-    with gr.Row():
-        with gr.Column():
-            pdf_out = gr.File(label="📄 Laporan PDF (A4)", file_types=[".pdf"])
-            gr.Markdown("*Multi-halaman dengan grafik & tabel*")
-        with gr.Column():
-            csv_out = gr.File(label="📊 Data CSV", file_types=[".csv"])
-            gr.Markdown("*Untuk analisis lanjutan*")
-    with gr.Row():
-        png1 = gr.File(label="🖼️ Grafik WFA (PNG)", file_types=[".png"])
-        png2 = gr.File(label="🖼️ Grafik HFA (PNG)", file_types=[".png"])
-        png3 = gr.File(label="🖼️ Grafik HCFA (PNG)", file_types=[".png"])
-    with gr.Row():
-        png4 = gr.File(label="🖼️ Grafik WFL (PNG)", file_types=[".png"])
-        png5 = gr.File(label="🖼️ Grafik Bar (PNG)", file_types=[".png"])
+                with gr.Column():
+                    gr.Markdown("## 📊 Hasil Analisis")
+                    out_md = gr.Markdown("*Hasil akan tampil setelah klik 'Analisis Sekarang'*")
 
-    # Events
-    age_mode.change(fn=update_age_input_visibility, inputs=[age_mode], outputs=[dob, dom, age_mo])
-    prefill_btn.click(fn=do_prefill, inputs=[sex, age_mode, dob, dom, age_mo], outputs=[w, h, hc, status_msg])
-    demo_btn.click(fn=do_demo, outputs=[sex, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme, status_msg])
-    run_btn.click(fn=run_all, inputs=[sex, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme],
-                  outputs=[out_md, plt1, plt2, plt3, plt4, plt5, pdf_out, csv_out, png1, png2, png3, png4, png5, status_msg])
+            gr.Markdown("---")
+            gr.Markdown("## 📈 Grafik Pertumbuhan")
+            with gr.Tabs():
+                with gr.TabItem("📊 BB menurut Umur (WFA)"): plt1 = gr.Plot(label="Weight-for-Age")
+                with gr.TabItem("📏 TB/PB menurut Umur (HFA)"): plt2 = gr.Plot(label="Height-for-Age")
+                with gr.TabItem("🧠 Lingkar Kepala (HCFA)"):     plt3 = gr.Plot(label="Head Circumference-for-Age")
+                with gr.TabItem("🎯 BB menurut TB/PB (WFL)"):    plt4 = gr.Plot(label="Weight-for-Length")
+                with gr.TabItem("📊 Ringkasan (Bar)"):           plt5 = gr.Plot(label="Summary Bar Chart")
+
+            gr.Markdown("---")
+            gr.Markdown("## 💾 Unduh Laporan")
+            with gr.Row():
+                with gr.Column():
+                    pdf_out = gr.File(label="📄 Laporan PDF (A4)", file_types=[".pdf"])
+                    gr.Markdown("*Multi-halaman dengan grafik & tabel*")
+                with gr.Column():
+                    csv_out = gr.File(label="📊 Data CSV", file_types=[".csv"])
+                    gr.Markdown("*Untuk analisis lanjutan*")
+            with gr.Row():
+                png1 = gr.File(label="🖼️ Grafik WFA (PNG)", file_types=[".png"])
+                png2 = gr.File(label="🖼️ Grafik HFA (PNG)", file_types=[".png"])
+                png3 = gr.File(label="🖼️ Grafik HCFA (PNG)", file_types=[".png"])
+            with gr.Row():
+                png4 = gr.File(label="🖼️ Grafik WFL (PNG)", file_types=[".png"])
+                png5 = gr.File(label="🖼️ Grafik Bar (PNG)", file_types=[".png"])
+
+            # ---- Events khusus Tab 1 ----
+            age_mode.change(fn=update_age_input_visibility, inputs=[age_mode], outputs=[dob, dom, age_mo])
+            prefill_btn.click(fn=do_prefill, inputs=[sex, age_mode, dob, dom, age_mo], outputs=[w, h, hc, status_msg])
+            demo_btn.click(fn=do_demo, outputs=[sex, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme, status_msg])
+            run_btn.click(
+                fn=run_all,
+                inputs=[sex, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme],
+                outputs=[out_md, plt1, plt2, plt3, plt4, plt5, pdf_out, csv_out, png1, png2, png3, png4, png5, status_msg]
+            )
+
+        # ===================== Tab 2: Checklist Bulanan =====================
+        with gr.TabItem("📋 Checklist Bulanan"):
+            checklist_tab = create_checklist_ui()
+
 
 # -------------------- FastAPI mount --------------------
 app = FastAPI()
