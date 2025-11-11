@@ -6,7 +6,15 @@ pydantic_core==2.23.4
 uvicorn[standard]==0.32.0
 
 # === GRADIO & TEMAN-TEMAN ===
-gradio==4.44.0
+gradio>=4.12.0
+fastapi>=0.110
+uvicorn>=0.23
+numpy
+matplotlib
+reportlab
+qrcode
+pillow
+pygrowup
 huggingface_hub==0.20.3   # aman dengan gradio 4.44
 
 # === LIBS LAIN ===
