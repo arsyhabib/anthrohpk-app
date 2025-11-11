@@ -859,6 +859,12 @@ with gr.Blocks(
     title="AnthroHPK - Kalkulator Status Gizi Anak (0-5 tahun)",
     theme=gr.themes.Soft(primary_hue="pink", secondary_hue="teal", neutral_hue="slate"),
     css=custom_css
+    with gr.Tabs():
+    with gr.TabItem("📊 Analisis Antropometri"):
+        # ... kode UI antropometri yang sudah ada ...
+    
+    with gr.TabItem("📋 Checklist Bulanan"):  # ← TAB BARU
+        checklist_tab = create_checklist_ui()
 ) as demo:
     gr.Markdown("""
     # 🏥 **AnthroHPK** - Kalkulator Status Gizi Anak Profesional
