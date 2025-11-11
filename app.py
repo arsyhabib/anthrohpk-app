@@ -1,23 +1,28 @@
-# AnthroHPK Web Application
-# Aplikasi Analisis Antropometri + Checklist Sehat Bulanan
-# WHO Child Growth Standards + Permenkes 2/2020
+"""
+AnthroHPK Web Application
+=========================
 
-# ==================== Imports & Setup ====================
+uvicorn app:app --host 0.0.0.0 --port 8000
+"""
+# -------------------- Imports & setup --------------------
 import os, sys, io, csv, math, datetime, traceback
 from functools import lru_cache
-from math import erf, sqrt
-from typing import Dict, List, Tuple, Optional
+from math import erf, sqrt  # <--- penting untuk z_to_percentile
 
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+# prioritaskan repo ini untuk import lokal
+sys.path.insert(0, os.path.dirname(__file__))
+
+from pygrowup import Calculator
 import gradio as gr
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
+from reportlab.lib import colors
 import qrcode
 from PIL import Image
 from fastapi import FastAPI
@@ -26,11 +31,9 @@ import warnings
 from decimal import Decimal
 
 warnings.filterwarnings('ignore')
-sys.path.insert(0, os.path.dirname(__file__))
+from checklist_ui import create_checklist_ui
 
-from pygrowup import Calculator
-
-# ==================== Helpers Umum ====================
+# -------------------- Helpers umum --------------------
 def as_float(x):
     """Konversi apapun (Decimal/str/int/float) -> float; kosong -> None."""
     if x is None:
@@ -48,21 +51,16 @@ def parse_date(s):
     if not s or str(s).strip() == "":
         return None
     s = str(s).strip()
-    for fmt in ["%Y-%m-%d", "%d/%m/%Y"]:
-        try:
-            return datetime.datetime.strptime(s, fmt).date()
-        except Exception:
-            continue
-    try:
-        if "-" in s:
-            y, m, d = [int(p) for p in s.split("-")]
-            return datetime.date(y, m, d)
-        elif "/" in s:
-            d, m, y = [int(p) for p in s.split("/")]
-            return datetime.date(y, m, d)
+    try:  # YYYY-MM-DD
+        y, m, d = [int(p) for p in s.split("-")]
+        return datetime.date(y, m, d)
     except Exception:
         pass
-    return None
+    try:  # DD/MM/YYYY
+        d, m, y = [int(p) for p in s.split("/")]
+        return datetime.date(y, m, d)
+    except Exception:
+        return None
 
 def age_months_from_dates(dob, dom):
     try:
@@ -101,564 +99,14 @@ def safe_float(x):
     except Exception:
         return None
 
-# ==================== Init Kalkulator WHO ====================
+# -------------------- Init kalkulator WHO --------------------
 try:
     calc = Calculator(adjust_height_data=False, adjust_weight_scores=False, include_cdc=False)
 except Exception as e:
     print(f"[Init] Calculator error: {e}")
     calc = None
 
-# ==================== Data Checklist Bulanan ====================
-CHECKLIST_DATA = {
-    0: {
-        "feeding": "Inisiasi menyusu dini; ASI on demand; tanda kecukupan (pipis ≥6×/hari setelah hari ke-4)",
-        "pertumbuhan": "Ukur BB/PB/LK; catat 2× untuk PB/LK; verifikasi usia kronologis/koreksi bila prematur",
-        "perkembangan": "Respons suara/visual; bonding kulit-ke-kulit; tidur aman",
-        "kpsp_due": False,
-        "warnings": ["Demam/hipotermia", "Malas minum", "Kuning menyeluruh", "Muntah hijau", "Napas cepat/tarikan"]
-    },
-    1: {
-        "feeding": "ASI eksklusif; pemantauan kenaikan BB tiap bulan; dukungan pelekatan & pumping bagi ibu bekerja",
-        "pertumbuhan": "BB dan PB meningkat stabil; bila WAZ datar 2 kunjungan → evaluasi asupan/infeksi",
-        "perkembangan": "Kontak mata; senyum sosial; angkat kepala tengkurap",
-        "kpsp_due": False,
-        "warnings": ["Demam ≥38°C pada <3 bulan", "Napas cepat/tarikan", "Dehidrasi", "Kejang"]
-    },
-    2: {
-        "feeding": "ASI eksklusif; pemantauan kenaikan BB tiap bulan",
-        "pertumbuhan": "BB dan PB meningkat stabil; verifikasi teknik pengukuran",
-        "perkembangan": "Tengkurap; menggenggam; mengoceh",
-        "kpsp_due": False,
-        "warnings": ["Demam ≥38°C pada <3 bulan", "Napas cepat/tarikan", "Dehidrasi", "Kejang"]
-    },
-    3: {
-        "feeding": "ASI eksklusif; pemantauan kenaikan BB tiap bulan",
-        "pertumbuhan": "BB dan PB meningkat stabil",
-        "perkembangan": "Berguling; memegang mainan; tertawa",
-        "kpsp_due": True,
-        "kpsp_paket": "3 bulan",
-        "warnings": ["Demam tinggi", "Napas cepat", "Tidak mau minum"]
-    },
-    6: {
-        "feeding": "**MULAI MPASI**; target 2-3×/hari + ASI on demand; utamakan **zat besi** (hewani)",
-        "pertumbuhan": "Verifikasi z-score; bila LAZ <-2 SD → ulang ukur PB (2×) & optimasi MPASI",
-        "perkembangan": "Duduk dengan bantuan; meraih benda; babbling",
-        "kpsp_due": True,
-        "kpsp_paket": "6 bulan",
-        "warnings": ["BB tidak naik 2 bulan berturut-turut", "Menolak makan", "Diare persisten"]
-    },
-    9: {
-        "feeding": "Naikkan kualitas menu; mulai finger food sesuai kesiapan",
-        "pertumbuhan": "Review tren 3 bulan; bila WAZ stagnan → ↑ densitas energi",
-        "perkembangan": "Merangkak; menggenggam dengan ibu jari-telunjuk; meniru suara",
-        "kpsp_due": True,
-        "kpsp_paket": "9 bulan",
-        "warnings": ["Tidak bisa duduk sendiri", "Tidak merespons nama", "Penurunan BB"]
-    },
-    12: {
-        "feeding": "**3-4×/hari** + 1-2 selingan; lanjut menyusui",
-        "pertumbuhan": "Evaluasi tren kuartal; bila BB tidak naik 2× kunjungan → intervensi lebih intensif",
-        "perkembangan": "Berdiri dengan pegangan; kata pertama; menunjuk",
-        "kpsp_due": True,
-        "kpsp_paket": "12 bulan",
-        "warnings": ["Tidak bisa berdiri dengan bantuan", "Tidak ada kata bermakna", "Stunting (LAZ <-2)"]
-    },
-    15: {
-        "feeding": "Kukuhkan rutinitas makan; atasi pilih-pilih (responsive feeding)",
-        "pertumbuhan": "Tinjau LAZ; bila <-2 SD → paket intervensi rumah + follow-up 4 minggu",
-        "perkembangan": "Berjalan mandiri; 3-6 kata; menunjuk keinginan",
-        "kpsp_due": True,
-        "kpsp_paket": "15 bulan",
-        "warnings": ["Belum bisa berjalan", "Kehilangan kemampuan yang sudah dikuasai", "Wasting (WHZ <-2)"]
-    },
-    18: {
-        "feeding": "Menu keluarga; variasi sumber zat besi; ajak makan bersama keluarga",
-        "pertumbuhan": "Review WAZ/LAZ; bila stagnan → konseling intensif",
-        "perkembangan": "Naik tangga; menyusun 2-3 balok; 10-20 kata",
-        "kpsp_due": True,
-        "kpsp_paket": "18 bulan",
-        "warnings": ["Belum bisa naik tangga", "Kurang dari 6 kata", "Obesitas (WHZ >+3)"]
-    },
-    21: {
-        "feeding": "Pertahankan frekuensi; latih kemandirian makan",
-        "pertumbuhan": "Rencanakan transisi ke pemantauan 2-3 bulanan setelah 24 bln",
-        "perkembangan": "Menendang bola; makan sendiri dengan sendok; kalimat 2 kata",
-        "kpsp_due": True,
-        "kpsp_paket": "21 bulan",
-        "warnings": ["Tidak bisa menendang bola", "Tidak ada kalimat 2 kata", "Infeksi berulang"]
-    },
-    24: {
-        "feeding": "Pola makan keluarga; pertahankan variasi & kepadatan gizi",
-        "pertumbuhan": "Rekap 2 tahun pertama; rencana pemantauan lanjutan (3-6 bulanan)",
-        "perkembangan": "Berlari; mencuci tangan; kalimat 3 kata",
-        "kpsp_due": True,
-        "kpsp_paket": "24 bulan",
-        "warnings": ["Tidak bisa berlari", "Tidak ada kalimat 3 kata", "Picky eater ekstrem"]
-    }
-}
-
-DEFAULT_CHECKLIST = {
-    "feeding": "Lanjut ASI/MPASI sesuai usia; frekuensi 3-4×/hari + selingan",
-    "pertumbuhan": "Pantau BB/PB bulanan; verifikasi z-score",
-    "perkembangan": "Stimulasi motorik, bahasa, sosial sesuai usia",
-    "kpsp_due": False,
-    "warnings": ["Demam tinggi", "Sesak napas", "Diare berdarah", "Dehidrasi", "Kejang"]
-}
-
-# ==================== Fungsi Checklist Bulanan ====================
-def generate_monthly_checklist(
-    age_months: float,
-    z_scores: Dict[str, Optional[float]],
-    feeding_status: str = "",
-    kpsp_result: str = "Belum dilakukan"
-) -> Tuple[List[str], List[str], List[str]]:
-    """Generate checklist bulanan: Do Now, Saran Perbaikan, Warnings/Red Flags"""
-    age_mo = int(round(age_months))
-    checklist = CHECKLIST_DATA.get(age_mo, DEFAULT_CHECKLIST)
-    
-    do_now = []
-    saran = []
-    warnings = []
-    
-    # DO NOW
-    if any(z is not None and abs(z) > 3 for z in z_scores.values() if z is not None):
-        do_now.append("🔴 **PRIORITAS**: Ulang ukur BB/PB/LK dengan teknik benar (2× pengukuran)")
-    
-    if age_mo == 6 and "belum mpasi" in feeding_status.lower():
-        do_now.append("🍽️ **MULAI MPASI SEKARANG**: 2-3×/hari, utamakan sumber zat besi (hati/daging/ikan/telur)")
-    
-    if checklist.get("kpsp_due") and kpsp_result == "Belum dilakukan":
-        do_now.append(f"📋 **Lakukan KPSP paket {checklist.get('kpsp_paket', age_mo)} bulan** (skrining perkembangan)")
-    
-    if z_scores.get('haz') is not None and z_scores['haz'] < -2:
-        do_now.append("📏 **Stunting terdeteksi**: Tingkatkan MPASI 3-4×/hari + konsultasi gizi ke Puskesmas")
-    
-    if z_scores.get('whz') is not None and z_scores['whz'] < -2:
-        do_now.append("⚖️ **Wasting/Kurus**: Naikkan densitas energi MPASI + evaluasi penyakit akut")
-    
-    if z_scores.get('waz') is not None and z_scores['waz'] < -2:
-        do_now.append("🍴 **Gizi Kurang**: Perbaiki frekuensi & kualitas makan; follow-up 2 minggu")
-    
-    if kpsp_result in ["Meragukan", "Penyimpangan"]:
-        do_now.append(f"🧩 **Hasil KPSP: {kpsp_result}** → Konsultasi ke dokter anak/klinik tumbuh kembang")
-    
-    if not do_now:
-        do_now.append("✅ Lanjutkan pemantauan rutin bulanan di Posyandu/Puskesmas")
-    do_now.append(f"📖 Catat hasil ukur di Buku KIA")
-    
-    # SARAN PERBAIKAN
-    saran.append(f"🍽️ **Feeding**: {checklist['feeding']}")
-    saran.append(f"🧒 **Perkembangan**: {checklist['perkembangan']}")
-    
-    if age_mo >= 6:
-        saran.append("🥘 Variasikan sumber protein hewani (telur, ikan, ayam, daging) untuk cegah anemia")
-    
-    if age_mo >= 12:
-        saran.append("👨‍👩‍👧 Ajak makan bersama keluarga; latih kemandirian makan dengan sendok")
-    
-    saran.append("🧼 Jaga kebersihan alat makan; cuci tangan sebelum makan")
-    saran.append("💤 Pastikan tidur cukup (12-14 jam/hari untuk bayi, 11-13 jam untuk batita)")
-    
-    # WARNINGS
-    for warning in checklist.get("warnings", []):
-        warnings.append(f"⚠️ {warning}")
-    
-    if z_scores.get('haz') is not None and z_scores['haz'] < -3:
-        warnings.append("🔴 **STUNTING BERAT**: Segera konsultasi ke Puskesmas/RS untuk evaluasi komprehensif")
-    
-    if z_scores.get('whz') is not None and z_scores['whz'] < -3:
-        warnings.append("🔴 **GIZI BURUK AKUT**: RUJUK SEGERA ke fasilitas kesehatan terdekat")
-    
-    if z_scores.get('whz') is not None and z_scores['whz'] > 3:
-        warnings.append("🔴 **OBESITAS**: Konsultasi ahli gizi untuk penyesuaian pola makan")
-    
-    warnings.append("⚡ **Bila ada demam tinggi/kejang/sesak/dehidrasi → RUJUK SEGERA**")
-    
-    return do_now, saran, warnings
-
-def format_checklist_markdown(
-    age_months: float,
-    child_name: str,
-    do_now: List[str],
-    saran: List[str],
-    warnings: List[str]
-) -> str:
-    """Format checklist ke Markdown untuk display"""
-    age_mo = int(round(age_months))
-    now = datetime.datetime.now().strftime("%d %B %Y")
-    
-    md = f"""# 📋 Checklist Sehat Bulanan - Usia {age_mo} Bulan
-
-## 👶 **Anak: {child_name or 'Tidak disebutkan'}**
-📅 **Tanggal Checklist**: {now}
-
----
-
-## 🎯 **DO NOW** (Lakukan Hari Ini/Minggu Ini)
-
-"""
-    for i, item in enumerate(do_now, 1):
-        md += f"{i}. {item}\n\n"
-    
-    md += """---
-
-## 💡 **SARAN PERBAIKAN** (Optimasi Harian/Mingguan)
-
-"""
-    for i, item in enumerate(saran, 1):
-        md += f"{i}. {item}\n\n"
-    
-    md += """---
-
-## ⚠️ **WARNINGS / RED FLAGS**
-
-"""
-    for item in warnings:
-        md += f"- {item}\n\n"
-    
-    md += """---
-
-## 📌 **Catatan Penting**
-
-- ✅ Checklist ini bersifat **skrining edukatif**, bukan diagnosis medis
-- ✅ Konsultasikan dengan **tenaga kesehatan** untuk interpretasi lengkap
-- ✅ Gunakan **Buku KIA** untuk mencatat hasil pemantauan
-- ✅ Rujukan: **Permenkes No. 2/2020**, **IDAI**, **WHO Child Growth Standards**
-
----
-
-**Aplikasi AnthroHPK** | Data Anda tidak disimpan di server 🔒
-"""
-    
-    return md
-
-def export_checklist_pdf_simple(
-    age_months: float,
-    child_name: str,
-    parent_name: str,
-    do_now: List[str],
-    saran: List[str],
-    warnings: List[str],
-    filename: str = "Checklist_Bulanan.pdf"
-) -> str:
-    """Export checklist ke PDF sederhana (1 halaman)"""
-    try:
-        c = canvas.Canvas(filename, pagesize=A4)
-        W, H = A4
-        age_mo = int(round(age_months))
-        now = datetime.datetime.now().strftime("%d %B %Y")
-        
-        # Header
-        c.setFillColorRGB(0.965, 0.647, 0.753)
-        c.rect(0, H - 60, W, 60, stroke=0, fill=1)
-        c.setFillColor(colors.black)
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(30, H - 35, f"Checklist Sehat Bulanan - Usia {age_mo} Bulan")
-        c.setFont("Helvetica", 10)
-        c.drawRightString(W - 30, H - 35, now)
-        
-        y = H - 90
-        
-        # Informasi anak
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(30, y, "INFORMASI ANAK")
-        y -= 20
-        c.setFont("Helvetica", 10)
-        if child_name:
-            c.drawString(40, y, f"Nama Anak: {child_name}")
-            y -= 15
-        if parent_name:
-            c.drawString(40, y, f"Orang Tua/Wali: {parent_name}")
-            y -= 15
-        c.drawString(40, y, f"Usia: {age_mo} bulan")
-        y -= 30
-        
-        # DO NOW
-        c.setFont("Helvetica-Bold", 12)
-        c.setFillColorRGB(0.8, 0.2, 0.2)
-        c.drawString(30, y, "🎯 DO NOW (Prioritas)")
-        c.setFillColor(colors.black)
-        y -= 20
-        c.setFont("Helvetica", 9)
-        for i, item in enumerate(do_now[:3], 1):
-            clean_item = item.replace("🔴", "").replace("🍽️", "").replace("📋", "").replace("📏", "").replace("⚖️", "").replace("🍴", "").replace("🧩", "").replace("✅", "").replace("📖", "").strip()
-            wrapped = _wrap_text(clean_item, 90)
-            c.drawString(40, y, f"{i}. {wrapped[0]}")
-            y -= 12
-            for line in wrapped[1:]:
-                c.drawString(50, y, line)
-                y -= 12
-            y -= 5
-        
-        y -= 10
-        
-        # SARAN
-        c.setFont("Helvetica-Bold", 12)
-        c.setFillColorRGB(0.2, 0.6, 0.8)
-        c.drawString(30, y, "💡 SARAN PERBAIKAN")
-        c.setFillColor(colors.black)
-        y -= 20
-        c.setFont("Helvetica", 9)
-        for i, item in enumerate(saran[:4], 1):
-            clean_item = item.replace("🍽️", "").replace("🧒", "").replace("🥘", "").replace("👨‍👩‍👧", "").replace("🧼", "").replace("💤", "").strip()
-            wrapped = _wrap_text(clean_item, 90)
-            c.drawString(40, y, f"{i}. {wrapped[0]}")
-            y -= 12
-            for line in wrapped[1:]:
-                c.drawString(50, y, line)
-                y -= 12
-            y -= 5
-        
-        y -= 10
-        
-        # WARNINGS
-        if y < 150:
-            c.setFont("Helvetica-Bold", 10)
-            c.setFillColorRGB(0.8, 0.1, 0.1)
-            c.drawString(30, y, "⚠️ WARNINGS (lihat aplikasi untuk detail)")
-        else:
-            c.setFont("Helvetica-Bold", 12)
-            c.setFillColorRGB(0.8, 0.1, 0.1)
-            c.drawString(30, y, "⚠️ WARNINGS / RED FLAGS")
-            c.setFillColor(colors.black)
-            y -= 20
-            c.setFont("Helvetica", 9)
-            for item in warnings[:3]:
-                clean_item = item.replace("⚠️", "").replace("🔴", "").replace("⚡", "").strip()
-                wrapped = _wrap_text(clean_item, 90)
-                c.drawString(40, y, f"• {wrapped[0]}")
-                y -= 12
-                for line in wrapped[1:]:
-                    c.drawString(50, y, line)
-                    y -= 12
-        
-        # Footer
-        c.setFont("Helvetica-Oblique", 8)
-        c.drawCentredString(W / 2, 30, "AnthroHPK - Checklist Sehat Bulanan | Permenkes 2/2020 + WHO Standards")
-        c.drawCentredString(W / 2, 15, "⚠️ Bukan diagnosis medis. Konsultasikan dengan tenaga kesehatan.")
-        
-        c.save()
-        return filename
-    
-    except Exception as e:
-        print(f"Error export PDF: {e}")
-        return None
-
-def _wrap_text(text: str, max_len: int = 80) -> List[str]:
-    """Helper untuk wrap text panjang"""
-    words = text.split()
-    lines = []
-    current_line = []
-    current_len = 0
-    
-    for word in words:
-        if current_len + len(word) + 1 <= max_len:
-            current_line.append(word)
-            current_len += len(word) + 1
-        else:
-            if current_line:
-                lines.append(" ".join(current_line))
-            current_line = [word]
-            current_len = len(word)
-    
-    if current_line:
-        lines.append(" ".join(current_line))
-    
-    return lines if lines else [""]
-
-def get_feeding_status_from_age(age_months: float) -> str:
-    """Helper untuk determine feeding status default berdasarkan usia"""
-    if age_months < 6:
-        return "ASI Eksklusif"
-    elif age_months < 12:
-        return "ASI + MPASI 2-3×/hari"
-    elif age_months < 24:
-        return "ASI + MPASI 3-4×/hari"
-    else:
-        return "Makanan keluarga + ASI"
-
-def validate_checklist_input(age_months: float) -> Tuple[bool, str]:
-    """Validasi input untuk checklist"""
-    if age_months < 0:
-        return False, "Usia tidak boleh negatif"
-    if age_months > 24:
-        return False, "Checklist ini untuk usia 0-24 bulan. Gunakan pemantauan reguler untuk usia >24 bulan"
-    return True, ""
-
-# ==================== UI Component Checklist ====================
-def create_checklist_ui():
-    """Buat UI Gradio untuk Checklist Bulanan"""
-    
-    with gr.Blocks() as checklist_ui:
-        gr.Markdown("""
-        # 📋 **Checklist Sehat Bulanan (0-24 Bulan)**
-        ### 🏥 Panduan Praktis Berbasis Permenkes & WHO Standards
-        
-        > Fitur ini memberikan checklist bulanan yang mencakup **pertumbuhan**, **feeding (ASI/MPASI)**, 
-        > **perkembangan (KPSP)**, dan **warning signs** berdasarkan usia anak.
-        """)
-        
-        gr.Markdown("---")
-        
-        with gr.Row():
-            with gr.Column(scale=1):
-                gr.Markdown("## 📝 Input Data")
-                
-                with gr.Group():
-                    gr.Markdown("### 👤 Identitas")
-                    child_name_ck = gr.Textbox(
-                        label="Nama Anak (opsional)",
-                        placeholder="Budi Santoso"
-                    )
-                    parent_name_ck = gr.Textbox(
-                        label="Nama Orang Tua/Wali (opsional)",
-                        placeholder="Ibu Siti"
-                    )
-                
-                with gr.Group():
-                    gr.Markdown("### 📅 Usia")
-                    age_months_ck = gr.Number(
-                        label="Usia Anak (bulan)",
-                        value=9.0,
-                        precision=1,
-                        minimum=0,
-                        maximum=24
-                    )
-                
-                with gr.Group():
-                    gr.Markdown("### 📏 Status Gizi (Z-scores)")
-                    gr.Markdown("*Isi dari hasil analisis antropometri. Kosongkan jika tidak ada.*")
-                    
-                    with gr.Row():
-                        z_waz_ck = gr.Number(label="WAZ (BB/U)", value=None, precision=2)
-                        z_haz_ck = gr.Number(label="HAZ (TB/U)", value=None, precision=2)
-                    with gr.Row():
-                        z_whz_ck = gr.Number(label="WHZ (BB/TB)", value=None, precision=2)
-                        z_baz_ck = gr.Number(label="BAZ (IMT/U)", value=None, precision=2)
-                    z_hcz_ck = gr.Number(label="HCZ (LK/U)", value=None, precision=2)
-                
-                with gr.Group():
-                    gr.Markdown("### 🍽️ Status Feeding")
-                    feeding_status_ck = gr.Dropdown(
-                        label="Status Pemberian Makan",
-                        choices=[
-                            "ASI Eksklusif",
-                            "ASI + MPASI 1-2×/hari",
-                            "ASI + MPASI 2-3×/hari",
-                            "ASI + MPASI 3-4×/hari",
-                            "Makanan keluarga + ASI",
-                            "Belum MPASI (usia ≥6 bln)",
-                            "Tidak diketahui"
-                        ],
-                        value="Tidak diketahui"
-                    )
-                
-                with gr.Group():
-                    gr.Markdown("### 🧩 Status KPSP")
-                    kpsp_result_ck = gr.Dropdown(
-                        label="Hasil Skrining KPSP",
-                        choices=[
-                            "Belum dilakukan",
-                            "Sesuai (S)",
-                            "Meragukan (M)",
-                            "Penyimpangan (P)"
-                        ],
-                        value="Belum dilakukan"
-                    )
-                
-                gr.Markdown("---")
-                
-                generate_btn = gr.Button(
-                    "📋 Generate Checklist Sekarang",
-                    variant="primary",
-                    size="lg",
-                    elem_classes="big-button"
-                )
-                
-                status_ck = gr.Markdown("💡 **Tip**: Isi data di atas lalu klik 'Generate Checklist'")
-            
-            with gr.Column(scale=1):
-                gr.Markdown("## 📊 Hasil Checklist")
-                output_md_ck = gr.Markdown("*Checklist akan tampil di sini setelah generate*")
-        
-        gr.Markdown("---")
-        
-        gr.Markdown("## 💾 Unduh Checklist")
-        with gr.Row():
-            pdf_checklist_output = gr.File(label="📄 Checklist PDF (1 halaman)", file_types=[".pdf"])
-        
-        def run_checklist(age_mo, child_name, parent_name, z_waz, z_haz, z_whz, z_baz, z_hcz, feeding_status, kpsp_result):
-            try:
-                # Validasi
-                is_valid, msg = validate_checklist_input(age_mo)
-                if not is_valid:
-                    return (f"❌ **Error**: {msg}", None, f"❌ {msg}")
-                
-                # Prepare z_scores dict
-                z_scores = {
-                    'waz': z_waz,
-                    'haz': z_haz,
-                    'whz': z_whz,
-                    'baz': z_baz,
-                    'hcz': z_hcz
-                }
-                
-                # Auto-fill feeding status jika "Tidak diketahui"
-                if feeding_status == "Tidak diketahui":
-                    feeding_status = get_feeding_status_from_age(age_mo)
-                
-                # Generate checklist
-                do_now, saran, warnings = generate_monthly_checklist(
-                    age_months=age_mo,
-                    z_scores=z_scores,
-                    feeding_status=feeding_status,
-                    kpsp_result=kpsp_result
-                )
-                
-                # Format Markdown
-                md_output = format_checklist_markdown(
-                    age_months=age_mo,
-                    child_name=child_name or "Tidak disebutkan",
-                    do_now=do_now,
-                    saran=saran,
-                    warnings=warnings
-                )
-                
-                # Export PDF
-                child_safe_name = (child_name or "Anak").replace(" ", "_")[:20]
-                pdf_filename = f"Checklist_{int(age_mo)}bln_{child_safe_name}.pdf"
-                
-                pdf_path = export_checklist_pdf_simple(
-                    age_months=age_mo,
-                    child_name=child_name or "Tidak disebutkan",
-                    parent_name=parent_name or "",
-                    do_now=do_now,
-                    saran=saran,
-                    warnings=warnings,
-                    filename=pdf_filename
-                )
-                
-                status_msg = "✅ **Checklist berhasil dibuat!** Download PDF untuk dibagikan ke keluarga/nakes."
-                
-                return (md_output, pdf_path, status_msg)
-            
-            except Exception as e:
-                error_msg = f"❌ **Error**: {str(e)}"
-                return (error_msg, None, error_msg)
-        
-        generate_btn.click(
-            fn=run_checklist,
-            inputs=[
-                age_months_ck, child_name_ck, parent_name_ck,
-                z_waz_ck, z_haz_ck, z_whz_ck, z_baz_ck, z_hcz_ck,
-                feeding_status_ck, kpsp_result_ck
-            ],
-            outputs=[output_md_ck, pdf_checklist_output, status_ck]
-        )
-    
-    return checklist_ui
-
-# ==================== Grid & Inversi Kurva ====================
+# -------------------- Grid & inversi kurva --------------------
 AGE_GRID = np.arange(0.0, 60.0 + 1e-9, 0.25)
 BOUNDS = {
     'wfa': (1.0, 30.0),
@@ -739,7 +187,7 @@ def wfl_curve_smooth(sex, age_mo, z, lengths=None):
     weights = [invert_z_with_scan(lambda w: _safe_z(calc.wfl, w, age_mo, sex, L), z, lo_w, hi_w) for L in lengths]
     return np.asarray(lengths), np.asarray(weights)
 
-# ==================== Klasifikasi / Teks ====================
+# -------------------- Klasifikasi / teks --------------------
 def permenkes_waz(z):
     if z is None or (isinstance(z, float) and math.isnan(z)): return "Tidak diketahui"
     if z < -3: return "Gizi buruk (BB sangat kurang)"
@@ -768,7 +216,7 @@ def who_haz(z):
     if z > 3:  return "Tall"
     return "Normal"
 
-def permenkes_whaz(z):
+def permenkes_whz(z):
     if z is None or (isinstance(z, float) and math.isnan(z)): return "Tidak diketahui"
     if z < -3: return "Gizi buruk (sangat kurus)"
     if z < -2: return "Gizi kurang (kurus)"
@@ -777,7 +225,7 @@ def permenkes_whaz(z):
     if z <= 3: return "Gizi lebih"
     return "Obesitas"
 
-def who_whaz(z):
+def who_whz(z):
     if z is None or (isinstance(z, float) and math.isnan(z)): return "Unknown"
     if z < -3: return "Severe wasting"
     if z < -2: return "Wasting"
@@ -785,8 +233,8 @@ def who_whaz(z):
     if z <= 3: return "Overweight"
     return "Obesity"
 
-def permenkes_baz(z):
-    return permenkes_whaz(z)
+def permenkes_baz(z):  # pakai aturan WHZ (Permenkes)
+    return permenkes_whz(z)
 
 def who_baz(z):
     if z is None or (isinstance(z, float) and math.isnan(z)): return "Unknown"
@@ -805,12 +253,12 @@ def hcz_text(z):
     if z > 2:  return ("Lingkar kepala di atas normal", "Above normal")
     return ("Normal", "Normal")
 
-def biv_warnings(age_mo, sex, w, h, hc, z_waz, z_haz, z_whaz, z_baz, z_hcz):
+def biv_warnings(age_mo, sex, w, h, hc, z_waz, z_haz, z_whz, z_baz, z_hcz):
     warns, errors = [], []
     for name, z, critical, warn in [
         ("WAZ", z_waz, 6, 5),
         ("HAZ", z_haz, 6, 5),
-        ("WHZ", z_whaz, 5, 4),
+        ("WHZ", z_whz, 5, 4),
         ("BAZ", z_baz, 5, 4),
         ("HCZ", z_hcz, 5, 4),
     ]:
@@ -844,14 +292,14 @@ def biv_warnings(age_mo, sex, w, h, hc, z_waz, z_haz, z_whaz, z_baz, z_hcz):
         elif age_mo > 60:
             warns.append("ℹ️ Aplikasi ini dioptimalkan untuk 0–60 bulan.")
     try:
-        if all(x is not None for x in [w, h, z_whaz, z_waz]):
-            if z_waz < -2 and z_whaz > -1:
+        if all(x is not None for x in [w, h, z_whz, z_waz]):
+            if z_waz < -2 and z_whz > -1:
                 warns.append("ℹ️ Pola: malnutrisi kronis (BB/U rendah namun BB/TB normal) mungkin.")
     except Exception:
         pass
     return errors, warns
 
-# ==================== Tema Matplotlib ====================
+# -------------------- Tema Matplotlib --------------------
 THEMES = {
     "pastel": {"primary":"#f6a5c0","secondary":"#9ee0c8","accent":"#ffd4a3","neutral":"#ffffff","text":"#2c3e50","grid":"#e0e0e0"},
     "dark":   {"primary":"#ff6b9d","secondary":"#4ecdc4","accent":"#ffe66d","neutral":"#1a1a2e","text":"#eaeaea","grid":"#444444"},
@@ -885,7 +333,7 @@ def apply_matplotlib_theme(_theme="pastel"):
     })
     return THEMES.get(_theme, THEMES["pastel"])
 
-# ==================== Report Builder ====================
+# -------------------- Report builder --------------------
 def build_markdown_report(name_child, name_parent, age_mo, age_days, sex_text,
                          w, h, hc, z_scores, percentiles, classifications,
                          lang_mode, errors, warns):
@@ -994,13 +442,13 @@ def median_values_for(sex_text, age_mode, dob_str, dom_str, age_months_input):
     except Exception:
         return (None, None, None)
 
-# ==================== Fungsi Inti: compute_all ====================
+# -------------------- >>> FUNGSI INTI: compute_all <<< --------------------
 def compute_all(sex_text, age_mode, dob, dom, age_mo_in, w_in, h_in, hc_in,
                 name_child, name_parent, lang_mode, theme):
     if calc is None:
         raise RuntimeError("Modul WHO calculator belum terinisialisasi.")
 
-    # Normalisasi input
+    # 1) Normalisasi input
     sex = 'M' if str(sex_text).lower().startswith('l') else 'F'
     if age_mode == "Tanggal":
         dob_dt = parse_date(dob)
@@ -1019,7 +467,7 @@ def compute_all(sex_text, age_mode, dob, dom, age_mo_in, w_in, h_in, hc_in,
     h = as_float(h_in)
     hc = as_float(hc_in)
 
-    # Hitung Z-score
+    # 2) Hitung Z-score (paksa float agar tidak ada Decimal/float mix)
     z = {"waz": None, "haz": None, "whz": None, "baz": None, "hcz": None}
     if w is not None:
         z["waz"] = _safe_z(calc.wfa, float(w), float(age_mo), sex)
@@ -1035,29 +483,29 @@ def compute_all(sex_text, age_mode, dob, dom, age_mo_in, w_in, h_in, hc_in,
     if hc is not None:
         z["hcz"] = _safe_z(calc.hcfa, float(hc), float(age_mo), sex)
 
-    # Persentil
+    # 3) Persentil
     pct = {k: z_to_percentile(v) for k, v in z.items()}
 
-    # Klasifikasi
+    # 4) Klasifikasi
     permenkes = {
         "waz": permenkes_waz(z["waz"]),
         "haz": permenkes_haz(z["haz"]),
-        "whz": permenkes_whaz(z["whz"]),
+        "whz": permenkes_whz(z["whz"]),
         "baz": permenkes_baz(z["baz"]),
         "hcz": hcz_text(z["hcz"])[0],
     }
     who = {
         "waz": who_waz(z["waz"]),
         "haz": who_haz(z["haz"]),
-        "whz": who_whaz(z["whz"]),
+        "whz": who_whz(z["whz"]),
         "baz": who_baz(z["baz"]),
         "hcz": hcz_text(z["hcz"])[1],
     }
 
-    # Validasi BIV & peringatan
+    # 5) Validasi BIV & peringatan
     errors, warns = biv_warnings(age_mo, sex, w, h, hc, z["waz"], z["haz"], z["whz"], z["baz"], z["hcz"])
 
-    # Payload untuk plotting/export
+    # 6) Payload untuk plotting/export
     payload = {
         "sex": sex,
         "sex_text": sex_text,
@@ -1071,13 +519,13 @@ def compute_all(sex_text, age_mode, dob, dom, age_mo_in, w_in, h_in, hc_in,
         "errors": errors, "warns": warns,
     }
 
-    # Markdown laporan
+    # 7) Markdown laporan
     md = build_markdown_report(name_child, name_parent, age_mo, age_days, sex_text,
                                w, h, hc, z, pct, {"permenkes": permenkes, "who": who},
                                lang_mode, errors, warns)
     return md, payload
 
-# ==================== Plotting ====================
+# -------------------- Plotting --------------------
 def _zone_fill(ax, x, lower, upper, color, alpha, label):
     try:
         ax.fill_between(x, lower, upper, color=color, alpha=alpha, zorder=1, label=label, linewidth=0)
@@ -1195,12 +643,12 @@ def plot_wfl(payload):
     for z, (c, ls) in sd_lines.items():
         ax.plot(curves[z][0], curves[z][1], color=c, linestyle=ls, linewidth=2.0 if abs(z) in (0,2) else 1.6, label=("Median" if z==0 else f"{z:+d} SD"), zorder=5)
     if h is not None and w is not None:
-        z_whaz = payload['z']['whz']
+        z_whz = payload['z']['whz']
         point_color = '#228B22'
-        if z_whaz is not None:
-            if abs(z_whaz) > 3: point_color = '#8B0000'
-            elif abs(z_whaz) > 2: point_color = '#DC143C'
-            elif abs(z_whaz) > 1: point_color = '#FF8C00'
+        if z_whz is not None:
+            if abs(z_whz) > 3: point_color = '#8B0000'
+            elif abs(z_whz) > 2: point_color = '#DC143C'
+            elif abs(z_whz) > 1: point_color = '#FF8C00'
         ax.scatter([h], [w], s=300, c=point_color, edgecolors='black', linewidths=2.5, marker='o', zorder=20, label='Data Anak')
         ax.plot([h, h], [0, w], 'k--', linewidth=1, alpha=0.3, zorder=1)
     ax.set_xlabel('Panjang/Tinggi Badan (cm)', fontweight='bold'); ax.set_ylabel('Berat Badan (kg)', fontweight='bold')
@@ -1248,7 +696,7 @@ def plot_bars(payload):
     ax.legend(loc='upper right', frameon=True, edgecolor='black', fontsize=8, title='Referensi WHO', title_fontsize=9)
     plt.tight_layout(); return fig
 
-# ==================== Export Helpers ====================
+# -------------------- Export helpers --------------------
 def export_png(fig, filename):
     try:
         fig.savefig(filename, dpi=200, bbox_inches='tight', facecolor='white')
@@ -1284,7 +732,7 @@ def export_csv(payload, filename):
     except Exception:
         return None
 
-def qr_image_bytes(text="https://github.com/AnthroHPK "):
+def qr_image_bytes(text="https://github.com/AnthroHPK"):
     try:
         qr = qrcode.QRCode(box_size=3, border=2); qr.add_data(text); qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
@@ -1364,7 +812,7 @@ def export_pdf(payload, md_text, figs, filename):
     except Exception:
         return None
 
-# ==================== Callbacks ====================
+# -------------------- Callbacks (prefill / demo / run_all) --------------------
 def do_prefill(sex_text, age_mode, dob, dom, age_mo):
     try:
         w, h, hc = median_values_for(sex_text, age_mode, dob, dom, age_mo)
@@ -1394,18 +842,12 @@ def run_all(sex_text, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_par
         csvf = export_csv(payload, "hasil_analisis.csv")
         status_msg = "✅ **Analisis selesai!**"
         if payload.get('errors'): status_msg = "⚠️ **Analisis selesai dengan peringatan kritis!**"
-        
-        # Extract z-scores for checklist auto-fill
-        z_scores = payload['z']
-        
-        return (md, fig1, fig2, fig3, fig4, fig5, pdf, csvf, png1, png2, png3, png4, png5, status_msg,
-                z_scores['waz'], z_scores['haz'], z_scores['whz'], z_scores['baz'], z_scores['hcz'])
+        return (md, fig1, fig2, fig3, fig4, fig5, pdf, csvf, png1, png2, png3, png4, png5, status_msg)
     except Exception as e:
         print("Run all error:\n", traceback.format_exc())
-        return (f"❌ **Error Sistem:**\n\n````\n{str(e)}\n````", None, None, None, None, None, None, None, None, None, None, None, None, "❌ Terjadi error sistem.",
-                None, None, None, None, None)
+        return (f"❌ **Error Sistem:**\n\n````\n{str(e)}\n````", None, None, None, None, None, None, None, None, None, None, None, None, "❌ Terjadi error sistem.")
 
-# ==================== Gradio UI Utama ====================
+# -------------------- Gradio UI --------------------
 custom_css = """
 .gradio-container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 .status-success { color: #28a745; font-weight: bold; }
@@ -1413,7 +855,6 @@ custom_css = """
 .status-error   { color: #dc3545; font-weight: bold; }
 .big-button     { font-size: 18px !important; font-weight: bold !important; padding: 20px !important; }
 """
-
 with gr.Blocks(
     title="AnthroHPK - Kalkulator Status Gizi Anak (0-5 tahun)",
     theme=gr.themes.Soft(primary_hue="pink", secondary_hue="teal", neutral_hue="slate"),
@@ -1425,14 +866,6 @@ with gr.Blocks(
     > 🔒 **Privasi Terjaga** | ⚕️ **Standar Resmi** | 📱 **Mudah Digunakan**
     """)
     gr.Markdown("---")
-    
-    # State untuk menyimpan z-scores
-    z_waz_state = gr.State(None)
-    z_haz_state = gr.State(None)
-    z_whaz_state = gr.State(None)
-    z_baz_state = gr.State(None)
-    z_hcz_state = gr.State(None)
-    
     with gr.Row():
         with gr.Column(scale=5):
             gr.Markdown("## 📝 Input Data Anak")
@@ -1483,13 +916,11 @@ with gr.Blocks(
                 """)
             with gr.Accordion("⚠️ Peringatan", open=False):
                 gr.Markdown("Skrining edukatif; konsultasi nakes bila ada masalah. Pastikan satuan benar.")
-    
     gr.Markdown("---")
     with gr.Row():
         with gr.Column():
             gr.Markdown("## 📊 Hasil Analisis")
             out_md = gr.Markdown("*Hasil akan tampil setelah klik 'Analisis Sekarang'*")
-    
     gr.Markdown("---")
     gr.Markdown("## 📈 Grafik Pertumbuhan")
     with gr.Tabs():
@@ -1498,7 +929,6 @@ with gr.Blocks(
         with gr.TabItem("🧠 Lingkar Kepala (HCFA)"):     plt3 = gr.Plot(label="Head Circumference-for-Age")
         with gr.TabItem("🎯 BB menurut TB/PB (WFL)"):    plt4 = gr.Plot(label="Weight-for-Length")
         with gr.TabItem("📊 Ringkasan (Bar)"):           plt5 = gr.Plot(label="Summary Bar Chart")
-    
     gr.Markdown("---")
     gr.Markdown("## 💾 Unduh Laporan")
     with gr.Row():
@@ -1515,52 +945,17 @@ with gr.Blocks(
     with gr.Row():
         png4 = gr.File(label="🖼️ Grafik WFL (PNG)", file_types=[".png"])
         png5 = gr.File(label="🖼️ Grafik Bar (PNG)", file_types=[".png"])
-    
-    # ==================== TAB CHECKLIST BARU ====================
-    gr.Markdown("---")
-    with gr.Tabs():
-        with gr.TabItem("📊 Analisis Antropometri"):
-            gr.Markdown("### 📊 Hasil analisis antropometri sudah ditampilkan di atas")
-        
-        with gr.TabItem("📋 Checklist Bulanan"):
-            checklist_tab = create_checklist_ui()
-    
+
     # Events
     age_mode.change(fn=update_age_input_visibility, inputs=[age_mode], outputs=[dob, dom, age_mo])
     prefill_btn.click(fn=do_prefill, inputs=[sex, age_mode, dob, dom, age_mo], outputs=[w, h, hc, status_msg])
     demo_btn.click(fn=do_demo, outputs=[sex, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme, status_msg])
-    
-    # Update run_btn to also update z-scores states
-    run_btn.click(
-        fn=run_all, 
-        inputs=[sex, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme],
-        outputs=[out_md, plt1, plt2, plt3, plt4, plt5, pdf_out, csv_out, png1, png2, png3, png4, png5, status_msg,
-                 z_waz_state, z_haz_state, z_whaz_state, z_baz_state, z_hcz_state]
-    )
-    
-    # Auto-fill checklist z-scores when analysis completes
-    checklist_z_inputs = [checklist_tab.blocks.get('z_waz_ck'), 
-                         checklist_tab.blocks.get('z_haz_ck'),
-                         checklist_tab.blocks.get('z_whz_ck'),
-                         checklist_tab.blocks.get('z_baz_ck'),
-                         checklist_tab.blocks.get('z_hcz_ck')]
-    
-    # Connect states to checklist inputs
-    for i, state in enumerate([z_waz_state, z_haz_state, z_whaz_state, z_baz_state, z_hcz_state]):
-        state.change(
-            lambda val, idx=i: gr.update(value=val),
-            inputs=[state],
-            outputs=[checklist_tab.blocks[list(checklist_tab.blocks.keys())[i+3]]]  # Adjust index based on component order
-        )
+    run_btn.click(fn=run_all, inputs=[sex, age_mode, dob, dom, age_mo, w, h, hc, name_child, name_parent, lang_mode, theme],
+                  outputs=[out_md, plt1, plt2, plt3, plt4, plt5, pdf_out, csv_out, png1, png2, png3, png4, png5, status_msg])
 
-# ==================== FastAPI Mount ====================
+# -------------------- FastAPI mount --------------------
 app = FastAPI()
 app.mount("/.well-known", StaticFiles(directory=".well-known"), name="well-known")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 demo.queue(max_size=10)
 app = gr.mount_gradio_app(app, demo, path="/")
-
-# ==================== Entry Point ====================
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
