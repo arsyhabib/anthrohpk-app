@@ -2528,6 +2528,34 @@ def export_checklist_pdf_handler(month, payload):
     except Exception as e:
         return gr.update(visible=False), f"❌ Error: {str(e)}"
 
+def share_whatsapp_handler(month, payload):
+    """Generate WhatsApp share link"""
+    if not payload:
+        return gr.update(value="", visible=False)
+    
+    name = payload.get('name_child', 'Si Kecil')
+    age = payload.get('age_mo', 0)
+    
+    msg = f"📊 *Progress GiziSiKecil Bulan {month}*%0A%0A"
+    msg += f"👶 {name} ({age:.1f} bulan)%0A"
+    msg += f"✅ Checklist selesai!%0A"
+    msg += f"🔥 Streak aktif%0A%0A"
+    msg += f"*Download app GiziSiKecil:*%0A{BASE_URL}"
+    
+    link = f"https://wa.me/?text={msg}"
+    
+    html = f"""
+    <div style='text-align: center; padding: 20px; background: #e8f5e9; border-radius: 10px;'>
+        <a href='{link}' target='_blank'
+           style='display: inline-block; padding: 15px 30px; background: #25D366; color: white;
+                  text-decoration: none; border-radius: 10px; font-size: 16px; font-weight: bold;'>
+            📱 Share via WhatsApp
+        </a>
+    </div>
+    """
+    
+    return gr.update(value=html, visible=True)
+
 print("✅ Part 2C loaded: Checklist handlers")
 
 # ==================== PART 3D: GRADIO UI COMPLETE ====================
@@ -3748,33 +3776,7 @@ def next_to_results_handler(month, payload, theme_name):
 
 
 
-def share_whatsapp_handler(month, payload):
-    """Generate WhatsApp share link"""
-    if not payload:
-        return gr.update(value="", visible=False)
-    
-    name = payload.get('name_child', 'Si Kecil')
-    age = payload.get('age_mo', 0)
-    
-    msg = f"📊 *Progress GiziSiKecil Bulan {month}*%0A%0A"
-    msg += f"👶 {name} ({age:.1f} bulan)%0A"
-    msg += f"✅ Checklist selesai!%0A"
-    msg += f"🔥 Streak aktif%0A%0A"
-    msg += f"*Download app GiziSiKecil:*%0A{BASE_URL}"
-    
-    link = f"https://wa.me/?text={msg}"
-    
-    html = f"""
-    <div style='text-align: center; padding: 20px; background: #e8f5e9; border-radius: 10px;'>
-        <a href='{link}' target='_blank'
-           style='display: inline-block; padding: 15px 30px; background: #25D366; color: white;
-                  text-decoration: none; border-radius: 10px; font-size: 16px; font-weight: bold;'>
-            📱 Share via WhatsApp
-        </a>
-    </div>
-    """
-    
-    return gr.update(value=html, visible=True)
+
 
 
 # -------------------- NOTIFICATION HANDLERS --------------------
