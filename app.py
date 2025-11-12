@@ -21,6 +21,7 @@ import traceback
 from datetime import datetime, timedelta, date
 from functools import lru_cache
 from typing import Dict, List, Tuple, Optional, Any
+from functools import lru_cache
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -822,6 +823,154 @@ def generate_wfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray
     
     return AGE_GRID.copy(), np.array(weights)
 
+@lru_cache(maxsize=128)
+def generate_wfa_curve_cached(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """Cached wrapper untuk generate_wfa_curve"""
+    return generate_wfa_curve(sex, z_score)
+
+
+def generate_hfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Generate Height-for-Age curve for given z-score
+    
+    Args:
+        sex: 'M' or 'F'
+        z_score: Z-score line to generate
+        
+    Returns:
+        Tuple of (age_array, height_array)
+    """
+    lo, hi = BOUNDS['hfa']
+    
+    def z_func(height, age):
+        return _safe_z(calc.lhfa, height, age, sex)
+    
+    heights = []
+    for age in AGE_GRID:
+        height = invert_z_with_scan(
+            lambda h: z_func(h, age),
+            z_score,
+            lo,
+            hi
+        )
+        heights.append(height)
+    
+    return AGE_GRID.copy(), np.array(heights)
+
+
+# ⭐ PASTE KODE CACHING DI SINI - SETELAH generate_hfa_curve
+@lru_cache(maxsize=128)
+def generate_hfa_curve_cached(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """Cached wrapper untuk generate_hfa_curve"""
+    return generate_hfa_curve(sex, z_score)
+
+
+def generate_hcfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Generate Head Circumference-for-Age curve for given z-score
+    
+    Args:
+        sex: 'M' or 'F'
+        z_score: Z-score line to generate
+        
+    Returns:
+        Tuple of (age_array, head_circ_array)
+    """
+    lo, hi = BOUNDS['hcfa']
+    
+    def z_func(hc, age):
+        return _safe_z(calc.hcfa, hc, age, sex)
+    
+    head_circs = []
+    for age in AGE_GRID:
+        hc = invert_z_with_scan(
+            lambda h: z_func(h, age),
+            z_score,
+            lo,
+            hi
+        )
+        head_circs.append(hc)
+    
+    return AGE_GRID.copy(), np.array(head_circs)
+
+
+# ⭐ PASTE KODE CACHING DI SINI - SETELAH generate_hcfa_curve
+@lru_cache(maxsize=128)
+def generate_hcfa_curve_cached(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """Cached wrapper untuk generate_hcfa_curve"""
+    return generate_hcfa_curve(sex, z_score)
+
+
+def generate_wfl_curve(sex: str, age_months: float, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Generate Weight-for-Length curve for given z-score
+    
+    Args:
+        sex: 'M' or 'F'
+        age_months: Child's age in months
+        z_score: Z-score line to generate
+        
+    Returns:
+        Tuple of (length_array, weight_array)
+    """
+    lengths = np.arange(BOUNDS['wfl_l'][0], BOUNDS['wfl_l'][1] + 0.5, 0.5)
+    lo_w, hi_w = BOUNDS['wfl_w']
+    
+    def z_func(weight, length):
+        return _safe_z(calc.wfl, weight, age_months, sex, length)
+    
+    weights = []
+    for length in lengths:
+        weight = invert_z_with_scan(
+            lambda w: z_func(w, length),
+            z_score,
+            lo_w,
+            hi_w
+        )
+        weights.append(weight)
+    
+    return lengths, np.array(weights)
+
+
+# ⭐ PASTE KODE CACHING DI SINI - SETELAH generate_wfl_curve
+@lru_cache(maxsize=128)
+def generate_wfl_curve_cached(sex: str, age_months: float, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """Cached wrapper untuk generate_wfl_curve"""
+    return generate_wfl_curve(sex, age_months, z_score)
+
+
+# ==================== PART 3: PLOTTING FUNCTIONS ====================
+
+def plot_weight_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figure:
+    """
+    Plot Weight-for-Age growth chart with child's data
+    
+    Args:
+        payload: Data dict with sex, age_mo, w, z-scores, etc
+        theme_name: Theme to apply
+        
+    Returns:
+        Matplotlib Figure object
+    """
+    theme = apply_matplotlib_theme(theme_name)
+    
+    sex = payload['sex']
+    age = payload['age_mo']
+    weight = payload.get('w')
+    
+    # Define SD lines to plot
+    sd_lines = {
+        -3: ('#DC143C', '-'),
+        -2: ('#FF6347', '-'),
+        -1: (theme['primary'], '--'),
+        0: (theme['secondary'], '-'),
+        1: (theme['primary'], '--'),
+        2: ('#FF6347', '-'),
+        3: ('#DC143C', '-')
+    }
+    
+    # ⭐ GUNAKAN VERSI CACHED
+    curves = {z: generate_wfa_curve_cached(sex, z) for z in sd_lines.keys()}
 
 def generate_hfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
     """
@@ -2383,7 +2532,7 @@ with gr.Blocks(
     # State variables
     state_payload = gr.State({})
     state_checklist_progress = gr.State({})
-    state_notification_settings = gr.State({"enabled": True, "time": "08:00"})
+    
     
     # Main Tabs
     with gr.Tabs():
@@ -3059,19 +3208,51 @@ with gr.Blocks(
                                 height=200
                             )
                             streak_display = gr.Markdown("**🔥 Streak:** 0 bulan | **⭐ Poin:** 0")
-                    
-# 💾 Export Checklist (Baris 3065 sekitar)
-gr.Markdown("### 💾 Export Checklist")
-with gr.Row():
-    export_checklist_pdf_btn = gr.Button("📄 Download Checklist PDF", variant="primary")
 
-export_checklist_pdf_btn.click(
-    fn=export_checklist_pdf_handler,
-    inputs=[month_selector, state_payload],
-    outputs=[download_checklist_pdf, gr.State()]
-)
-    share_whatsapp_btn = gr.Button("📱 Share via WhatsApp", variant="secondary")
-    save_notification_btn = gr.Button("🔔 Set Notifikasi", variant="secondary")
+                        # 💾 Export Checklist - Tempatkan di luar Column, di dalam step3_container
+                        gr.Markdown("### 💾 Export Checklist")
+                        with gr.Row():
+                            export_checklist_pdf_btn = gr.Button("📄 Download Checklist PDF", variant="primary")
+                            share_whatsapp_btn = gr.Button("📱 Share via WhatsApp", variant="secondary")
+                            save_notification_btn = gr.Button("🔔 Set Notifikasi", variant="secondary")
+                        
+                        # Output components - definisikan di sini
+                        download_checklist_pdf = gr.File(label="File PDF Checklist", visible=False)
+                        whatsapp_share_html = gr.HTML(visible=False)
+                        
+                        # ⭐ HANDLERS - Identasi sejajar dengan komponen lainnya
+                        export_checklist_pdf_btn.click(
+                            fn=export_checklist_pdf_handler,
+                            inputs=[month_selector, state_payload],
+                            outputs=[download_checklist_pdf, gr.State()]
+                        )
+                        
+                        share_whatsapp_btn.click(
+                            fn=share_whatsapp_handler,
+                            inputs=[month_selector, state_payload],
+                            outputs=[whatsapp_share_html]
+                        )
+                    # FIX: Kurangi indentasi
+                    export_checklist_pdf_btn.click(
+                        fn=export_checklist_pdf_handler,
+                        inputs=[month_selector, state_payload],
+                        outputs=[download_checklist_pdf, gr.State()]
+                    )
+                    
+                    # FIX: Hapus indentasi yang salah
+                    share_whatsapp_btn = gr.Button("📱 Share via WhatsApp", variant="secondary")
+                    save_notification_btn = gr.Button("🔔 Set Notifikasi", variant="secondary")
+                    
+                    # FIX: Tambahkan handlers
+                    share_whatsapp_btn.click(
+                        fn=share_whatsapp_handler,
+                        inputs=[month_selector, state_payload],
+                        outputs=[whatsapp_share_html]
+                    )
+                    
+                    # Output area
+                    download_checklist_pdf = gr.File(label="File PDF Checklist", visible=False)
+                    whatsapp_share_html = gr.HTML(visible=False)
 
 # Output area
 download_checklist_pdf = gr.File(label="File PDF Checklist", visible=False)
@@ -3495,7 +3676,7 @@ def next_to_results_handler(month, payload, theme_name):
     
     try:
         # Generate checklist content
-        do_now, saran, warnings, videos, imm = generate_checklist_content(month, payload)
+        return do_now_text, saran_text, warnings_text, videos_html, imm_text
         
         # Random sticker
         sticker_num = random.randint(1, 5)
