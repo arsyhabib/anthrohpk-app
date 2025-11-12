@@ -3063,7 +3063,7 @@ with gr.Blocks(
 # 💾 Export Checklist (Baris 3065 sekitar)
 gr.Markdown("### 💾 Export Checklist")
 with gr.Row():
-export_checklist_pdf_btn = gr.Button("📄 Download Checklist PDF", variant="primary")
+    export_checklist_pdf_btn = gr.Button("📄 Download Checklist PDF", variant="primary")
 
 export_checklist_pdf_btn.click(
     fn=export_checklist_pdf_handler,
