@@ -1892,8 +1892,32 @@ if __name__ == "__main__":
     # Bind all handlers
     bind_event_handlers()
     
-    # Mount to FastAPI dengan routes lengkap
-    app = FastAPI(title="GiziSiKecil Pro", version="2.0")
+   # ==================== FASTAPI APP DEFINITION ====================
+# PENTING: Variabel HARUS bernama 'app' (bukan app_fastapi)
+app = FastAPI(title="GiziSiKecil Pro", version="2.0")
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/.well-known", StaticFiles(directory=".well-known"), name="well-known")
+
+# Premium page route
+@app.get("/premium", response_class=HTMLResponse)
+async def premium_page():
+    return PREMIUM_PAGE_HTML
+
+# Health check
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+# Mount Gradio setelah semua route didefinisikan
+app = gr.mount_gradio_app(app, demo, path="/")
+
+# ==================== MAIN GUARD (HANYA UNTUK LOCAL) ====================
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
     
     # Mount static files
     app.mount("/static", StaticFiles(directory="static"), name="static")
