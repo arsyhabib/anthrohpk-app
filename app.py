@@ -79,22 +79,46 @@ except Exception as e:
     print(f"❌ Calculator init error: {e}")
 
 # -------------------- Theme System - 3 Pastel Variants --------------------
+# ==================== GANTI BAGIAN INI (line 82-96) ====================
+
 UI_THEMES = {
     "pink_pastel": {
-        "primary": "#ff6b9d", "secondary": "#4ecdc4", "accent": "#ffe66d",
-        "bg": "#fff5f8", "card": "#ffffff", "text": "#2c3e50", "border": "#ffd4e0",
-        "shadow": "rgba(255, 107, 157, 0.1)", "gradient": "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)"
+        "primary": "#ff6b9d",
+        "secondary": "#4ecdc4",
+        "accent": "#ffe66d",
+        "bg": "#fff5f8",
+        "card": "#ffffff",
+        "text": "#2c3e50",
+        "border": "#ffd4e0",
+        "shadow": "rgba(255, 107, 157, 0.1)",
+        "gradient": "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)"
     },
     "mint_pastel": {
-        "primary": "#4ecdc4", "secondary": "#a8e6cf", "accent": "#ffd93d",
-        "bg": "#f0fffa", "card": "#ffffff", "text": "#2c3e50", "border": "#b7f0e9",
-        "shadow": "rgba(78, 205, 196, 0.1)", "gradient": "linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)"
+        "primary": "#4ecdc4",
+        "secondary": "#a8e6cf",
+        "accent": "#ffd93d",
+        "bg": "#f0fffa",
+        "card": "#ffffff",
+        "text": "#2c3e50",
+        "border": "#b7f0e9",
+        "shadow": "rgba(78, 205, 196, 0.1)",
+        "gradient": "linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)"
     },
     "lavender_pastel": {
-        "primary": "#b19cd9", "secondary": "#d6b3ff", "accent": "#ffb3ba",
-        "bg": "#f5f0ff", "card": "#ffffff", "text": "#2c3e50", "border": "#e0d4ff",
-        "shadow": "rgba(177, 156, 217, 0.1)", "gradient": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+        "primary": "#b19cd9",
+        "secondary": "#d6b3ff",
+        "accent": "#ffb3ba",
+        "bg": "#f5f0ff",
+        "card": "#ffffff",
+        "text": "#2c3e50",
+        "border": "#e0d4ff",
+        "shadow": "rgba(177, 156, 217, 0.1)",
+        "gradient": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+    }
 }
+
+# ==================== END OF FIX ====================
+
 
 def ensure_stickers():
     os.makedirs("static", exist_ok=True)
