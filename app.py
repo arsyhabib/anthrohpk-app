@@ -2383,6 +2383,7 @@ def generate_checklist_content(month: int, payload: Dict) -> Tuple[str, str, str
     return do_now_text, saran_text, warnings_text, videos_html, imm_text
 
 
+
 def find_posyandu_nearby() -> str:
     """Generate mock Posyandu locator HTML"""
     mock_data = [
@@ -2472,6 +2473,62 @@ def find_posyandu_nearby() -> str:
 
 
 print("✅ Part 3C loaded: Checklist content generation")
+
+def export_checklist_pdf_handler(month, payload):
+    """Export checklist as PDF"""
+    if not payload:
+        return gr.update(visible=False), "❌ Tidak ada data checklist"
+    
+    try:
+        child_name = payload.get('name_child', 'Anak').replace(' ', '_')
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"Checklist_GiziSiKecil_{child_name}_Bulan{month}_{timestamp}.pdf"
+        
+        # Simple checklist PDF
+        filepath = os.path.join(OUTPUTS_DIR, filename)
+        c = canvas.Canvas(filepath, pagesize=A4)
+        W, H = A4
+        
+        # Header
+        c.setFillColorRGB(0.965, 0.647, 0.753)
+        c.rect(0, H - 50, W, 50, stroke=0, fill=1)
+        c.setFillColor(rl_colors.black)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(30, H - 32, f"GiziSiKecil - Checklist Bulan ke-{month}")
+        
+        y = H - 80
+        c.setFont("Helvetica", 11)
+        c.drawString(30, y, f"Nama: {payload.get('name_child', 'Si Kecil')}")
+        y -= 15
+        c.drawString(30, y, f"Usia: {payload.get('age_mo', 0):.1f} bulan")
+        y -= 15
+        c.drawString(30, y, f"Tanggal: {datetime.now().strftime('%d %B %Y')}")
+        y -= 25
+        
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(30, y, "RINGKASAN CHECKLIST")
+        y -= 20
+        
+        c.setFont("Helvetica", 10)
+        do_now, saran, warnings, _, imm = generate_checklist_content(month, payload)
+        
+        c.drawString(30, y, "DO NOW:")
+        y -= 15
+        for line in do_now.split('\n')[:5]:
+            c.drawString(40, y, line[:80])
+            y -= 12
+        
+        c.setFont("Helvetica-Oblique", 8)
+        c.drawString(30, 30, f"Dicetak: {datetime.now().strftime('%Y-%m-%d %H:%M')} | GiziSiKecil App")
+        
+        c.save()
+        
+        return gr.update(value=filepath, visible=True), "✅ Checklist PDF berhasil dibuat!"
+    
+    except Exception as e:
+        return gr.update(visible=False), f"❌ Error: {str(e)}"
+
+print("✅ Part 2C loaded: Checklist handlers")
 
 # ==================== PART 3D: GRADIO UI COMPLETE ====================
 
@@ -3232,31 +3289,7 @@ with gr.Blocks(
                             inputs=[month_selector, state_payload],
                             outputs=[whatsapp_share_html]
                         )
-                    # FIX: Kurangi indentasi
-                    export_checklist_pdf_btn.click(
-                        fn=export_checklist_pdf_handler,
-                        inputs=[month_selector, state_payload],
-                        outputs=[download_checklist_pdf, gr.State()]
-                    )
-                    
-                    # FIX: Hapus indentasi yang salah
-                    share_whatsapp_btn = gr.Button("📱 Share via WhatsApp", variant="secondary")
-                    save_notification_btn = gr.Button("🔔 Set Notifikasi", variant="secondary")
-                    
-                    # FIX: Tambahkan handlers
-                    share_whatsapp_btn.click(
-                        fn=share_whatsapp_handler,
-                        inputs=[month_selector, state_payload],
-                        outputs=[whatsapp_share_html]
-                    )
-                    
-                    # Output area
-                    download_checklist_pdf = gr.File(label="File PDF Checklist", visible=False)
-                    whatsapp_share_html = gr.HTML(visible=False)
 
-# Output area
-download_checklist_pdf = gr.File(label="File PDF Checklist", visible=False)
-whatsapp_share_html = gr.HTML(visible=False)
 
 # ==================== PART 3E: EVENT HANDLERS ====================
 
@@ -3713,59 +3746,6 @@ def next_to_results_handler(month, payload, theme_name):
         )
 
 
-def export_checklist_pdf_handler(month, payload):
-    """Export checklist as PDF"""
-    if not payload:
-        return gr.update(visible=False), "❌ Tidak ada data checklist"
-    
-    try:
-        child_name = payload.get('name_child', 'Anak').replace(' ', '_')
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"Checklist_GiziSiKecil_{child_name}_Bulan{month}_{timestamp}.pdf"
-        
-        # Simple checklist PDF
-        filepath = os.path.join(OUTPUTS_DIR, filename)
-        c = canvas.Canvas(filepath, pagesize=A4)
-        W, H = A4
-        
-        # Header
-        c.setFillColorRGB(0.965, 0.647, 0.753)
-        c.rect(0, H - 50, W, 50, stroke=0, fill=1)
-        c.setFillColor(rl_colors.black)
-        c.setFont("Helvetica-Bold", 16)
-        c.drawString(30, H - 32, f"GiziSiKecil - Checklist Bulan ke-{month}")
-        
-        y = H - 80
-        c.setFont("Helvetica", 11)
-        c.drawString(30, y, f"Nama: {payload.get('name_child', 'Si Kecil')}")
-        y -= 15
-        c.drawString(30, y, f"Usia: {payload.get('age_mo', 0):.1f} bulan")
-        y -= 15
-        c.drawString(30, y, f"Tanggal: {datetime.now().strftime('%d %B %Y')}")
-        y -= 25
-        
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(30, y, "RINGKASAN CHECKLIST")
-        y -= 20
-        
-        c.setFont("Helvetica", 10)
-        do_now, saran, warnings, _, imm = generate_checklist_content(month, payload)
-        
-        c.drawString(30, y, "DO NOW:")
-        y -= 15
-        for line in do_now.split('\n')[:5]:
-            c.drawString(40, y, line[:80])
-            y -= 12
-        
-        c.setFont("Helvetica-Oblique", 8)
-        c.drawString(30, 30, f"Dicetak: {datetime.now().strftime('%Y-%m-%d %H:%M')} | GiziSiKecil App")
-        
-        c.save()
-        
-        return gr.update(value=filepath, visible=True), "✅ Checklist PDF berhasil dibuat!"
-    
-    except Exception as e:
-        return gr.update(visible=False), f"❌ Error: {str(e)}"
 
 
 def share_whatsapp_handler(month, payload):
@@ -4270,3 +4250,25 @@ async def root():
     }
 
 print("✅ Part 3F loaded: FastAPI routes & Premium page")
+
+# Mount Gradio app to FastAPI
+try:
+    app = gr.mount_gradio_app(
+        app=app_fastapi,
+        blocks=demo,
+        path="/"
+    )
+    print("✅ Gradio app successfully mounted to FastAPI at /")
+except Exception as e:
+    print(f"⚠️ Mount failed, using FastAPI only: {e}")
+    app = app_fastapi
+
+print("=" * 70)
+print("🚀 GiziSiKecil v2.0 - READY FOR DEPLOYMENT")
+print("=" * 70)
+print(f"📊 WHO Calculator: {'✅ Active' if calc else '❌ Unavailable'}")
+print(f"🌐 Base URL: {BASE_URL}")
+print(f"📞 Contact: +{CONTACT_WA}")
+print("=" * 70)
+print("▶️  Run: uvicorn app:app --host 0.0.0.0 --port 8000")
+print("=" * 70)
