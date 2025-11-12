@@ -1,18 +1,34 @@
-# === WEB STACK MODERN (kompatibel) ===
+# === CORE WEB FRAMEWORK ===
 fastapi==0.115.5
 starlette==0.40.0
 pydantic==2.9.2
 pydantic_core==2.23.4
 uvicorn[standard]==0.32.0
 
-# === GRADIO & TEMAN-TEMAN ===
+# === GRADIO & UI ===
 gradio==4.44.0
-huggingface_hub==0.20.3   # aman dengan gradio 4.44
+huggingface-hub==0.20.3
 
-# === LIBS LAIN ===
+# === DATA & COMPUTATION ===
+numpy==1.24.3
+scipy==1.11.4
+
+# === VISUALIZATION ===
 matplotlib==3.8.4
 pillow==10.4.0
+
+# === PDF & REPORTS ===
 reportlab==4.2.2
 qrcode==7.4.2
-six==1.16.0
 
+# === WHO GROWTH STANDARDS (CRITICAL!) ===
+# Gunakan pygrowup dari GitHub (original sudah unmaintained)
+git+https://github.com/natelandau/pygrowup.git@master
+
+# === UTILITIES ===
+requests==2.31.0
+python-dateutil==2.8.2
+python-multipart==0.0.9
+
+# === OPTIONAL (for production) ===
+gunicorn==21.2.0
