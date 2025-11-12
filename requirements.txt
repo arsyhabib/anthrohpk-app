@@ -23,8 +23,7 @@ qrcode==7.4.2
 
 # === WHO GROWTH STANDARDS (CRITICAL!) ===
 # Gunakan pygrowup dari GitHub (original sudah unmaintained)
-git+https://github.com/natelandau/pygrowup.git@master
-
+pygrowup-pyx==1.0.0
 # === UTILITIES ===
 requests==2.31.0
 python-dateutil==2.8.2
