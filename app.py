@@ -3060,10 +3060,22 @@ with gr.Blocks(
                             )
                             streak_display = gr.Markdown("**🔥 Streak:** 0 bulan | **⭐ Poin:** 0")
                     
-                    gr.Markdown("### 💾 Export Checklist")
-                    with gr.Row():
-                        export_checklist_pdf_btn = gr.Button(
-                            "📄 Download Checklist PDF",
+# 💾 Export Checklist (Baris 3065 sekitar)
+gr.Markdown("### 💾 Export Checklist")
+with gr.Row():
+    export_checklist_pdf_btn = gr.Button("📄 Download Checklist PDF", variant="primary")
+    
+        export_checklist_pdf_btn.click(
+            fn=export_checklist_pdf_handler,
+            inputs=[month_selector, state_payload],
+            outputs=[download_checklist_pdf, gr.State()]
+)
+    share_whatsapp_btn = gr.Button("📱 Share via WhatsApp", variant="secondary")
+    save_notification_btn = gr.Button("🔔 Set Notifikasi", variant="secondary")
+
+# Output area
+download_checklist_pdf = gr.File(label="File PDF Checklist", visible=False)
+whatsapp_share_html = gr.HTML(visible=False)
 
 # ==================== PART 3E: EVENT HANDLERS ====================
 
