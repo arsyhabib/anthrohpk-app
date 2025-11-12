@@ -4235,21 +4235,7 @@ async def health_check():
         }
     }
 
-# API info
-@app_fastapi.get("/")
-async def root():
-    """API root endpoint"""
-    return {
-        "app": "GiziSiKecil",
-        "version": APP_VERSION,
-        "description": "Professional Child Growth Monitoring System",
-        "endpoints": {
-            "ui": "/",
-            "premium": "/premium",
-            "health": "/health",
-            "docs": "/docs"
-        }
-    }
+
 
 print("✅ Part 3F loaded: FastAPI routes & Premium page")
 
