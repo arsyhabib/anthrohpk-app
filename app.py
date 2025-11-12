@@ -3063,12 +3063,12 @@ with gr.Blocks(
 # 💾 Export Checklist (Baris 3065 sekitar)
 gr.Markdown("### 💾 Export Checklist")
 with gr.Row():
-    export_checklist_pdf_btn = gr.Button("📄 Download Checklist PDF", variant="primary")
-    
-        export_checklist_pdf_btn.click(
-            fn=export_checklist_pdf_handler,
-            inputs=[month_selector, state_payload],
-            outputs=[download_checklist_pdf, gr.State()]
+export_checklist_pdf_btn = gr.Button("📄 Download Checklist PDF", variant="primary")
+
+export_checklist_pdf_btn.click(
+    fn=export_checklist_pdf_handler,
+    inputs=[month_selector, state_payload],
+    outputs=[download_checklist_pdf, gr.State()]
 )
     share_whatsapp_btn = gr.Button("📱 Share via WhatsApp", variant="secondary")
     save_notification_btn = gr.Button("🔔 Set Notifikasi", variant="secondary")
