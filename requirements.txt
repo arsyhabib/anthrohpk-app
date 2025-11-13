@@ -1,8 +1,3 @@
-# ============================================
-# GiziSiKecil - Production Requirements
-# Fixed version without Git dependencies
-# ============================================
-
 # Core Web Framework
 fastapi==0.115.4
 uvicorn[standard]==0.32.0
@@ -31,9 +26,3 @@ geopy==2.4.1
 
 # Data Processing
 python-multipart==0.0.17
-
-# ============================================
-# CATATAN PENTING:
-# pygrowup sudah ada di folder lokal /pygrowup
-# Tidak perlu install dari Git!
-# ============================================
