@@ -1,6 +1,5 @@
 # File: requirements.txt
 # ⭐ PENTING: WHO Calculator dari GitHub
-+ pygrowup2==0.8.2  # Versi tersedia di PyPI
 
 
 # Web Framework (versi STABIL untuk cloud)
