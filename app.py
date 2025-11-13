@@ -3708,13 +3708,19 @@ def interpret_growth_velocity(velocity_data: Dict, gender: str) -> Dict:
         'recommendations': recommendations, 'velocity_data': velocity_data
     }
 
-
 def plot_growth_trajectory(measurements: List[Dict], gender: str) -> Optional[str]:
     """
     Plot grafik trajectory pertumbuhan dengan kurva WHO
+    (VERSI DIPERBAIKI - v3.2.2)
+    
+    Perbaikan:
+    - Menggunakan np.isclose() untuk perbandingan float yang aman, mengatasi bug IndexError.
+    - Memastikan array referensi (age_ref_valid) valid sebelum membuat kurva.
     """
     try:
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+        
+        # Terapkan tema
         theme = UI_THEMES.get("pink_pastel")
         plt.rcParams.update({
             "axes.facecolor": theme["card"], "figure.facecolor": theme["bg"], "savefig.facecolor": theme["bg"],
@@ -3722,26 +3728,59 @@ def plot_growth_trajectory(measurements: List[Dict], gender: str) -> Optional[st
             "xtick.color": theme["text"], "ytick.color": theme["text"], "grid.color": theme["border"],
         })
         
+        # Siapkan data dari input
         ages = [m['age_months'] for m in measurements]
         weights = [m['weight'] for m in measurements]
         heights = [m['height'] for m in measurements]
         gender_code = 'M' if gender == "Laki-laki" else 'F'
         
+        # --- Plot Weight Curve (ax1) ---
         ax1.plot(ages, weights, 'o-', color=theme['primary'], linewidth=2.5, markersize=10, 
                  markerfacecolor=theme['accent'], markeredgecolor='white', label='Data Anak', zorder=10)
         
-        age_ref = np.arange(math.floor(min(ages)), math.ceil(max(ages)) + 1, 1)
-        age_ref_valid = [a for a in age_ref if a in AGE_GRID]
+        # Buat rentang usia referensi (WHO)
+        min_age = math.floor(min(ages))
+        max_age = math.ceil(max(ages))
+        if max_age < min_age + 1: max_age = min_age + 1 # Pastikan rentang valid
+            
+        age_ref = np.arange(min_age, max_age + 1, 1)
         
+        # Filter rentang usia agar sesuai dengan AGE_GRID (0-60.25)
+        age_ref_valid = [a for a in age_ref if a >= 0 and a <= 60]
+
         if age_ref_valid:
-            wfa_curves = {
-                z: [generate_wfa_curve(gender_code, z)[1][np.where(AGE_GRID == a)[0][0]] for a in age_ref_valid]
-                for z in [-2, 0, 2]
-            }
-            ax1.plot(age_ref_valid, wfa_curves[0], 'k--', label='Median WHO', zorder=5)
-            ax1.plot(age_ref_valid, wfa_curves[2], 'g--', label='+2 SD', zorder=5)
-            ax1.plot(age_ref_valid, wfa_curves[-2], 'r--', label='-2 SD', zorder=5)
-            ax1.fill_between(age_ref_valid, wfa_curves[-2], wfa_curves[2], color='green', alpha=0.1, label='Rentang Normal')
+            try:
+                # --- [FIX v3.2.2] ---
+                # Menggunakan np.isclose() untuk perbandingan float yang aman
+                # Ini memperbaiki bug "invalid literal for int()" atau "IndexError"
+                
+                # Buat kurva WFA
+                wfa_curves = {
+                    z: [generate_wfa_curve(gender_code, z)[1][np.where(np.isclose(AGE_GRID, a))[0][0]] for a in age_ref_valid]
+                    for z in [-2, 0, 2]
+                }
+                ax1.plot(age_ref_valid, wfa_curves[0], 'k--', label='Median WHO', zorder=5)
+                ax1.plot(age_ref_valid, wfa_curves[2], 'g--', label='+2 SD', zorder=5)
+                ax1.plot(age_ref_valid, wfa_curves[-2], 'r--', label='-2 SD', zorder=5)
+                ax1.fill_between(age_ref_valid, wfa_curves[-2], wfa_curves[2], color='green', alpha=0.1, label='Rentang Normal')
+                
+                # Buat kurva HFA
+                hfa_curves = {
+                    z: [generate_hfa_curve(gender_code, z)[1][np.where(np.isclose(AGE_GRID, a))[0][0]] for a in age_ref_valid]
+                    for z in [-2, 0, 2]
+                }
+                ax2.plot(age_ref_valid, hfa_curves[0], 'k--', label='Median WHO', zorder=5)
+                ax2.plot(age_ref_valid, hfa_curves[2], 'g--', label='+2 SD', zorder=5)
+                ax2.plot(age_ref_valid, hfa_curves[-2], 'r--', label='-2 SD', zorder=5)
+                ax2.fill_between(age_ref_valid, hfa_curves[-2], hfa_curves[2], color='green', alpha=0.1, label='Rentang Normal')
+
+            except IndexError as ie:
+                print(f"IndexError saat plotting kurva WHO (kemungkinan age_ref di luar AGE_GRID): {ie}")
+                # Tetap lanjutkan plotting data anak
+            except Exception as e:
+                print(f"Error saat plotting kurva WHO: {e}")
+                # Tetap lanjutkan plotting data anak
+        # --- [AKHIR DARI FIX] ---
 
         ax1.set_xlabel('Usia (bulan)', fontsize=12, fontweight='bold')
         ax1.set_ylabel('Berat Badan (kg)', fontsize=12, fontweight='bold')
@@ -3749,31 +3788,24 @@ def plot_growth_trajectory(measurements: List[Dict], gender: str) -> Optional[st
         ax1.grid(True, alpha=0.3, linestyle='--')
         ax1.legend(loc='upper left', fontsize=10)
         
+        # --- Plot Height Curve (ax2) ---
         ax2.plot(ages, heights, 'o-', color=theme['secondary'], linewidth=2.5, markersize=10, 
                  markerfacecolor=theme['accent'], markeredgecolor='white', label='Data Anak', zorder=10)
         
-        if age_ref_valid:
-            hfa_curves = {
-                z: [generate_hfa_curve(gender_code, z)[1][np.where(AGE_GRID == a)[0][0]] for a in age_ref_valid]
-                for z in [-2, 0, 2]
-            }
-            ax2.plot(age_ref_valid, hfa_curves[0], 'k--', label='Median WHO', zorder=5)
-            ax2.plot(age_ref_valid, hfa_curves[2], 'g--', label='+2 SD', zorder=5)
-            ax2.plot(age_ref_valid, hfa_curves[-2], 'r--', label='-2 SD', zorder=5)
-            ax2.fill_between(age_ref_valid, hfa_curves[-2], hfa_curves[2], color='green', alpha=0.1, label='Rentang Normal')
-
         ax2.set_xlabel('Usia (bulan)', fontsize=12, fontweight='bold')
         ax2.set_ylabel('Panjang/Tinggi Badan (cm)', fontsize=12, fontweight='bold')
         ax2.set_title('Trajectory Panjang/Tinggi Badan', fontsize=14, fontweight='bold', pad=15)
         ax2.grid(True, alpha=0.3, linestyle='--')
         ax2.legend(loc='upper left', fontsize=10)
         
+        # Tambahkan anotasi velocity
         for i in range(1, len(measurements)):
             prev = measurements[i-1]
             curr = measurements[i]
             time_diff = curr['age_months'] - prev['age_months']
             if time_diff == 0: continue
             
+            # Anotasi Berat Badan
             wt_vel = (curr['weight'] - prev['weight']) / time_diff
             mid_age = (prev['age_months'] + curr['age_months']) / 2
             mid_wt = (prev['weight'] + curr['weight']) / 2
@@ -3781,6 +3813,7 @@ def plot_growth_trajectory(measurements: List[Dict], gender: str) -> Optional[st
                         xy=(mid_age, mid_wt), xytext=(0, 10), textcoords='offset points',
                         fontsize=9, ha='center', bbox=dict(boxstyle='round,pad=0.5', fc=theme['accent'], alpha=0.7))
             
+            # Anotasi Tinggi Badan
             ht_vel = (curr['height'] - prev['height']) / time_diff
             mid_ht = (prev['height'] + curr['height']) / 2
             ax2.annotate(f'+{ht_vel:.2f} cm/bln',
@@ -3789,6 +3822,7 @@ def plot_growth_trajectory(measurements: List[Dict], gender: str) -> Optional[st
         
         plt.tight_layout()
         
+        # Simpan plot
         output_dir = "outputs"
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, f"growth_trajectory_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
@@ -3801,6 +3835,7 @@ def plot_growth_trajectory(measurements: List[Dict], gender: str) -> Optional[st
         print(f"Error generating growth trajectory plot: {e}")
         traceback.print_exc()
         return None
+
 
 
 def kalkulator_kejar_tumbuh_handler(
@@ -4471,7 +4506,7 @@ def render_perpustakaan_updated() -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# SECTION 11: GRADIO UI (Fully Updated for v3.2)
+# SECTION 11: GRADIO UI (Fully Updated for v3.2 - Re-Ordered Tabs)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # UPDATED Custom CSS with Dark Mode Optimization (from v3.1)
@@ -5029,13 +5064,13 @@ with gr.Blocks(
     state_payload = gr.State({})
     
     # ═══════════════════════════════════════════════════════════════════════
-    # MAIN TABS (MODIFIED FOR v3.2)
+    # MAIN TABS (MODIFIED FOR v3.2.1 - RE-ORDERED)
     # ═══════════════════════════════════════════════════════════════════════
     
     with gr.Tabs() as main_tabs:
         
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 1: KALKULATOR GIZI (from v3.1, unchanged)
+        # TAB 1: KALKULATOR GIZI WHO
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("📊 Kalkulator Gizi WHO", id=0):
@@ -5334,10 +5369,60 @@ with gr.Blocks(
             )
         
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 2: CHECKLIST BULANAN (BUG FIX v3.2)
+        # TAB 2: MODE MUDAH (BARU v3.2)
         # ═══════════════════════════════════════════════════════════════════
         
-        with gr.TabItem("📋 Checklist Sehat Bulanan", id=1):
+        with gr.TabItem("🎯 Mode Mudah", id=1):
+            gr.Markdown("""
+            ### Mode Mudah - Referensi Cepat untuk Ibu
+            
+            Tidak perlu menghitung z-score yang rumit! Cukup masukkan **usia** dan **jenis kelamin** anak, 
+            dan kami akan menampilkan **rentang normal** untuk berat badan, tinggi badan, dan lingkar kepala.
+            
+            Sangat cocok untuk:
+            - ✅ Screening cepat di rumah
+            - ✅ Evaluasi awal sebelum ke posyandu
+            - ✅ Memahami standar pertumbuhan dengan mudah
+            """)
+            
+            with gr.Row():
+                with gr.Column(scale=1):
+                    mode_mudah_age = gr.Slider(
+                        minimum=0, maximum=60, step=1, value=12,
+                        label="Usia Anak (bulan)",
+                        info="Geser untuk memilih usia"
+                    )
+                    
+                    mode_mudah_gender = gr.Radio(
+                        choices=["Laki-laki", "Perempuan"],
+                        value="Laki-laki",
+                        label="Jenis Kelamin"
+                    )
+                    
+                    mode_mudah_btn = gr.Button(
+                        "🔍 Lihat Rentang Normal",
+                        variant="primary",
+                        size="lg"
+                    )
+                
+                with gr.Column(scale=2):
+                    mode_mudah_output = gr.HTML(
+                        label="Hasil Referensi Cepat",
+                        value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil akan tampil di sini...</p>"
+                    )
+            
+            # Connect handler
+            mode_mudah_btn.click(
+                fn=mode_mudah_handler,
+                inputs=[mode_mudah_age, mode_mudah_gender],
+                outputs=mode_mudah_output
+            )
+
+        # ═══════════════════════════════════════════════════════════════════
+        # TAB 3: CHECKLIST SEHAT BULANAN (BUG FIX v3.2)
+        # ═══════════════════════════════════════════════════════════════════
+        
+        with gr.TabItem("📋 Checklist Sehat Bulanan", id=2):
             gr.Markdown("""
             ## 🗓️ Panduan Checklist Bulanan (0-24 Bulan)
             
@@ -5396,70 +5481,194 @@ checklist yang disesuaikan dengan status gizi anak.
             )
         
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 3: TENTANG & BANTUAN (Re-indexed to id=2)
+        # TAB 4: KALKULATOR TARGET KEJAR TUMBUH (BARU v3.2)
         # ═══════════════════════════════════════════════════════════════════
         
-        with gr.TabItem("ℹ️ Tentang & Bantuan", id=2):
-            gr.Markdown(f"""
-            ## 🏥 Tentang {APP_TITLE}
+        with gr.TabItem("📈 Kalkulator Target Kejar Tumbuh", id=3):
+            gr.Markdown("""
+            ### Kalkulator Target Kejar Tumbuh (Growth Velocity)
             
-            **{APP_TITLE}** adalah aplikasi pemantauan 
-            pertumbuhan anak berbasis standar WHO Child Growth Standards 2006 dan 
-            Permenkes RI No. 2 Tahun 2020.
+            Monitor **laju pertumbuhan** anak Anda dengan standar internasional WHO! 
+            Fitur ini membantu Anda:
             
-            ### ✨ Fitur Utama (v3.2)
-            
-            1. **📊 Kalkulator Z-Score WHO**
-               - 5 indeks antropometri: WAZ, HAZ, WHZ, BAZ, HCZ
-               - Klasifikasi ganda: Permenkes & WHO
-            
-            2. **📈 Grafik Pertumbuhan Interaktif**
-               - Kurva WHO standar dengan zona warna
-               - Plot data anak dengan interpretasi visual
-            
-            3. **💾 Export Profesional**
-               - PDF laporan lengkap dengan QR code & CSV data
-            
-            4. **📋 Checklist Bulanan**
-               - Milestone perkembangan, KPSP, Gizi, Imunisasi
-               - Integrasi video edukasi
-            
-            5. **🎯 Fitur Baru (v3.2)**
-               - **Mode Mudah:** Referensi cepat rentang normal
-               - **Kalkulator Kejar Tumbuh:** Monitor laju/velocity pertumbuhan
-               - **Perpustakaan Lokal:** Baca artikel Kemenkes/IDAI/WHO langsung
-            
-            ### 📚 Referensi Ilmiah
-            
-            - **WHO Child Growth Standards 2006**
-            - **Permenkes RI No. 2 Tahun 2020**
-            - **Rekomendasi Ikatan Dokter Anak Indonesia (IDAI)**
-            
-            ### ⚠️ Disclaimer
-            
-            Aplikasi ini adalah **alat skrining awal**, BUKAN pengganti konsultasi medis.
-            Hasil analisis harus dikonsultasikan dengan dokter spesialis anak, ahli gizi, atau tenaga kesehatan terlatih.
-            
-            ### 📱 Kontak & Dukungan
-            
-            **WhatsApp:** [+{CONTACT_WA}](https://wa.me/{CONTACT_WA})  
-            **Website:** {BASE_URL}  
-            **Versi:** {APP_VERSION}
-            
-            ### 👨‍💻 Developer
-            
-            Dikembangkan oleh **Habib Arsy** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
+            - 📈 Memantau **velocity pertumbuhan** (kenaikan BB & TB per bulan)
+            - 🎯 Mengetahui apakah anak **mengejar kurva** atau **melambat**
+            - 💡 Mendapat **rekomendasi nutrisi** berdasarkan trajectory pertumbuhan
             
             ---
             
-            © 2024-2025 {APP_TITLE}. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
+            #### 📝 Cara Menggunakan:
+            
+            1.  Pilih **Jenis Kelamin** dan **Mode Input** (Tanggal atau Usia).
+            2.  Jika mode "Tanggal", isi **Tanggal Lahir** (cukup sekali).
+            3.  Isi formulir **"Input Data Pengukuran"** (Tanggal/Usia, BB, TB).
+            4.  Klik **"Tambah Data"**. Ulangi untuk setiap pengukuran (minimal 2 data).
+            5.  Data yang Anda tambahkan akan muncul di tabel **"Data Terinput"**.
+            6.  Jika salah, klik **"Hapus Data Terakhir"**.
+            7.  Setelah semua data terisi, klik **"Analisis Pertumbuhan"**.
             """)
-        
+            
+            # State untuk menyimpan list data
+            kejar_tumbuh_data_state = gr.State([])
+            
+            with gr.Row():
+                with gr.Column(scale=1):
+                    gr.Markdown("#### 1. Informasi Dasar Anak")
+                    kejar_gender = gr.Radio(
+                        choices=["Laki-laki", "Perempuan"],
+                        value="Laki-laki",
+                        label="Jenis Kelamin Anak"
+                    )
+                    kejar_tumbuh_mode = gr.Radio(
+                        choices=["Tanggal", "Usia (bulan)"],
+                        value="Tanggal",
+                        label="Mode Input Data",
+                        info="Pilih cara Anda memasukkan data"
+                    )
+                    kejar_tumbuh_dob = gr.Textbox(
+                        label="Tanggal Lahir Anak (DOB)",
+                        placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                        info="Diperlukan jika mode 'Tanggal'",
+                        visible=True
+                    )
+                    
+                    gr.Markdown("#### 2. Input Data Pengukuran")
+                    with gr.Group():
+                        kejar_tumbuh_dom = gr.Textbox(
+                            label="Tanggal Pengukuran (DOM)",
+                            placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                            info="Tanggal saat anak diukur",
+                            visible=True
+                        )
+                        kejar_tumbuh_usia = gr.Number(
+                            label="Usia (bulan)",
+                            info="Usia anak saat diukur",
+                            visible=False
+                        )
+                        kejar_tumbuh_bb = gr.Number(
+                            label="Berat Badan (kg)",
+                        )
+                        kejar_tumbuh_tb = gr.Number(
+                            label="Panjang/Tinggi Badan (cm)",
+                        )
+                    
+                    with gr.Row():
+                        tambah_data_btn = gr.Button("➕ Tambah Data", variant="secondary")
+                        hapus_data_btn = gr.Button("🗑️ Hapus Data Terakhir")
+                    
+                    gr.Markdown("#### 3. Analisis")
+                    kejar_btn = gr.Button(
+                        "📊 Analisis Pertumbuhan",
+                        variant="primary",
+                        size="lg"
+                    )
+
+                with gr.Column(scale=2):
+                    gr.Markdown("#### Data Terinput")
+                    data_terinput_display = gr.HTML(
+                        "<p style='text-align: center; color: #888; padding: 10px;'>Belum ada data yang ditambahkan.</p>"
+                    )
+                    
+                    gr.Markdown("---")
+                    gr.Markdown("#### Hasil Analisis")
+                    
+                    kejar_output_html = gr.HTML(
+                        label="Hasil Analisis Velocity",
+                        value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil analisis akan tampil di sini...</p>"
+                    )
+                    
+                    kejar_output_plot = gr.Image(
+                        label="Grafik Trajectory Pertumbuhan",
+                        type="filepath",
+                        visible=False
+                    )
+
+            # --- Handlers untuk UI Kejar Tumbuh ---
+            
+            # Toggle visibilitas input Tanggal vs Usia
+            def toggle_kejar_tumbuh_mode(mode):
+                is_tanggal_mode = (mode == "Tanggal")
+                return (
+                    gr.update(visible=is_tanggal_mode), # DOB
+                    gr.update(visible=is_tanggal_mode), # DOM
+                    gr.update(visible=not is_tanggal_mode) # Usia
+                )
+            
+            kejar_tumbuh_mode.change(
+                fn=toggle_kejar_tumbuh_mode,
+                inputs=[kejar_tumbuh_mode],
+                outputs=[kejar_tumbuh_dob, kejar_tumbuh_dom, kejar_tumbuh_usia]
+            )
+            
+            # Handler Tombol "Tambah Data"
+            tambah_data_btn.click(
+                fn=tambah_data_kejar_tumbuh,
+                inputs=[
+                    kejar_tumbuh_data_state, kejar_tumbuh_mode, kejar_tumbuh_dob,
+                    kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
+                ],
+                outputs=[
+                    kejar_tumbuh_data_state, data_terinput_display,
+                    kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
+                ]
+            )
+            
+            # Handler Tombol "Hapus Data Terakhir"
+            hapus_data_btn.click(
+                fn=hapus_data_terakhir,
+                inputs=[kejar_tumbuh_data_state],
+                outputs=[kejar_tumbuh_data_state, data_terinput_display]
+            )
+            
+            # Handler Tombol "Analisis Pertumbuhan"
+            def kejar_tumbuh_handler_wrapper(data_list, gender):
+                # Panggil handler baru yang dimodifikasi
+                html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender) 
+                if plot_path:
+                    return html, gr.update(value=plot_path, visible=True)
+                else:
+                    return html, gr.update(visible=False)
+
+            kejar_btn.click(
+                fn=kejar_tumbuh_handler_wrapper,
+                inputs=[kejar_tumbuh_data_state, kejar_gender],
+                outputs=[kejar_output_html, kejar_output_plot]
+            )
+
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 4: PREMIUM & NOTIFIKASI (Re-indexed to id=3)
+        # TAB 5: PERPUSTAKAAN LOKAL (BARU v3.2)
         # ═══════════════════════════════════════════════════════════════════
         
-        with gr.TabItem("⭐ Premium & Notifikasi", id=3):
+        with gr.TabItem("📚 Perpustakaan (Lokal)", id=4):
+            gr.Markdown("""
+            ### Perpustakaan Ibu Balita - Baca Langsung
+            
+            Pilih artikel dari daftar di bawah untuk membacanya langsung di sini.
+            Semua konten bersumber dari Kemenkes, IDAI, WHO, dan sumber terpercaya lainnya.
+            """)
+            
+            artikel_dropdown = gr.Dropdown(
+                choices=JUDUL_ARTIKEL_LOKAL,
+                label="Pilih Judul Artikel",
+                info="Pilih artikel yang ingin Anda baca"
+            )
+            
+            artikel_konten_output = gr.Markdown(
+                value="<div style='padding: 20px; text-align: center; color: #888;'>Silakan pilih artikel untuk dibaca.</div>"
+            )
+            
+            # Hubungkan handler (interaktif saat diubah)
+            artikel_dropdown.change(
+                fn=tampilkan_artikel_lokal,
+                inputs=[artikel_dropdown],
+                outputs=[artikel_konten_output]
+            )
+
+        # ═══════════════════════════════════════════════════════════════════
+        # TAB 6: PREMIUM & NOTIFIKASI
+        # ═══════════════════════════════════════════════════════════════════
+        
+        with gr.TabItem("⭐ Premium & Notifikasi", id=5):
             gr.Markdown("""
             ## 🎁 Upgrade ke Premium
             
@@ -5804,259 +6013,67 @@ checklist yang disesuaikan dengan status gizi anak.
             gold_btn.click(
                 fn=lambda: handle_premium_upgrade("gold"), outputs=[premium_status]
             ).then(lambda: gr.update(visible=True), outputs=[premium_status])
-        
+
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 5: NEW FEATURES (v3.2) - (Re-indexed to id=4)
+        # TAB 7: TENTANG & BANTUAN
         # ═══════════════════════════════════════════════════════════════════
         
-        with gr.TabItem("🎉 Fitur Baru v3.2", id=4):
-            gr.Markdown("""
-            # 🎉 Fitur Baru {APP_VERSION}
-            Selamat datang di fitur-fitur terbaru! Pilih sub-tab di bawah:
-            """)
+        with gr.TabItem("ℹ️ Tentang & Bantuan", id=6):
+            gr.Markdown(f"""
+            ## 🏥 Tentang {APP_TITLE}
             
-            with gr.Tabs():
-                
-                # --- SUB-TAB 1: MODE MUDAH ---
-                with gr.Tab("🎯 Mode Mudah"):
-                    gr.Markdown("""
-                    ### Mode Mudah - Referensi Cepat untuk Ibu
-                    
-                    Tidak perlu menghitung z-score yang rumit! Cukup masukkan **usia** dan **jenis kelamin** anak, 
-                    dan kami akan menampilkan **rentang normal** untuk berat badan, tinggi badan, dan lingkar kepala.
-                    
-                    Sangat cocok untuk:
-                    - ✅ Screening cepat di rumah
-                    - ✅ Evaluasi awal sebelum ke posyandu
-                    - ✅ Memahami standar pertumbuhan dengan mudah
-                    """)
-                    
-                    with gr.Row():
-                        with gr.Column(scale=1):
-                            mode_mudah_age = gr.Slider(
-                                minimum=0, maximum=60, step=1, value=12,
-                                label="Usia Anak (bulan)",
-                                info="Geser untuk memilih usia"
-                            )
-                            
-                            mode_mudah_gender = gr.Radio(
-                                choices=["Laki-laki", "Perempuan"],
-                                value="Laki-laki",
-                                label="Jenis Kelamin"
-                            )
-                            
-                            mode_mudah_btn = gr.Button(
-                                "🔍 Lihat Rentang Normal",
-                                variant="primary",
-                                size="lg"
-                            )
-                        
-                        with gr.Column(scale=2):
-                            mode_mudah_output = gr.HTML(
-                                label="Hasil Referensi Cepat",
-                                value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil akan tampil di sini...</p>"
-                            )
-                    
-                    # Connect handler
-                    mode_mudah_btn.click(
-                        fn=mode_mudah_handler,
-                        inputs=[mode_mudah_age, mode_mudah_gender],
-                        outputs=mode_mudah_output
-                    )
-                
-                # --- SUB-TAB 2: KALKULATOR KEJAR TUMBUH ---
-                # --- SUB-TAB 2: KALKULATOR KEJAR TUMBUH (UI BARU v3.2.1) ---
-                with gr.Tab("📈 Kalkulator Target Kejar Tumbuh"):
-                    gr.Markdown("""
-                    ### Kalkulator Target Kejar Tumbuh (Growth Velocity)
-                    
-                    Monitor **laju pertumbuhan** anak Anda dengan standar internasional WHO! 
-                    Fitur ini membantu Anda:
-                    
-                    - 📈 Memantau **velocity pertumbuhan** (kenaikan BB & TB per bulan)
-                    - 🎯 Mengetahui apakah anak **mengejar kurva** atau **melambat**
-                    - 💡 Mendapat **rekomendasi nutrisi** berdasarkan trajectory pertumbuhan
-                    
-                    ---
-                    
-                    #### 📝 Cara Menggunakan:
-                    
-                    1.  Pilih **Jenis Kelamin** dan **Mode Input** (Tanggal atau Usia).
-                    2.  Jika mode "Tanggal", isi **Tanggal Lahir** (cukup sekali).
-                    3.  Isi formulir **"Input Data Pengukuran"** (Tanggal/Usia, BB, TB).
-                    4.  Klik **"Tambah Data"**. Ulangi untuk setiap pengukuran (minimal 2 data).
-                    5.  Data yang Anda tambahkan akan muncul di tabel **"Data Terinput"**.
-                    6.  Jika salah, klik **"Hapus Data Terakhir"**.
-                    7.  Setelah semua data terisi, klik **"Analisis Pertumbuhan"**.
-                    """)
-                    
-                    # State untuk menyimpan list data
-                    kejar_tumbuh_data_state = gr.State([])
-                    
-                    with gr.Row():
-                        with gr.Column(scale=1):
-                            gr.Markdown("#### 1. Informasi Dasar Anak")
-                            kejar_gender = gr.Radio(
-                                choices=["Laki-laki", "Perempuan"],
-                                value="Laki-laki",
-                                label="Jenis Kelamin Anak"
-                            )
-                            kejar_tumbuh_mode = gr.Radio(
-                                choices=["Tanggal", "Usia (bulan)"],
-                                value="Tanggal",
-                                label="Mode Input Data",
-                                info="Pilih cara Anda memasukkan data"
-                            )
-                            kejar_tumbuh_dob = gr.Textbox(
-                                label="Tanggal Lahir Anak (DOB)",
-                                placeholder="YYYY-MM-DD atau DD/MM/YYYY",
-                                info="Diperlukan jika mode 'Tanggal'",
-                                visible=True
-                            )
-                            
-                            gr.Markdown("#### 2. Input Data Pengukuran")
-                            with gr.Group():
-                                kejar_tumbuh_dom = gr.Textbox(
-                                    label="Tanggal Pengukuran (DOM)",
-                                    placeholder="YYYY-MM-DD atau DD/MM/YYYY",
-                                    info="Tanggal saat anak diukur",
-                                    visible=True
-                                )
-                                kejar_tumbuh_usia = gr.Number(
-                                    label="Usia (bulan)",
-                                    info="Usia anak saat diukur",
-                                    visible=False
-                                )
-                                kejar_tumbuh_bb = gr.Number(
-                                    label="Berat Badan (kg)",
-                                )
-                                kejar_tumbuh_tb = gr.Number(
-                                    label="Panjang/Tinggi Badan (cm)",
-                                )
-                            
-                            with gr.Row():
-                                tambah_data_btn = gr.Button("➕ Tambah Data", variant="secondary")
-                                hapus_data_btn = gr.Button("🗑️ Hapus Data Terakhir")
-                            
-                            gr.Markdown("#### 3. Analisis")
-                            kejar_btn = gr.Button(
-                                "📊 Analisis Pertumbuhan",
-                                variant="primary",
-                                size="lg"
-                            )
-
-                        with gr.Column(scale=2):
-                            gr.Markdown("#### Data Terinput")
-                            data_terinput_display = gr.HTML(
-                                "<p style='text-align: center; color: #888; padding: 10px;'>Belum ada data yang ditambahkan.</p>"
-                            )
-                            
-                            gr.Markdown("---")
-                            gr.Markdown("#### Hasil Analisis")
-                            
-                            kejar_output_html = gr.HTML(
-                                label="Hasil Analisis Velocity",
-                                value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil analisis akan tampil di sini...</p>"
-                            )
-                            
-                            kejar_output_plot = gr.Image(
-                                label="Grafik Trajectory Pertumbuhan",
-                                type="filepath",
-                                visible=False
-                            )
-
-                    # --- Handlers untuk UI Kejar Tumbuh ---
-                    
-                    # Toggle visibilitas input Tanggal vs Usia
-                    def toggle_kejar_tumbuh_mode(mode):
-                        is_tanggal_mode = (mode == "Tanggal")
-                        return (
-                            gr.update(visible=is_tanggal_mode), # DOB
-                            gr.update(visible=is_tanggal_mode), # DOM
-                            gr.update(visible=not is_tanggal_mode) # Usia
-                        )
-                    
-                    kejar_tumbuh_mode.change(
-                        fn=toggle_kejar_tumbuh_mode,
-                        inputs=[kejar_tumbuh_mode],
-                        outputs=[kejar_tumbuh_dob, kejar_tumbuh_dom, kejar_tumbuh_usia]
-                    )
-                    
-                    # Handler Tombol "Tambah Data"
-                    tambah_data_btn.click(
-                        fn=tambah_data_kejar_tumbuh,
-                        inputs=[
-                            kejar_tumbuh_data_state, kejar_tumbuh_mode, kejar_tumbuh_dob,
-                            kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
-                        ],
-                        outputs=[
-                            kejar_tumbuh_data_state, data_terinput_display,
-                            kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
-                        ]
-                    )
-                    
-                    # Handler Tombol "Hapus Data Terakhir"
-                    hapus_data_btn.click(
-                        fn=hapus_data_terakhir,
-                        inputs=[kejar_tumbuh_data_state],
-                        outputs=[kejar_tumbuh_data_state, data_terinput_display]
-                    )
-                    
-                    # Handler Tombol "Analisis Pertumbuhan"
-                    def kejar_tumbuh_handler_wrapper(data_list, gender):
-                        # Panggil handler baru yang dimodifikasi
-                        html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender) 
-                        if plot_path:
-                            return html, gr.update(value=plot_path, visible=True)
-                        else:
-                            return html, gr.update(visible=False)
-
-                    kejar_btn.click(
-                        fn=kejar_tumbuh_handler_wrapper,
-                        inputs=[kejar_tumbuh_data_state, kejar_gender],
-                        outputs=[kejar_output_html, kejar_output_plot]
-                    )
-                    
-                    # Connect handler
-                    def kejar_tumbuh_handler_wrapper(data, gender):
-                        html, plot_path = kalkulator_kejar_tumbuh_handler(data, gender)
-                        if plot_path:
-                            return html, gr.update(value=plot_path, visible=True)
-                        else:
-                            return html, gr.update(visible=False)
-
-                    kejar_btn.click(
-                        fn=kejar_tumbuh_handler_wrapper,
-                        inputs=[kejar_tumbuh_data_state, kejar_gender],
-                        outputs=[kejar_output_html, kejar_output_plot]
-                    )
-                
-                # --- SUB-TAB 3: PERPUSTAKAAN (LOKAL) ---
-                with gr.Tab("📚 Perpustakaan (Lokal)"):
-                    gr.Markdown("""
-                    ### Perpustakaan Ibu Balita - Baca Langsung
-                    
-                    Pilih artikel dari daftar di bawah untuk membacanya langsung di sini.
-                    Semua konten bersumber dari Kemenkes, IDAI, WHO, dan sumber terpercaya lainnya.
-                    """)
-                    
-                    artikel_dropdown = gr.Dropdown(
-                        choices=JUDUL_ARTIKEL_LOKAL,
-                        label="Pilih Judul Artikel",
-                        info="Pilih artikel yang ingin Anda baca"
-                    )
-                    
-                    artikel_konten_output = gr.Markdown(
-                        value="<div style='padding: 20px; text-align: center; color: #888;'>Silakan pilih artikel untuk dibaca.</div>"
-                    )
-                    
-                    # Hubungkan handler (interaktif saat diubah)
-                    artikel_dropdown.change(
-                        fn=tampilkan_artikel_lokal,
-                        inputs=[artikel_dropdown],
-                        outputs=[artikel_konten_output]
-                    )
-
+            **{APP_TITLE}** adalah aplikasi pemantauan 
+            pertumbuhan anak berbasis standar WHO Child Growth Standards 2006 dan 
+            Permenkes RI No. 2 Tahun 2020.
+            
+            ### ✨ Fitur Utama (v3.2)
+            
+            1. **📊 Kalkulator Z-Score WHO**
+               - 5 indeks antropometri: WAZ, HAZ, WHZ, BAZ, HCZ
+               - Klasifikasi ganda: Permenkes & WHO
+            
+            2. **📈 Grafik Pertumbuhan Interaktif**
+               - Kurva WHO standar dengan zona warna
+               - Plot data anak dengan interpretasi visual
+            
+            3. **💾 Export Profesional**
+               - PDF laporan lengkap dengan QR code & CSV data
+            
+            4. **📋 Checklist Bulanan**
+               - Milestone perkembangan, KPSP, Gizi, Imunisasi
+               - Integrasi video edukasi
+            
+            5. **🎯 Fitur Baru (v3.2)**
+               - **Mode Mudah:** Referensi cepat rentang normal
+               - **Kalkulator Kejar Tumbuh:** Monitor laju/velocity pertumbuhan
+               - **Perpustakaan Lokal:** Baca artikel Kemenkes/IDAI/WHO langsung
+            
+            ### 📚 Referensi Ilmiah
+            
+            - **WHO Child Growth Standards 2006**
+            - **Permenkes RI No. 2 Tahun 2020**
+            - **Rekomendasi Ikatan Dokter Anak Indonesia (IDAI)**
+            
+            ### ⚠️ Disclaimer
+            
+            Aplikasi ini adalah **alat skrining awal**, BUKAN pengganti konsultasi medis.
+            Hasil analisis harus dikonsultasikan dengan dokter spesialis anak, ahli gizi, atau tenaga kesehatan terlatih.
+            
+            ### 📱 Kontak & Dukungan
+            
+            **WhatsApp:** [+{CONTACT_WA}](https://wa.me/{CONTACT_WA})  
+            **Website:** {BASE_URL}  
+            **Versi:** {APP_VERSION}
+            
+            ### 👨‍💻 Developer
+            
+            Dikembangkan oleh **Habib Arsy** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
+            
+            ---
+            
+            © 2024-2025 {APP_TITLE}. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
+            """)
+    
     # Footer (MODIFIED)
     gr.Markdown(f"""
     ---
@@ -6078,7 +6095,7 @@ checklist yang disesuaikan dengan status gizi anak.
     </div>
     """)
 
-print("✅ Section 11 loaded: Gradio UI complete (v3.2 features integrated)")
+print("✅ Section 11 loaded: Gradio UI complete (v3.2 features integrated & re-ordered)")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -6241,3 +6258,4 @@ if __name__ == "__main__":
         log_level="info",
         access_log=True
     )
+
