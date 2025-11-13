@@ -3539,8 +3539,7 @@ def generate_checklist_with_videos(month: int, payload: Dict) -> str:
     return "\n".join(lines)
 
 
-print("✅ Section 10 loaded: Checklist & KPSP functions (Updated with videos & library 
-helpers)")
+print("✅ Section 10 loaded: Checklist & KPSP functions (Updated with videos & library helpers)")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
