@@ -4311,589 +4311,6 @@ def render_perpustakaan_updated() -> str:
     
     return html
 
-# --- FITUR 3: KALKULATOR TARGET KEJAR TUMBUH ---
-
-def calculate_growth_velocity(measurements: List[Dict]) -> Dict:
-    """
-    Menghitung velocity pertumbuhan anak
-    
-    Args:
-        measurements: List of dicts dengan keys: date, weight, height, age_months
-    
-    Returns:
-        Dictionary berisi analisis velocity dan rekomendasi
-    """
-    
-    if len(measurements) < 2:
-        return {
-            'status': 'insufficient_data',
-            'message': 'Minimal 2 data pengukuran diperlukan untuk analisis velocity'
-        }
-    
-    # Sort by date
-    measurements = sorted(measurements, key=lambda x: x['date'])
-    
-    # Calculate deltas
-    weight_velocity = []
-    height_velocity = []
-    
-    for i in range(1, len(measurements)):
-        prev = measurements[i-1]
-        curr = measurements[i]
-        
-        # Time difference in months
-        time_diff = curr['age_months'] - prev['age_months']
-        
-        if time_diff > 0:
-            # Weight velocity (kg/month)
-            wt_vel = (curr['weight'] - prev['weight']) / time_diff
-            weight_velocity.append({
-                'period': f"{prev['age_months']}-{curr['age_months']} bulan",
-                'velocity': wt_vel,
-                'start_weight': prev['weight'],
-                'end_weight': curr['weight'],
-                'time_months': time_diff
-            })
-            
-            # Height velocity (cm/month)
-            ht_vel = (curr['height'] - prev['height']) / time_diff
-            height_velocity.append({
-                'period': f"{prev['age_months']}-{curr['age_months']} bulan",
-                'velocity': ht_vel,
-                'start_height': prev['height'],
-                'end_height': curr['height'],
-                'time_months': time_diff
-            })
-    
-    return {
-        'status': 'success',
-        'measurements': measurements,
-        'weight_velocity': weight_velocity,
-        'height_velocity': height_velocity,
-        'total_measurements': len(measurements),
-        'monitoring_period': f"{measurements[0]['age_months']}-{measurements[-1]['age_months']} bulan"
-    }
-
-
-def interpret_growth_velocity(velocity_data: Dict, gender: str) -> Dict:
-    """
-    Interpretasi velocity pertumbuhan berdasarkan standar WHO
-    
-    Expected growth velocity (approximate):
-    - 0-3 months: 0.7-0.9 kg/month, 3.5 cm/month
-    - 3-6 months: 0.5-0.6 kg/month, 2.0 cm/month  
-    - 6-12 months: 0.3-0.4 kg/month, 1.2 cm/month
-    - 12-24 months: 0.2-0.25 kg/month, 1.0 cm/month
-    - 24-60 months: 0.15-0.2 kg/month, 0.6 cm/month
-    """
-    
-    if velocity_data['status'] != 'success':
-        return velocity_data
-    
-    interpretations = []
-    recommendations = []
-    concern_level = "normal"  # normal, warning, critical
-    
-    # Analyze weight velocity
-    for wv in velocity_data['weight_velocity']:
-        period_start = int(wv['period'].split('-')[0])
-        vel = wv['velocity']
-        
-        # Expected velocity ranges
-        if period_start < 3:
-            expected = (0.6, 1.0)
-            optimal = 0.8
-        elif period_start < 6:
-            expected = (0.4, 0.7)
-            optimal = 0.55
-        elif period_start < 12:
-            expected = (0.25, 0.5)
-            optimal = 0.35
-        elif period_start < 24:
-            expected = (0.15, 0.3)
-            optimal = 0.22
-        else:
-            expected = (0.12, 0.25)
-            optimal = 0.18
-        
-        # Interpretation
-        if vel < expected[0]:
-            status = "🔴 Pertumbuhan Lambat"
-            concern_level = "critical" if vel < expected[0] * 0.5 else "warning"
-            interpretations.append({
-                'period': wv['period'],
-                'type': 'weight',
-                'status': status,
-                'velocity': vel,
-                'expected': optimal,
-                'message': f"Velocity BB ({vel:.2f} kg/bulan) di bawah normal ({expected[0]:.2f}-{expected[1]:.2f} kg/bulan)"
-            })
-            recommendations.append(f"Tingkatkan asupan kalori dan protein untuk periode {wv['period']}")
-            
-        elif vel > expected[1]:
-            status = "🟡 Pertumbuhan Cepat"
-            if vel > expected[1] * 1.5:
-                concern_level = "warning"
-            interpretations.append({
-                'period': wv['period'],
-                'type': 'weight',
-                'status': status,
-                'velocity': vel,
-                'expected': optimal,
-                'message': f"Velocity BB ({vel:.2f} kg/bulan) di atas normal ({expected[0]:.2f}-{expected[1]:.2f} kg/bulan)"
-            })
-            recommendations.append(f"Monitor kenaikan BB berlebih pada periode {wv['period']}, konsultasi ahli gizi")
-            
-        else:
-            status = "🟢 Pertumbuhan Normal"
-            interpretations.append({
-                'period': wv['period'],
-                'type': 'weight',
-                'status': status,
-                'velocity': vel,
-                'expected': optimal,
-                'message': f"Velocity BB ({vel:.2f} kg/bulan) dalam rentang normal"
-            })
-    
-    # Analyze height velocity
-    for hv in velocity_data['height_velocity']:
-        period_start = int(hv['period'].split('-')[0])
-        vel = hv['velocity']
-        
-        # Expected velocity ranges
-        if period_start < 3:
-            expected = (3.0, 4.0)
-            optimal = 3.5
-        elif period_start < 6:
-            expected = (1.5, 2.5)
-            optimal = 2.0
-        elif period_start < 12:
-            expected = (1.0, 1.5)
-            optimal = 1.2
-        elif period_start < 24:
-            expected = (0.8, 1.2)
-            optimal = 1.0
-        else:
-            expected = (0.5, 0.8)
-            optimal = 0.6
-        
-        # Interpretation
-        if vel < expected[0]:
-            status = "🔴 Pertumbuhan Lambat"
-            concern_level = "critical" if vel < expected[0] * 0.5 else "warning"
-            interpretations.append({
-                'period': hv['period'],
-                'type': 'height',
-                'status': status,
-                'velocity': vel,
-                'expected': optimal,
-                'message': f"Velocity TB ({vel:.2f} cm/bulan) di bawah normal ({expected[0]:.2f}-{expected[1]:.2f} cm/bulan)"
-            })
-            recommendations.append(f"Fokus pada nutrisi untuk pertumbuhan linear periode {hv['period']}")
-            
-        elif vel > expected[1]:
-            status = "🟢 Pertumbuhan Baik"
-            interpretations.append({
-                'period': hv['period'],
-                'type': 'height',
-                'status': status,
-                'velocity': vel,
-                'expected': optimal,
-                'message': f"Velocity TB ({vel:.2f} cm/bulan) baik, bahkan di atas rata-rata"
-            })
-            
-        else:
-            status = "🟢 Pertumbuhan Normal"
-            interpretations.append({
-                'period': hv['period'],
-                'type': 'height',
-                'status': status,
-                'velocity': vel,
-                'expected': optimal,
-                'message': f"Velocity TB ({vel:.2f} cm/bulan) dalam rentang normal"
-            })
-    
-    # General recommendations based on overall trend
-    if concern_level == "critical":
-        recommendations.insert(0, "⚠️ PENTING: Segera konsultasi ke dokter anak atau ahli gizi untuk evaluasi lengkap")
-    elif concern_level == "warning":
-        recommendations.insert(0, "⚠️ Perhatian: Pertimbangkan konsultasi dengan tenaga kesehatan")
-    else:
-        recommendations.append("✅ Pertumbuhan anak dalam jalur yang baik, teruskan pola asuh dan nutrisi saat ini")
-    
-    return {
-        'status': 'analyzed',
-        'concern_level': concern_level,
-        'interpretations': interpretations,
-        'recommendations': recommendations,
-        'velocity_data': velocity_data
-    }
-
-
-def plot_growth_trajectory(measurements: List[Dict], gender: str) -> Optional[str]:
-    """
-    Plot grafik trajectory pertumbuhan dengan kurva WHO
-    
-    Returns:
-        Path ke file image yang di-generate
-    """
-    
-    try:
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
-        
-        # Apply pink pastel theme for consistency
-        theme = UI_THEMES.get("pink_pastel")
-        plt.rcParams.update({
-            "axes.facecolor": theme["card"],
-            "figure.facecolor": theme["bg"],
-            "savefig.facecolor": theme["bg"],
-            "text.color": theme["text"],
-            "axes.labelcolor": theme["text"],
-            "axes.edgecolor": theme["border"],
-            "xtick.color": theme["text"],
-            "ytick.color": theme["text"],
-            "grid.color": theme["border"],
-        })
-        
-        # Prepare data
-        ages = [m['age_months'] for m in measurements]
-        weights = [m['weight'] for m in measurements]
-        heights = [m['height'] for m in measurements]
-        
-        gender_code = 'M' if gender == "Laki-laki" else 'F'
-        
-        # --- Plot Weight Curve (ax1) ---
-        ax1.plot(ages, weights, 'o-', color=theme['primary'], linewidth=2.5, markersize=10, 
-                 markerfacecolor=theme['accent'], markeredgecolor='white', label='Data Anak', zorder=10)
-        
-        # Add WHO Curves for Weight
-        age_ref = np.arange(min(ages), max(ages) + 1, 1)
-        # Handle cases where age_ref might be outside AGE_GRID (0-60.25)
-        age_ref_valid = [a for a in age_ref if a in AGE_GRID]
-        
-        wfa_curves = {
-            z: [generate_wfa_curve(gender_code, z)[1][np.where(AGE_GRID == a)[0][0]] for a in age_ref_valid]
-            for z in [-3, -2, 0, 2, 3]
-        }
-        
-        ax1.plot(age_ref_valid, wfa_curves[0], 'k--', label='Median WHO', zorder=5)
-        ax1.plot(age_ref_valid, wfa_curves[2], 'g--', label='+2 SD', zorder=5)
-        ax1.plot(age_ref_valid, wfa_curves[-2], 'r--', label='-2 SD', zorder=5)
-        ax1.fill_between(age_ref_valid, wfa_curves[-2], wfa_curves[2], color='green', alpha=0.1, label='Rentang Normal')
-        
-        ax1.set_xlabel('Usia (bulan)', fontsize=12, fontweight='bold')
-        ax1.set_ylabel('Berat Badan (kg)', fontsize=12, fontweight='bold')
-        ax1.set_title('Trajectory Berat Badan', fontsize=14, fontweight='bold', pad=15)
-        ax1.grid(True, alpha=0.3, linestyle='--')
-        ax1.legend(loc='upper left', fontsize=10)
-        
-        # --- Plot Height Curve (ax2) ---
-        ax2.plot(ages, heights, 'o-', color=theme['secondary'], linewidth=2.5, markersize=10, 
-                 markerfacecolor=theme['accent'], markeredgecolor='white', label='Data Anak', zorder=10)
-        
-        # Add WHO Curves for Height
-        hfa_curves = {
-            z: [generate_hfa_curve(gender_code, z)[1][np.where(AGE_GRID == a)[0][0]] for a in age_ref_valid]
-            for z in [-3, -2, 0, 2, 3]
-        }
-        
-        ax2.plot(age_ref_valid, hfa_curves[0], 'k--', label='Median WHO', zorder=5)
-        ax2.plot(age_ref_valid, hfa_curves[2], 'g--', label='+2 SD', zorder=5)
-        ax2.plot(age_ref_valid, hfa_curves[-2], 'r--', label='-2 SD', zorder=5)
-        ax2.fill_between(age_ref_valid, hfa_curves[-2], hfa_curves[2], color='green', alpha=0.1, label='Rentang Normal')
-        
-        ax2.set_xlabel('Usia (bulan)', fontsize=12, fontweight='bold')
-        ax2.set_ylabel('Panjang/Tinggi Badan (cm)', fontsize=12, fontweight='bold')
-        ax2.set_title('Trajectory Panjang/Tinggi Badan', fontsize=14, fontweight='bold', pad=15)
-        ax2.grid(True, alpha=0.3, linestyle='--')
-        ax2.legend(loc='upper left', fontsize=10)
-        
-        # Add velocity annotations
-        for i in range(1, len(measurements)):
-            prev = measurements[i-1]
-            curr = measurements[i]
-            
-            time_diff = curr['age_months'] - prev['age_months']
-            if time_diff == 0: continue # Hindari divide by zero
-            
-            # Weight velocity annotation
-            wt_vel = (curr['weight'] - prev['weight']) / time_diff
-            mid_age = (prev['age_months'] + curr['age_months']) / 2
-            mid_wt = (prev['weight'] + curr['weight']) / 2
-            ax1.annotate(f'+{wt_vel:.2f} kg/bln', 
-                        xy=(mid_age, mid_wt),
-                        xytext=(0, 10), textcoords='offset points',
-                        fontsize=9, ha='center',
-                        bbox=dict(boxstyle='round,pad=0.5', fc=theme['accent'], alpha=0.7))
-            
-            # Height velocity annotation
-            ht_vel = (curr['height'] - prev['height']) / time_diff
-            mid_ht = (prev['height'] + curr['height']) / 2
-            ax2.annotate(f'+{ht_vel:.2f} cm/bln',
-                        xy=(mid_age, mid_ht),
-                        xytext=(0, 10), textcoords='offset points',
-                        fontsize=9, ha='center',
-                        bbox=dict(boxstyle='round,pad=0.5', fc=theme['accent'], alpha=0.7))
-        
-        plt.tight_layout()
-        
-        # Save plot
-        output_dir = "outputs"
-        os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, f"growth_trajectory_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        plt.close(fig)
-        
-        return output_path
-        
-    except Exception as e:
-        print(f"Error generating growth trajectory plot: {e}")
-        traceback.print_exc()
-        return None
-
-
-def kalkulator_kejar_tumbuh_handler(
-    measurement_data: str,
-    gender: str
-) -> Tuple[str, Optional[str]]:
-    """
-    Handler untuk Kalkulator Target Kejar Tumbuh
-    
-    Args:
-        measurement_data: String dalam format CSV atau manual input
-        gender: Jenis kelamin anak
-    
-    Returns:
-        Tuple of (HTML report, plot image path)
-    """
-    
-    # Parse measurement data
-    # Expected format: "tanggal,usia_bulan,bb,tb" per line
-    try:
-        measurements = []
-        lines = [l.strip() for l in measurement_data.strip().split('\n') if l.strip()]
-        
-        for line in lines:
-            parts = line.split(',')
-            if len(parts) >= 4:
-                date_str = parts[0].strip()
-                age_months = float(parts[1].strip())
-                weight = float(parts[2].strip())
-                height = float(parts[3].strip())
-                
-                # Parse date
-                try:
-                    date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-                except:
-                    try:
-                        date_obj = datetime.strptime(date_str, '%d-%m-%Y')
-                    except:
-                        date_obj = datetime.now()
-                
-                measurements.append({
-                    'date': date_obj,
-                    'age_months': age_months,
-                    'weight': weight,
-                    'height': height
-                })
-        
-        if len(measurements) < 2:
-            return """
-            <div style='padding: 20px; background: #fff3cd; border-left: 5px solid #ffc107; border-radius: 8px;'>
-                <h3 style='color: #856404; margin-top: 0;'>⚠️ Data Tidak Cukup</h3>
-                <p>Minimal <strong>2 pengukuran</strong> diperlukan untuk analisis velocity pertumbuhan.</p>
-                <p>Silakan masukkan lebih banyak data pengukuran.</p>
-            </div>
-            """, None
-        
-        # Calculate velocity
-        velocity_data = calculate_growth_velocity(measurements)
-        
-        # Interpret results
-        analysis = interpret_growth_velocity(velocity_data, gender)
-        
-        # Generate plot
-        plot_path = plot_growth_trajectory(measurements, gender)
-        
-        # Generate HTML report
-        html_report = generate_kejar_tumbuh_report(analysis, gender)
-        
-        return html_report, plot_path
-        
-    except Exception as e:
-        return f"""
-        <div style='padding: 20px; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 8px;'>
-            <h3 style='color: #721c24; margin-top: 0;'>❌ Error</h3>
-            <p>Terjadi kesalahan saat memproses data: {str(e)}</p>
-            <p>Pastikan format data benar: <code>tanggal,usia_bulan,bb,tb</code></p>
-        </div>
-        """, None
-
-
-def generate_kejar_tumbuh_report(analysis: Dict, gender: str) -> str:
-    """
-    Generate HTML report untuk analisis kejar tumbuh
-    """
-    
-    if analysis.get('status') != 'analyzed':
-        return f"<div style='padding: 20px; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 8px;'><h3 style='color: #721c24; margin-top: 0;'>❌ Error</h3><p>{analysis.get('message', 'Gagal menganalisis data.')}</p></div>"
-    
-    concern_colors = {
-        'normal': '#28a745',
-        'warning': '#ffc107',
-        'critical': '#dc3545'
-    }
-    
-    concern_bg = {
-        'normal': '#d4edda',
-        'warning': '#fff3cd',
-        'critical': '#f8d7da'
-    }
-    
-    concern_text = {
-        'normal': 'Normal - Pertumbuhan Baik',
-        'warning': 'Perhatian - Monitoring Diperlukan',
-        'critical': 'Kritis - Perlu Intervensi Segera'
-    }
-    
-    level = analysis['concern_level']
-    
-    html = f"""
-    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                padding: 30px; border-radius: 20px; color: white; margin-bottom: 20px;
-                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);'>
-        <h2 style='margin: 0 0 10px 0; font-size: 28px;'>
-            🎯 Hasil Analisis Kalkulator Target Kejar Tumbuh
-        </h2>
-        <p style='margin: 0; opacity: 0.9; font-size: 14px;'>
-            Berdasarkan WHO Growth Velocity Standards
-        </p>
-    </div>
-    
-    <div style='background: {concern_bg[level]}; padding: 20px; border-radius: 15px; 
-                margin-bottom: 25px; border-left: 6px solid {concern_colors[level]};'>
-        <h3 style='margin: 0 0 10px 0; color: {concern_colors[level]};'>
-            Status Keseluruhan: {concern_text[level]}
-        </h3>
-        <p style='margin: 0; color: #555;'>
-            Jumlah pengukuran: <strong>{analysis['velocity_data']['total_measurements']}</strong> | 
-            Periode monitoring: <strong>{analysis['velocity_data']['monitoring_period']}</strong>
-        </p>
-    </div>
-    
-    <div style='background: white; padding: 25px; border-radius: 15px; 
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px;'>
-        <h3 style='color: #667eea; margin-top: 0;'>📊 Analisis Velocity Pertumbuhan</h3>
-    """
-    
-    # Interpretations
-    for interp in analysis['interpretations']:
-        icon = "⚖️" if interp['type'] == 'weight' else "📏"
-        type_text = "Berat Badan" if interp['type'] == 'weight' else "Panjang/Tinggi Badan"
-        
-        status_key = interp['status'].split(" ")[0].lower().replace("🔴","critical").replace("🟡","warning").replace("🟢","normal")
-        
-        html += f"""
-        <div style='margin-bottom: 20px; padding: 15px; background: #f8f9fa; 
-                    border-radius: 10px; border-left: 4px solid {concern_colors.get(status_key, "#667eea")};'>
-            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
-                <h4 style='margin: 0; color: #2c3e50;'>
-                    {icon} {type_text} - {interp['period']}
-                </h4>
-                <span style='font-weight: bold; color: {concern_colors.get(status_key, "#667eea")};'>{interp['status']}</span>
-            </div>
-            <p style='margin: 5px 0; color: #666;'>{interp['message']}</p>
-            <div style='margin-top: 10px; font-size: 13px; color: #888;'>
-                Velocity: <strong>{interp['velocity']:.2f}</strong> | 
-                Expected: <strong>~{interp['expected']:.2f}</strong>
-            </div>
-        </div>
-        """
-    
-    html += """
-    </div>
-    
-    <div style='background: white; padding: 25px; border-radius: 15px; 
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px;'>
-        <h3 style='color: #667eea; margin-top: 0;'>💡 Rekomendasi & Langkah Selanjutnya</h3>
-        <ul style='color: #555; line-height: 2; margin: 10px 0; padding-left: 20px;'>
-    """
-    
-    for rec in analysis['recommendations']:
-        html += f"<li>{rec}</li>"
-    
-    html += """
-        </ul>
-    </div>
-    
-    <div style='background: #e3f2fd; padding: 20px; border-radius: 12px; 
-                border-left: 5px solid #2196f3;'>
-        <h4 style='color: #1976d2; margin-top: 0;'>📚 Referensi & Standar</h4>
-        <ul style='color: #555; line-height: 1.8; margin: 10px 0; font-size: 14px; padding-left: 20px;'>
-            <li>Analisis berdasarkan <strong>WHO Growth Velocity Standards</strong></li>
-            <li>Velocity normal bervariasi berdasarkan usia anak</li>
-            <li>Monitoring rutin setiap bulan direkomendasikan untuk akurasi</li>
-            <li>Konsultasi profesional kesehatan untuk interpretasi lengkap</li>
-        </ul>
-    </div>
-    """
-    
-    return html
-
-# --- FITUR 4: BUG FIX HTML RENDERING ---
-# (Fungsi ini sengaja diduplikasi dari v3.2 untuk memastikan ketersediaan)
-# (Fungsi v3.1 `generate_video_links_html` menangani list, ini menangani 1 video)
-
-def render_video_card_fixed(video_data: Dict) -> str:
-    """
-    Render video card dengan HTML yang proper (tidak raw)
-    """
-    
-    video_html = f"""
-    <div class='video-card' style='background: linear-gradient(135deg, #ffe8f0 0%, #fff5f8 100%); 
-                                   padding: 20px; border-radius: 15px; margin: 15px 0;
-                                   box-shadow: 0 4px 12px rgba(255, 107, 157, 0.15);
-                                   border: 2px solid #ffd4e0;'>
-        <div class='video-title' style='display: flex; align-items: center; margin-bottom: 12px;'>
-            <span style='font-size: 24px; margin-right: 12px;'>{video_data.get('icon', '🍎')}</span>
-            <h4 style='margin: 0; color: #ff6b9d; font-size: 18px;'>{video_data['title']}</h4>
-        </div>
-        <div class='video-description' style='color: #666; font-size: 14px; margin-bottom: 10px; line-height: 1.6;'>
-            {video_data.get('description', '')}
-        </div>
-        <div class='video-duration' style='color: #999; font-size: 13px; margin-bottom: 15px;'>
-            ⏱️ Durasi: {video_data.get('duration', 'N/A')}
-        </div>
-        <div style='margin-top: 10px;'>
-            <a href='{video_data['url']}' target='_blank'
-               style='display: inline-block; padding: 12px 24px; 
-                      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
-                      color: white; text-decoration: none; border-radius: 25px;
-                      font-size: 14px; font-weight: 600;
-                      box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
-                      transition: all 0.3s ease;'
-               onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(255, 107, 157, 0.4)';"
-               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 107, 157, 0.3)';">
-                ▶️ Tonton Video
-            </a>
-        </div>
-    </div>
-    """
-    
-    return video_html
-
-# --- Helper Utilities (from v3.2) ---
-
-def format_date_indonesian(date_obj: datetime) -> str:
-    """Format tanggal ke Bahasa Indonesia"""
-    months_id = [
-        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-    ]
-    return f"{date_obj.day} {months_id[date_obj.month-1]} {date_obj.year}"
-
-
-print("✅ Section 10 & 10B loaded: v3.1 Checklist functions retained, v3.2 new features added.")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 11: GRADIO UI (Fully Updated for v3.2)
@@ -5128,7 +4545,7 @@ CUSTOM_CSS = """
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   LIBRARY ARTICLE CARDS (v3.2)
+   LIBRARY ARTICLE CARDS (v3.1)
    ═══════════════════════════════════════════════════════════════════ */
 
 .article-card {
@@ -5331,7 +4748,7 @@ print("✅ Custom CSS loaded with v3.1 dark mode optimizations & new styles")
 
 # Build Gradio Interface
 with gr.Blocks(
-    title=APP_TITLE,
+    title=APP_TITLE, # MODIFIED
     theme=gr.themes.Soft(
         primary_hue="pink",
         secondary_hue="teal",
@@ -5352,12 +4769,12 @@ with gr.Blocks(
     ### 💕 Monitor Pertumbuhan Anak Profesional Berbasis WHO Standards
     
     **Fitur Unggulan v3.2:**
-    - ✅ **BARU!** Mode Mudah - Referensi cepat rentang normal BB/TB/LK
-    - ✅ **BARU!** Kalkulator Target Kejar Tumbuh - Monitor laju pertumbuhan (velocity)
-    - ✅ **BARU!** Perpustakaan Artikel v2 - 50+ artikel dengan link terverifikasi
-    - ✅ Kalkulator Gizi WHO & Permenkes 2020
-    - ✅ Export PDF & CSV Profesional
-    - ✅ Checklist Bulanan & Video Edukasi KPSP/MPASI
+    - ✅ **Mode Mudah:** Referensi cepat rentang normal BB, TB, LK.
+    - ✅ **Kalkulator Kejar Tumbuh:** Monitor laju pertumbuhan (velocity) anak Anda.
+    - ✅ **Perpustakaan Lokal:** Baca artikel Kemenkes, IDAI, WHO langsung di aplikasi.
+    - ✅ **Bug Fix:** Perbaikan tampilan HTML di checklist bulanan.
+    - ✅ Standar WHO 2006 & Permenkes RI 2020.
+    - ✅ Export PDF & CSV Profesional.
     
     ---
     
@@ -5368,7 +4785,7 @@ with gr.Blocks(
     ---
     """)
     
-    # JavaScript for Browser Notifications
+    # JavaScript for Browser Notifications (from v3.1)
     notification_js = """
     <script>
     // Browser Notification Manager
@@ -5381,18 +4798,15 @@ with gr.Blocks(
                 console.log("Browser tidak support notifikasi");
                 return false;
             }
-            
             if (Notification.permission === 'granted') {
                 this.permission = 'granted';
                 return true;
             }
-            
             if (Notification.permission !== 'denied') {
                 const permission = await Notification.requestPermission();
                 this.permission = permission;
                 return permission === 'granted';
             }
-            
             return false;
         },
         
@@ -5402,7 +4816,6 @@ with gr.Blocks(
                 console.log('Permission not granted');
                 return;
             }
-            
             const options = {
                 body: body,
                 icon: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/' + icon.codePointAt(0).toString(16) + '.png',
@@ -5412,19 +4825,14 @@ with gr.Blocks(
                 requireInteraction: false,
                 silent: false
             };
-            
             try {
                 const notification = new Notification(title, options);
-                
                 notification.onclick = function(event) {
                     event.preventDefault();
                     window.focus();
                     notification.close();
                 };
-                
-                // Auto close after 10 seconds
                 setTimeout(() => notification.close(), 10000);
-                
             } catch (e) {
                 console.error('Notification error:', e);
             }
@@ -5463,13 +4871,13 @@ with gr.Blocks(
     state_payload = gr.State({})
     
     # ═══════════════════════════════════════════════════════════════════════
-    # MAIN TABS (RE-ORDERED AND UPDATED FOR v3.2)
+    # MAIN TABS (MODIFIED FOR v3.2)
     # ═══════════════════════════════════════════════════════════════════════
     
     with gr.Tabs() as main_tabs:
         
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 1: KALKULATOR GIZI (from v3.1)
+        # TAB 1: KALKULATOR GIZI (from v3.1, unchanged)
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("📊 Kalkulator Gizi WHO", id=0):
@@ -5768,7 +5176,7 @@ with gr.Blocks(
             )
         
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 2: CHECKLIST BULANAN (UPDATED with v3.2 BUG FIX)
+        # TAB 2: CHECKLIST BULANAN (BUG FIX v3.2)
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("📋 Checklist Sehat Bulanan", id=1):
@@ -5799,30 +5207,29 @@ with gr.Blocks(
                     size="lg"
                 )
             
-            # --- BUG FIX v3.2 ---
-            # Mengganti gr.Markdown() dengan gr.HTML() untuk merender video cards
+            # --- BUG FIX (v3.2) ---
+            # Mengganti gr.Markdown menjadi gr.HTML untuk merender video card dengan benar
             checklist_output = gr.HTML(
-                "*Pilih bulan dan klik tombol untuk melihat checklist...*"
+                value="<p style='padding: 20px; text-align: center; color: #888;'>Pilih bulan dan klik tombol untuk melihat checklist...</p>"
             )
-            # --- END BUG FIX ---
             
             def generate_checklist_handler(month, payload):
                 """Handler untuk generate checklist (UPDATED for v3.1)"""
                 if not payload:
                     return """
-                <div style='padding: 20px; background: #fff3cd; border-left: 5px solid #ffc107; border-radius: 8px;'>
-                    <h3 style='color: #856404; margin-top: 0;'>⚠️ Data Belum Tersedia</h3>
-                    <p>Silakan lakukan analisis di tab <strong>Kalkulator Gizi</strong> terlebih dahulu untuk mendapatkan 
-                    checklist yang disesuaikan dengan status gizi anak.</p>
-                </div>
-                """
+<h2> ⚠️ Data Belum Tersedia</h2>
+<p style='padding: 20px;'>
+Silakan lakukan analisis di tab <strong>Kalkulator Gizi</strong> terlebih dahulu untuk mendapatkan 
+checklist yang disesuaikan dengan status gizi anak.
+</p>
+"""
                 
                 try:
-                    # Use the v3.1 function that includes videos
-                    recommendations = generate_checklist_with_videos(int(month), payload)
-                    return recommendations
+                    # Use the NEW function that includes videos
+                    recommendations_html = generate_checklist_with_videos(int(month), payload)
+                    return recommendations_html
                 except Exception as e:
-                    return f"<div style='padding: 20px; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 8px;'><h3 style='color: #721c24; margin-top: 0;'>❌ Error</h3><p>Terjadi kesalahan: {str(e)}</p></div>"
+                    return f"<h2> ❌ Error</h2><p>Terjadi kesalahan: {str(e)}</p>"
             
             generate_checklist_btn.click(
                 generate_checklist_handler,
@@ -5831,7 +5238,7 @@ with gr.Blocks(
             )
         
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 3: TENTANG & BANTUAN (from v3.1, re-numbered to id=2)
+        # TAB 3: TENTANG & BANTUAN (Re-indexed to id=2)
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("ℹ️ Tentang & Bantuan", id=2):
@@ -5842,7 +5249,7 @@ with gr.Blocks(
             pertumbuhan anak berbasis standar WHO Child Growth Standards 2006 dan 
             Permenkes RI No. 2 Tahun 2020.
             
-            ### ✨ Fitur Utama (v{APP_VERSION})
+            ### ✨ Fitur Utama (v3.2)
             
             1. **📊 Kalkulator Z-Score WHO**
                - 5 indeks antropometri: WAZ, HAZ, WHZ, BAZ, HCZ
@@ -5855,27 +5262,25 @@ with gr.Blocks(
             3. **💾 Export Profesional**
                - PDF laporan lengkap dengan QR code & CSV data
             
-            4. **📋 Checklist Bulanan & Video**
-               - Milestone perkembangan, gizi, imunisasi, & KPSP
-               - Integrasi video edukasi KPSP & MPASI
+            4. **📋 Checklist Bulanan**
+               - Milestone perkembangan, KPSP, Gizi, Imunisasi
+               - Integrasi video edukasi
             
-            5. **🎯 Fitur Kejar Tumbuh (BARU!)**
-               - Monitor laju (velocity) pertumbuhan anak
-               - Bandingkan dengan standar WHO
-            
-            6. **📚 Perpustakaan Artikel (BARU!)**
-               - 50+ artikel terverifikasi dari Kemenkes, IDAI, WHO, dll.
+            5. **🎯 Fitur Baru (v3.2)**
+               - **Mode Mudah:** Referensi cepat rentang normal
+               - **Kalkulator Kejar Tumbuh:** Monitor laju/velocity pertumbuhan
+               - **Perpustakaan Lokal:** Baca artikel Kemenkes/IDAI/WHO langsung
             
             ### 📚 Referensi Ilmiah
             
             - **WHO Child Growth Standards 2006**
             - **Permenkes RI No. 2 Tahun 2020**
-            - **KPSP (Kuesioner Pra Skrining Perkembangan)**
+            - **Rekomendasi Ikatan Dokter Anak Indonesia (IDAI)**
             
             ### ⚠️ Disclaimer
             
             Aplikasi ini adalah **alat skrining awal**, BUKAN pengganti konsultasi medis.
-            Hasil analisis harus dikonsultasikan dengan Dokter Spesialis Anak atau Ahli Gizi.
+            Hasil analisis harus dikonsultasikan dengan dokter spesialis anak, ahli gizi, atau tenaga kesehatan terlatih.
             
             ### 📱 Kontak & Dukungan
             
@@ -5885,13 +5290,15 @@ with gr.Blocks(
             
             ### 👨‍💻 Developer
             
-            Dikembangkan oleh **Habib Arsy** ---
+            Dikembangkan oleh **Habib Arsy** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
+            
+            ---
             
             © 2024-2025 {APP_TITLE}. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
             """)
         
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 4: PREMIUM & NOTIFIKASI (from v3.1, re-numbered to id=3)
+        # TAB 4: PREMIUM & NOTIFIKASI (Re-indexed to id=3)
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("⭐ Premium & Notifikasi", id=3):
@@ -5920,7 +5327,6 @@ with gr.Blocks(
                         <div style='font-size: 14px; color: #666; margin-bottom: 20px;'>
                             /bulan
                         </div>
-                        
                         <div style='text-align: left; background: white; padding: 20px; 
                                     border-radius: 10px; margin: 20px 0;'>
                             <h4 style='color: #333; margin-top: 0;'>✨ Fitur Silver:</h4>
@@ -6013,11 +5419,11 @@ with gr.Blocks(
             
             gr.Markdown("---")
             
-            # NOTIFICATION SYSTEM (from v3.1, uses HOUR slider)
+            # NOTIFICATION SYSTEM (MODIFIED for v3.1 - HOUR slider)
             gr.Markdown("""
             ## 🔔 Sistem Notifikasi Browser (Premium Gold)
             
-            Dapatkan pengingat otomatis untuk jadwal pemeriksaan, imunisasi, MPASI, dll.
+            Dapatkan pengingat otomatis untuk jadwal MPASI, imunisasi, atau pemeriksaan bulanan.
             """)
             
             with gr.Row():
@@ -6055,7 +5461,7 @@ with gr.Blocks(
                             lines=2
                         )
                         
-                        # --- HOUR SLIDER (from v3.1) ---
+                        # --- MODIFIED SLIDER (v3.1) ---
                         reminder_delay = gr.Slider(
                             minimum=0.5,  # 30 menit minimum
                             maximum=24,   # 24 jam maximum
@@ -6064,7 +5470,7 @@ with gr.Blocks(
                             label="Delay (jam) ⏰",
                             info="Notifikasi akan muncul setelah X jam"
                         )
-                        # --- END HOUR SLIDER ---
+                        # --- END MODIFIED SLIDER ---
                         
                         schedule_btn = gr.Button(
                             "⏰ Jadwalkan Reminder",
@@ -6109,21 +5515,54 @@ with gr.Blocks(
                     
                     template_choice = gr.Dropdown(
                         choices=[
-                            "Pemeriksaan Bulanan",
-                            "Jadwal Imunisasi",
-                            "Milestone Perkembangan",
-                            "Reminder Nutrisi",
-                            "Custom"
+                            "Pemeriksaan Bulanan", "Jadwal Imunisasi",
+                            "Milestone Perkembangan", "Reminder Nutrisi", "Custom"
                         ],
-                        value="Custom",
-                        label="Pilih Template",
-                        info="Pilih template untuk quick setup"
+                        value="Custom", label="Pilih Template", info="Pilih template untuk quick setup"
                     )
                     
-                    use_template_btn = gr.Button(
-                        "📋 Gunakan Template",
-                        variant="secondary"
-                    )
+                    use_template_btn = gr.Button( "📋 Gunakan Template", variant="secondary")
+            
+            # JavaScript Handlers for Notifications
+            enable_notif_js = """
+            <script>
+            function enableNotifications() {
+                window.AnthroNotification.requestPermission().then(granted => {
+                    const statusDiv = document.getElementById('notif-status');
+                    if (granted) {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>✅ Notifikasi Berhasil Diaktifkan!</strong><br/>
+                                <span style='font-size: 13px;'>Anda akan menerima reminder sesuai jadwal</span>
+                            </div>
+                        `;
+                        setTimeout(() => {
+                            window.AnthroNotification.send(
+                                '🎉 Selamat!',
+                                'Notifikasi browser berhasil diaktifkan. Anda akan menerima reminder untuk tumbuh kembang anak.',
+                                '🔔'
+                            );
+                        }, 1000);
+                        return 'Notifikasi diaktifkan!';
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: #ff6b6b; 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>❌ Notifikasi Ditolak</strong><br/>
+                                <span style='font-size: 13px;'>
+                                    Mohon izinkan notifikasi di pengaturan browser Anda
+                                </span>
+                            </div>
+                        `;
+                        return 'Notifikasi ditolak.';
+                    }
+                });
+                return 'Memproses...';
+            }
+            </script>
+            """
+            gr.HTML(enable_notif_js)
             
             # Event Handlers
             def handle_enable_notification():
@@ -6131,68 +5570,31 @@ with gr.Blocks(
                 <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
                            border-radius: 10px; color: white; text-align: center; margin: 15px 0;'>
                     <strong>✅ Notifikasi Browser Diaktifkan!</strong><br/>
-                    <span style='font-size: 13px;'>
-                        Browser notification sudah aktif. Anda akan menerima reminder otomatis.
-                    </span>
+                    <span style='font-size: 13px;'>Browser notification sudah aktif.</span>
                 </div>
-                <script>
-                enableNotifications();
-                </script>
+                <script>enableNotifications();</script>
                 """)
             
             def handle_schedule_reminder_hours(title, message, delay_hours):
-                """Handle reminder with HOUR-based delay"""
                 if not title or not message:
                     return "❌ Judul dan pesan tidak boleh kosong!"
-                
-                # Convert hours to minutes for the JavaScript
                 delay_minutes = int(delay_hours * 60)
-                
                 js_code = f"""
                 <script>
-                window.AnthroNotification.schedule(
-                    '{title}',
-                    '{message}',
-                    {delay_minutes},
-                    '⏰'
-                );
+                window.AnthroNotification.schedule('{title}', '{message}', {delay_minutes}, '⏰');
                 alert('✅ Reminder dijadwalkan! Akan muncul dalam {delay_hours} jam.');
                 </script>
                 """
-                
-                return (
-                    f"✅ **Reminder Dijadwalkan!**\n\n"
-                    f"**Judul:** {title}\n\n"
-                    f"**Pesan:** {message}\n\n"
-                    f"**Waktu:** {delay_hours} jam dari sekarang\n\n"
-                    f"Notifikasi akan muncul otomatis. Jangan tutup tab browser!" +
-                    js_code
-                )
+                return (f"✅ **Reminder Dijadwalkan!**\n\n**Judul:** {title}\n\n**Pesan:** {message}\n\n"
+                        f"**Waktu:** {delay_hours} jam dari sekarang\n\n" + js_code)
             
             def handle_use_template(template):
                 templates = {
-                    "Pemeriksaan Bulanan": (
-                        "🩺 Pemeriksaan Bulanan",
-                        "Sudah saatnya pemeriksaan bulanan! Ukur berat, tinggi, dan lingkar kepala anak.",
-                        8 # 8 jam
-                    ),
-                    "Jadwal Imunisasi": (
-                        "💉 Jadwal Imunisasi",
-                        "Jangan lupa jadwal imunisasi hari ini! Cek jadwal lengkap di aplikasi.",
-                        1 # 1 jam
-                    ),
-                    "Milestone Perkembangan": (
-                        "🎯 Cek Milestone",
-                        "Waktunya cek milestone perkembangan anak. Lihat checklist KPSP.",
-                        12 # 12 jam
-                    ),
-                    "Reminder Nutrisi": (
-                        "🍽️ Waktu Makan",
-                        "Saatnya memberi makan anak. Pastikan menu 4 bintang!",
-                        3 # 3 jam
-                    )
+                    "Pemeriksaan Bulanan": ("🩺 Pemeriksaan Bulanan", "Sudah saatnya pemeriksaan bulanan! Ukur berat, tinggi, dan lingkar kepala anak.", 8),
+                    "Jadwal Imunisasi": ("💉 Jadwal Imunisasi", "Jangan lupa jadwal imunisasi hari ini! Cek jadwal lengkap di aplikasi.", 1),
+                    "Milestone Perkembangan": ("🎯 Cek Milestone", "Waktunya cek milestone perkembangan anak. Lihat checklist KPSP.", 12),
+                    "Reminder Nutrisi": ("🍽️ Waktu Makan", "Saatnya memberi makan anak. Pastikan menu 4 bintang!", 3)
                 }
-                
                 if template in templates:
                     title, message, delay = templates[template]
                     return title, message, delay
@@ -6202,22 +5604,17 @@ with gr.Blocks(
                 pkg_info = PREMIUM_PACKAGES.get(package, {})
                 price = pkg_info.get('price', 0)
                 price_formatted = f"Rp {price:,}".replace(',', '.')
-                
-                wa_message = f"Halo PeduliGiziBalita, saya ingin upgrade ke paket {package.upper()} ({price_formatted}/bulan)"
+                wa_message = f"Halo PeduliGiziBalita, saya ingin upgrade ke paket {package.upper()} ({price_formatted}/bulan)" # MODIFIED
                 wa_link = f"https://wa.me/{CONTACT_WA}?text={wa_message.replace(' ', '%20')}"
-                
                 return gr.Markdown.update(
                     value=f"""
 ## 🎉 Terima kasih telah memilih paket {package.upper()}!
-
 **Harga:** {price_formatted}/bulan
-
 **Langkah selanjutnya:**
 1. Klik tombol WhatsApp di bawah
 2. Konfirmasi pembelian dengan admin
 3. Lakukan pembayaran
 4. Akun premium akan diaktifkan dalam 5 menit
-
 <div style='text-align: center; margin: 30px 0;'>
     <a href='{wa_link}' target='_blank'
        style='display: inline-block; padding: 20px 40px; 
@@ -6228,78 +5625,50 @@ with gr.Blocks(
         💬 Hubungi Admin via WhatsApp
     </a>
 </div>
-
-**Metode Pembayaran:**
-- 💳 Transfer Bank (BCA, Mandiri, BRI)
-- 📱 E-Wallet (GoPay, OVO, DANA)
-- 💰 QRIS
-
-*Fitur premium akan aktif otomatis setelah pembayaran terverifikasi*
-""",
-                    visible=True
-                )
+**Metode Pembayaran:** Transfer Bank (BCA, Mandiri, BRI), E-Wallet (GoPay, OVO, DANA), QRIS
+""", visible=True)
             
             # Connect event handlers
-            enable_notif_btn.click(
-                fn=handle_enable_notification,
-                outputs=[notif_status]
-            )
-            
+            enable_notif_btn.click(fn=handle_enable_notification, outputs=[notif_status])
             schedule_btn.click(
-                fn=handle_schedule_reminder_hours, # Use new handler
+                fn=handle_schedule_reminder_hours,
                 inputs=[reminder_title, reminder_message, reminder_delay],
                 outputs=[reminder_status]
-            ).then(
-                lambda: gr.update(visible=True),
-                outputs=[reminder_status]
-            )
-            
+            ).then(lambda: gr.update(visible=True), outputs=[reminder_status])
             use_template_btn.click(
                 fn=handle_use_template,
                 inputs=[template_choice],
                 outputs=[reminder_title, reminder_message, reminder_delay]
             )
-            
             silver_btn.click(
-                fn=lambda: handle_premium_upgrade("silver"),
-                outputs=[premium_status]
-            ).then(
-                lambda: gr.update(visible=True),
-                outputs=[premium_status]
-            )
-            
+                fn=lambda: handle_premium_upgrade("silver"), outputs=[premium_status]
+            ).then(lambda: gr.update(visible=True), outputs=[premium_status])
             gold_btn.click(
-                fn=lambda: handle_premium_upgrade("gold"),
-                outputs=[premium_status]
-            ).then(
-                lambda: gr.update(visible=True),
-                outputs=[premium_status]
-            )
-
+                fn=lambda: handle_premium_upgrade("gold"), outputs=[premium_status]
+            ).then(lambda: gr.update(visible=True), outputs=[premium_status])
+        
         # ═══════════════════════════════════════════════════════════════════
-        # TAB 5: NEW FEATURES v3.2 (NEW)
+        # TAB 5: NEW FEATURES (v3.2) - (Re-indexed to id=4)
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("🎉 Fitur Baru v3.2", id=4):
-            
             gr.Markdown("""
-            # 🎉 Fitur Baru PeduliGiziBalita v3.2
-            
-            Selamat datang di fitur-fitur terbaru! Fitur ini dirancang untuk memberikan wawasan yang lebih dalam dan lebih cepat mengenai pertumbuhan anak Anda.
+            # 🎉 Fitur Baru {APP_VERSION}
+            Selamat datang di fitur-fitur terbaru! Pilih sub-tab di bawah:
             """)
             
             with gr.Tabs():
                 
                 # --- SUB-TAB 1: MODE MUDAH ---
-                with gr.TabItem("🎯 Mode Mudah"):
+                with gr.Tab("🎯 Mode Mudah"):
                     gr.Markdown("""
                     ### Mode Mudah - Referensi Cepat untuk Ibu
                     
                     Tidak perlu menghitung z-score yang rumit! Cukup masukkan **usia** dan **jenis kelamin** anak, 
-                    dan kami akan menampilkan **rentang normal** untuk berat badan, panjang/tinggi badan, dan lingkar kepala.
+                    dan kami akan menampilkan **rentang normal** untuk berat badan, tinggi badan, dan lingkar kepala.
                     
                     Sangat cocok untuk:
-                    - ✅ Skrining cepat di rumah
+                    - ✅ Screening cepat di rumah
                     - ✅ Evaluasi awal sebelum ke posyandu
                     - ✅ Memahami standar pertumbuhan dengan mudah
                     """)
@@ -6326,7 +5695,8 @@ with gr.Blocks(
                         
                         with gr.Column(scale=2):
                             mode_mudah_output = gr.HTML(
-                                label="Hasil Referensi Cepat"
+                                label="Hasil Referensi Cepat",
+                                value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil akan tampil di sini...</p>"
                             )
                     
                     # Connect handler
@@ -6337,9 +5707,9 @@ with gr.Blocks(
                     )
                 
                 # --- SUB-TAB 2: KALKULATOR KEJAR TUMBUH ---
-                with gr.TabItem("📈 Kalkulator Target Kejar Tumbuh"):
+                with gr.Tab("📈 Kalkulator Target Kejar Tumbuh"):
                     gr.Markdown("""
-                    ### Kalkulator Target Kejar Tumbuh
+                    ### Kalkulator Target Kejar Tumbuh (Growth Velocity)
                     
                     Monitor **laju pertumbuhan** anak Anda dengan standar internasional WHO! 
                     Fitur ini membantu Anda:
@@ -6347,7 +5717,6 @@ with gr.Blocks(
                     - 📈 Memantau **velocity pertumbuhan** (kenaikan BB & TB per bulan)
                     - 🎯 Mengetahui apakah anak **mengejar kurva** atau **melambat**
                     - 💡 Mendapat **rekomendasi nutrisi** berdasarkan trajectory pertumbuhan
-                    - 📊 Visualisasi grafik pertumbuhan yang mudah dipahami
                     
                     ---
                     
@@ -6362,7 +5731,6 @@ with gr.Blocks(
                        2025-03-15,8,8.3,70.0
                        ```
                     4. Klik **Analisis Pertumbuhan**
-                    5. Lihat hasil analisis dan rekomendasi
                     """)
                     
                     with gr.Row():
@@ -6377,7 +5745,7 @@ with gr.Blocks(
                                 label="Data Pengukuran",
                                 placeholder="2025-01-15,6,7.5,67.0\n2025-02-15,7,7.9,68.5\n2025-03-15,8,8.3,70.0",
                                 lines=10,
-                                info="Format: tanggal,usia_bulan,bb,tb (satu per baris)"
+                                info="Format: tanggal,usia_bulan,bb,tb"
                             )
                             
                             kejar_btn = gr.Button(
@@ -6385,50 +5753,60 @@ with gr.Blocks(
                                 variant="primary",
                                 size="lg"
                             )
-                            
-                            gr.Markdown("""
-                            **💡 Tips Input Data:**
-                            - Tanggal: YYYY-MM-DD atau DD-MM-YYYY
-                            - Usia: dalam bulan (bisa desimal, mis. 6.5)
-                            - BB: dalam kilogram (mis. 7.5)
-                            - TB: dalam sentimeter (mis. 67.0)
-                            - Minimal 2 data pengukuran
-                            """)
                         
                         with gr.Column(scale=2):
                             kejar_output_html = gr.HTML(
-                                label="Hasil Analisis"
+                                label="Hasil Analisis Velocity",
+                                value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil analisis akan tampil di sini...</p>"
                             )
                             
                             kejar_output_plot = gr.Image(
                                 label="Grafik Trajectory Pertumbuhan",
-                                type="filepath"
+                                type="filepath",
+                                visible=False
                             )
                     
                     # Connect handler
+                    def kejar_tumbuh_handler_wrapper(data, gender):
+                        html, plot_path = kalkulator_kejar_tumbuh_handler(data, gender)
+                        if plot_path:
+                            return html, gr.update(value=plot_path, visible=True)
+                        else:
+                            return html, gr.update(visible=False)
+
                     kejar_btn.click(
-                        fn=kalkulator_kejar_tumbuh_handler,
+                        fn=kejar_tumbuh_handler_wrapper,
                         inputs=[kejar_data, kejar_gender],
                         outputs=[kejar_output_html, kejar_output_plot]
                     )
                 
-                # --- SUB-TAB 3: PERPUSTAKAAN (UPDATED) ---
-                with gr.TabItem("📚 Perpustakaan (Updated)"):
+                # --- SUB-TAB 3: PERPUSTAKAAN (LOKAL) ---
+                with gr.Tab("📚 Perpustakaan (Lokal)"):
                     gr.Markdown("""
-                    ### Perpustakaan Ibu Balita - Link Terverifikasi
+                    ### Perpustakaan Ibu Balita - Baca Langsung
                     
-                    Koleksi artikel terpercaya dari WHO, Kemenkes RI, IDAI, CDC, UNICEF dan sumber kredibel lainnya.
-                    
-                    ✅ **Semua link telah diverifikasi dan valid!**
+                    Pilih artikel dari daftar di bawah untuk membacanya langsung di sini.
+                    Semua konten bersumber dari Kemenkes, IDAI, WHO, dan sumber terpercaya lainnya.
                     """)
                     
-                    perpus_html = gr.HTML(
-                        value=render_perpustakaan_updated(),
-                        label="Perpustakaan Artikel"
+                    artikel_dropdown = gr.Dropdown(
+                        choices=JUDUL_ARTIKEL_LOKAL,
+                        label="Pilih Judul Artikel",
+                        info="Pilih artikel yang ingin Anda baca"
+                    )
+                    
+                    artikel_konten_output = gr.Markdown(
+                        value="<div style='padding: 20px; text-align: center; color: #888;'>Silakan pilih artikel untuk dibaca.</div>"
+                    )
+                    
+                    # Hubungkan handler (interaktif saat diubah)
+                    artikel_dropdown.change(
+                        fn=tampilkan_artikel_lokal,
+                        inputs=[artikel_dropdown],
+                        outputs=[artikel_konten_output]
                     )
 
-    
-    # Footer (MODIFIED FOR v3.2)
+    # Footer (MODIFIED)
     gr.Markdown(f"""
     ---
     
@@ -6440,7 +5818,7 @@ with gr.Blocks(
             Permenkes RI No. 2/2020
         </p>
         <p style='font-size: 13px; color: #888; margin: 10px 0;'>
-            Developed by <strong>Habib Arsy</strong>
+            Developed by <strong>Habib Arsy</strong> - FKIK Universitas Jambi
         </p>
         <p style='font-size: 12px; color: #999; margin: 10px 0;'>
             📱 Contact: <a href="https://wa.me/{CONTACT_WA}" target="_blank">+{CONTACT_WA}</a> | 
@@ -6505,10 +5883,10 @@ async def health_check():
             "pdf_export": True,
             "csv_export": True,
             "kpsp_screening": True,
-            "education_library": True, 
             "video_integration": True,
             "mode_mudah": True, # Added v3.2
             "growth_velocity": True, # Added v3.2
+            "local_library": True, # Added v3.2
         },
         "endpoints": {
             "main_app": "/",
@@ -6525,7 +5903,7 @@ async def api_info():
         "app_name": APP_TITLE,
         "version": APP_VERSION,
         "description": APP_DESCRIPTION,
-        "author": "Habib Arsy", # MODIFIED
+        "author": "Habib Arsy - FKIK Universitas Jambi", # MODIFIED
         "contact": f"+{CONTACT_WA}",
         "base_url": BASE_URL,
         "standards": {
@@ -6542,19 +5920,19 @@ async def api_info():
             "CSV data export",
             "KPSP screening",
             "Monthly checklist recommendations",
-            "Educational Article Library (v3.2)",
-            "YouTube Video Integration (v3.1)",
+            "YouTube Video Integration",
             "Mode Mudah (v3.2)",
-            "Kalkulator Target Kejar Tumbuh (v3.2)"
+            "Kalkulator Kejar Tumbuh (v3.2)",
+            "Perpustakaan Artikel Lokal (v3.2)"
         ]
     }
 
-# Root redirect (optional - if you want / to show info before Gradio)
+# Root redirect
 @app_fastapi.get("/api")
 async def api_root():
     """API root endpoint"""
     return {
-        "message": f"{APP_TITLE} API is running",
+        "message": f"Selamat datang di {APP_TITLE} API", # MODIFIED
         "version": APP_VERSION,
         "docs": "/api/docs",
         "health": "/health",
@@ -6583,18 +5961,16 @@ except Exception as e:
 # Print startup banner
 print("")
 print("=" * 80)
-print(f"🚀 {APP_TITLE} v{APP_VERSION} - READY FOR DEPLOYMENT".center(80))
+print(f"🚀 {APP_TITLE} v{APP_VERSION} - READY FOR DEPLOYMENT".center(80)) # MODIFIED
 print("=" * 80)
-print(f"   Author: Habib Arsy")
 print(f"📊 WHO Calculator: {'✅ Operational' if calc else '❌ Unavailable'}")
 print(f"🌐 Base URL: {BASE_URL}")
 print(f"📱 Contact: +{CONTACT_WA}")
 print(f"🎨 Themes: {len(UI_THEMES)} available")
 print(f"💉 Immunization: {len(IMMUNIZATION_SCHEDULE)} schedules")
 print(f"🧠 KPSP: {len(KPSP_QUESTIONS)} question sets")
-print(f"📚 Library: {sum(len(v) for v in PERPUSTAKAAN_IBU_BALITA_UPDATED.values())} articles (v3.2)")
+print(f"📚 Library: {len(ARTIKEL_LOKAL_DATABASE)} articles loaded (v3.2)") # MODIFIED
 print(f"🎥 Videos: {len(KPSP_YOUTUBE_VIDEOS) + sum(len(v) for v in MPASI_YOUTUBE_VIDEOS.values())} video links (v3.1)")
-print(f"🎉 New v3.2 Features: Mode Mudah, Kejar Tumbuh, Bug Fixes")
 print("=" * 80)
 print("▶️  Run Command: uvicorn app:app --host 0.0.0.0 --port $PORT")
 print("=" * 80)
