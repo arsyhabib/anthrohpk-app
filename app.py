@@ -6027,7 +6027,7 @@ checklist yang disesuaikan dengan status gizi anak.
 
                     kejar_btn.click(
                         fn=kejar_tumbuh_handler_wrapper,
-                        inputs=[kejar_data, kejar_gender],
+                        inputs=[kejar_tumbuh_data_state, kejar_gender],
                         outputs=[kejar_output_html, kejar_output_plot]
                     )
                 
