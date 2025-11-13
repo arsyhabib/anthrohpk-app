@@ -1,6 +1,6 @@
 # File: requirements.txt
 # ⭐ PENTING: WHO Calculator dari GitHub
-+ https://github.com/natelandau/pygrowup/archive/master.zip
+https://github.com/natelandau/pygrowup/archive/master.zip
 
 # Web Framework (versi STABIL untuk cloud)
 fastapi==0.115.4
