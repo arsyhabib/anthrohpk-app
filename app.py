@@ -3540,6 +3540,8 @@ def generate_checklist_with_videos(month: int, payload: Dict) -> str:
 
 
 print("✅ Section 10 loaded: Checklist & KPSP functions (Updated with videos & library 
+helpers)")
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 11: GRADIO UI (Fully Updated for v3.1)
