@@ -73,13 +73,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Gradio UI
 import gradio as gr
 
-# WHO Calculator - CRITICAL IMPORT
-try:
-    from pygrowup import Calculator
-    print("✅ WHO Calculator (pygrowup) loaded successfully")
-except ImportError as e:
-    print(f"❌ CRITICAL: pygrowup not installed! Run: pip install git+https://github.com/natelandau/pygrowup.git")
-    sys.exit(1)
+
 
 # HTTP Requests
 import requests
