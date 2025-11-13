@@ -1,14 +1,24 @@
 """
-GiziSiKecil (stable + PDF)
---------------------------------------
-FastAPI + Gradio app for child growth monitoring (WHO + Permenkes)
+GiziSiKecil – WHO Growth, Permenkes, PDF, EduParenting
+------------------------------------------------------
+FastAPI + Gradio app for child growth monitoring:
+
+- Z-score WHO (WAZ, HAZ, WHZ, BAZ, HCZ)
+- Dual classification WHO + Permenkes
+- Growth curves (BB/U, TB/U, LK/U, BB/TB)
+- Monthly checklist & KPSP
+- EduParenting & motivational quotes
+- PDF report export
+
+Run (e.g. on Render):
+    uvicorn app:app --host 0.0.0.0 --port $PORT
 """
 
 import os
 import math
 import random
 from datetime import datetime, date
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 
 import numpy as np
 import matplotlib
@@ -24,12 +34,13 @@ import gradio as gr
 
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
+from functools import lru_cache
 
 # -------------------------------------------------
 # Global config & folders
 # -------------------------------------------------
-APP_VERSION = "2.2.0"
-APP_TITLE = "GiziSiKecil - Monitor Pertumbuhan Anak (Stable + PDF)"
+APP_VERSION = "2.3.0"
+APP_TITLE = "GiziSiKecil - Monitor Pertumbuhan Anak (Full)"
 
 BASE_URL = os.getenv("BASE_URL", "https://anthrohpk-app.onrender.com")
 STATIC_DIR = "static"
@@ -77,7 +88,6 @@ MOM_QUOTES = [
     "💖 'Ibu, hatimu adalah rumah pertama Si Kecil, dan itu akan selalu jadi rumahnya yang paling aman.'",
 ]
 
-
 # -------------------------------------------------
 # WHO Calculator
 # -------------------------------------------------
@@ -95,7 +105,7 @@ except Exception as e:
     calc = None
 
 # -------------------------------------------------
-# Helper functions
+# Helper functions: parsing & age
 # -------------------------------------------------
 def as_float(x) -> Optional[float]:
     if x is None:
@@ -142,9 +152,8 @@ def z_to_percentile(z: Optional[float]) -> Optional[float]:
     p = 0.5 * (1 + math.erf(z / math.sqrt(2))) * 100
     return round(p, 1)
 
-
 # -------------------------------------------------
-# WHO + Permenkes Z-score computation & labels
+# WHO Z-scores & Permenkes classification
 # -------------------------------------------------
 def compute_zscores(
     sex_label: str,
@@ -296,9 +305,167 @@ def build_interpretation(
     )
     return title + "\n".join(lines)
 
+# -------------------------------------------------
+# WHO growth curve helpers
+# -------------------------------------------------
+BOUNDS = {
+    "wfa": (1.0, 30.0),       # berat (kg)
+    "hfa": (45.0, 125.0),     # panjang/tinggi (cm)
+    "hcfa": (30.0, 55.0),     # lingkar kepala (cm)
+    "wfl_w": (1.0, 30.0),     # berat untuk BB/TB
+    "wfl_l": (45.0, 110.0),   # panjang/tinggi untuk BB/TB
+}
+
+AGE_GRID = np.arange(0.0, 60.0 + 1e-9, 0.25)  # 0–60 bulan, step 0.25
+
+
+def _safe_z(calc_func, *args) -> Optional[float]:
+    if calc is None:
+        return None
+    try:
+        z = calc_func(*args)
+        if z is None:
+            return None
+        z_float = float(z)
+        if math.isnan(z_float) or math.isinf(z_float):
+            return None
+        return z_float
+    except Exception:
+        return None
+
+
+def brentq_simple(f, a: float, b: float, xtol: float = 1e-3, maxiter: int = 50) -> float:
+    fa = f(a)
+    fb = f(b)
+    if fa is None or fb is None:
+        return (a + b) / 2.0
+    if fa == 0:
+        return a
+    if fb == 0:
+        return b
+    if fa * fb > 0:
+        return (a + b) / 2.0
+
+    for _ in range(maxiter):
+        m = 0.5 * (a + b)
+        fm = f(m)
+        if fm is None:
+            return m
+        if abs(fm) < 1e-5 or (b - a) / 2.0 < xtol:
+            return m
+        if fa * fm < 0:
+            b, fb = m, fm
+        else:
+            a, fa = m, fm
+    return 0.5 * (a + b)
+
+
+def invert_z_with_scan(z_of_m, target_z: float, lo: float, hi: float, samples: int = 80) -> float:
+    xs = np.linspace(lo, hi, samples)
+    last_x = None
+    last_f = None
+    best_x = None
+    best_abs = float("inf")
+
+    for x in xs:
+        z = z_of_m(x)
+        if z is None:
+            continue
+        f = z - target_z
+        af = abs(f)
+        if af < best_abs:
+            best_x = x
+            best_abs = af
+        if last_f is not None and f * last_f < 0:
+            try:
+                root = brentq_simple(lambda t: (z_of_m(t) or 0.0) - target_z, last_x, x)
+                return float(root)
+            except Exception:
+                pass
+        last_x, last_f = x, f
+
+    if best_x is not None:
+        return float(best_x)
+    return float((lo + hi) / 2.0)
+
+
+def generate_wfa_curve(sex: str, target_z: float) -> Tuple[np.ndarray, np.ndarray]:
+    ages = AGE_GRID
+    lo, hi = BOUNDS["wfa"]
+
+    def z_func(weight, age_mo):
+        return _safe_z(calc.wfa, weight, age_mo, sex)
+
+    weights = []
+    for age in ages:
+        val = invert_z_with_scan(lambda w: z_func(w, age), target_z, lo, hi)
+        weights.append(val)
+    return ages.copy(), np.array(weights)
+
+
+def generate_hfa_curve(sex: str, target_z: float) -> Tuple[np.ndarray, np.ndarray]:
+    ages = AGE_GRID
+    lo, hi = BOUNDS["hfa"]
+
+    def z_func(height, age_mo):
+        return _safe_z(calc.lhfa, height, age_mo, sex)
+
+    heights = []
+    for age in ages:
+        val = invert_z_with_scan(lambda h: z_func(h, age), target_z, lo, hi)
+        heights.append(val)
+    return ages.copy(), np.array(heights)
+
+
+def generate_hcfa_curve(sex: str, target_z: float) -> Tuple[np.ndarray, np.ndarray]:
+    ages = AGE_GRID
+    lo, hi = BOUNDS["hcfa"]
+
+    def z_func(hc, age_mo):
+        return _safe_z(calc.hcfa, hc, age_mo, sex)
+
+    vals = []
+    for age in ages:
+        val = invert_z_with_scan(lambda h: z_func(h, age), target_z, lo, hi)
+        vals.append(val)
+    return ages.copy(), np.array(vals)
+
+
+def generate_wfl_curve(sex: str, age_months: float, target_z: float) -> Tuple[np.ndarray, np.ndarray]:
+    lengths = np.arange(BOUNDS["wfl_l"][0], BOUNDS["wfl_l"][1] + 0.5, 0.5)
+    lo_w, hi_w = BOUNDS["wfl_w"]
+
+    def z_func(weight, length):
+        return _safe_z(calc.wfl, weight, age_months, sex, length)
+
+    weights = []
+    for L in lengths:
+        val = invert_z_with_scan(lambda w: z_func(w, L), target_z, lo_w, hi_w)
+        weights.append(val)
+    return lengths, np.array(weights)
+
+
+@lru_cache(maxsize=64)
+def generate_wfa_curve_cached(sex: str, z: float):
+    return generate_wfa_curve(sex, z)
+
+
+@lru_cache(maxsize=64)
+def generate_hfa_curve_cached(sex: str, z: float):
+    return generate_hfa_curve(sex, z)
+
+
+@lru_cache(maxsize=64)
+def generate_hcfa_curve_cached(sex: str, z: float):
+    return generate_hcfa_curve(sex, z)
+
+
+@lru_cache(maxsize=128)
+def generate_wfl_curve_cached(sex: str, age_key: float, z: float):
+    return generate_wfl_curve(sex, age_key, z)
 
 # -------------------------------------------------
-# Checklist bulanan & KPSP (sederhana)
+# Checklist bulanan & KPSP
 # -------------------------------------------------
 IMMUNIZATION_SCHEDULE = {
     0: ["HB 0", "BCG", "Polio 0"],
@@ -397,107 +564,14 @@ def build_checklist(age_mo: float) -> str:
     return title + "\n".join(lines)
 
 # -------------------------------------------------
-# EduParenting helpers
-# -------------------------------------------------
-def get_random_quote() -> str:
-    """Ambil satu quote motivasi random untuk orang tua."""
-    if not MOM_QUOTES:
-        return "Ibu/Ayah, kamu sudah melakukan yang terbaik hari ini. Terima kasih sudah berjuang untuk Si Kecil. 💖"
-    return random.choice(MOM_QUOTES)
-
-
-def get_recommended_videos(age_mo: Optional[float]):
-    """
-    Pilih beberapa video edukasi yang relevan dengan usia anak.
-    Logika sederhana berbasis rentang usia.
-    """
-    if age_mo is None:
-        keys = ["imunisasi"]
-    else:
-        a = age_mo
-        keys = []
-        if a < 5:
-            keys.append("imunisasi")
-        if 5 <= a <= 8:
-            keys.extend(["mpasi_6bln", "motorik_6bln"])
-        if 8 < a <= 11:
-            keys.extend(["mpasi_9bln", "motorik_6bln"])
-        if a >= 11:
-            keys.extend(["bahasa_12bln", "imunisasi"])
-
-    # Hilangkan duplikat sambil menjaga urutan
-    seen = set()
-    videos = []
-    for k in keys:
-        if k in seen:
-            continue
-        v = YOUTUBE_VIDEOS.get(k)
-        if v:
-            videos.append(v)
-            seen.add(k)
-
-    # fallback
-    if not videos:
-        videos = [YOUTUBE_VIDEOS["imunisasi"]]
-
-    return videos
-
-
-def edu_callback(
-    sex_label,
-    age_mode,
-    dob_str,
-    dom_str,
-    age_months_manual,
-):
-    """
-    Callback untuk Tab EduParenting: hitung usia, lalu munculkan
-    quote + rekomendasi video.
-    """
-    # Hitung usia dalam bulan (pakai fungsi yang sudah ada)
-    if age_mode == "Tanggal":
-        dob = parse_date(dob_str) if dob_str else None
-        dom = parse_date(dom_str) if dom_str else date.today()
-        age_mo = age_months_from_dates(dob, dom) if (dob and dom) else None
-    else:
-        age_mo = as_float(age_months_manual)
-
-    # Bangun teks quote
-    quote = "### 💌 Pesan untuk Ibu/Ayah\n\n"
-    quote += f"> {get_random_quote()}\n\n"
-
-    if age_mo is None:
-        quote += "_Isi tanggal lahir atau usia anak terlebih dahulu agar rekomendasi lebih spesifik._\n\n"
-    else:
-        quote += f"_Rekomendasi ini disesuaikan untuk usia sekitar **{age_mo:.1f} bulan**._\n\n"
-
-    # Bangun rekomendasi video
-    videos = get_recommended_videos(age_mo)
-    md = "### 🎥 Rekomendasi tontonan edukatif\n\n"
-    md += "Video-video berikut membantu orang tua memahami gizi, stimulasi, dan imunisasi sesuai usia anak.\n\n"
-
-    for i, v in enumerate(videos, start=1):
-        title = v["title"]
-        url = v["url"]
-        thumb = v["thumbnail"]
-        md += f"{i}. **{title}**  \n"
-        md += f"[Tonton di YouTube]({url})  \n"
-        md += f"![thumbnail]({thumb})  \n\n"
-
-    md += "_Catatan: Link mengarah ke YouTube, pastikan kuota & koneksi aman digunakan._"
-
-    return quote, md
-
-
-# -------------------------------------------------
-# Plot: simple bar chart of Z-scores
+# Plotting: Z-score bar + growth curves
 # -------------------------------------------------
 def make_zscore_bar_chart(z: Dict[str, Optional[float]]) -> plt.Figure:
     labels = ["WAZ", "HAZ", "WHZ", "BAZ", "HCZ"]
     keys = ["waz", "haz", "whz", "baz", "hcz"]
     values = [z.get(k) if z.get(k) is not None else 0 for k in keys]
 
-    fig, ax = plt.subplots(figsize=(5, 3))
+    fig, ax = plt.subplots(figsize=(5.5, 3.5))
     ax.bar(labels, values)
     ax.axhline(0, color="black", linewidth=1)
     ax.axhline(-2, color="red", linestyle="--", linewidth=1)
@@ -505,9 +579,236 @@ def make_zscore_bar_chart(z: Dict[str, Optional[float]]) -> plt.Figure:
     ax.set_ylabel("Z-score")
     ax.set_title("Ringkasan Z-score WHO")
     ax.set_ylim(-4, 4)
+    ax.grid(axis="y", linestyle="--", alpha=0.4)
     fig.tight_layout()
     return fig
 
+
+def _sex_code(sex_label: str) -> str:
+    return "M" if sex_label.lower().startswith("l") else "F"
+
+
+def plot_wfa_curve(payload: Dict[str, Any]) -> Optional[plt.Figure]:
+    if calc is None:
+        return None
+    age_mo = payload.get("age_mo")
+    w = payload.get("w")
+    sex_label = payload.get("sex_label") or ""
+    if age_mo is None or w is None:
+        return None
+
+    sex = _sex_code(sex_label)
+    sd_levels = [-3, -2, -1, 0, 1, 2, 3]
+
+    curves = {}
+    for z in sd_levels:
+        ages, weights = generate_wfa_curve_cached(sex, float(z))
+        curves[z] = (ages, weights)
+
+    fig, ax = plt.subplots(figsize=(5.5, 3.5))
+
+    # Zona normal -2 s/d +2
+    ages = curves[0][0]
+    ax.fill_between(ages, curves[-2][1], curves[2][1], color="#E8F5E9", alpha=0.7, label="Normal (-2 s/d +2 SD)")
+
+    for z in sd_levels:
+        ages, weights = curves[z]
+        if z == 0:
+            style, width = "-", 2.2
+        elif abs(z) == 1:
+            style, width = "--", 1.3
+        else:
+            style, width = ":", 1.0
+        ax.plot(ages, weights, linestyle=style, linewidth=width, label=f"{z:+d} SD")
+
+    waz = payload.get("z", {}).get("waz")
+    color = "tab:green"
+    if waz is not None:
+        if abs(waz) > 3:
+            color = "tab:red"
+        elif abs(waz) > 2:
+            color = "orange"
+    ax.scatter([age_mo], [w], s=40, color=color, zorder=5, label="Data anak")
+
+    ax.set_xlim(0, 60)
+    ax.set_xlabel("Usia (bulan)")
+    ax.set_ylabel("Berat badan (kg)")
+    ax.set_title("Grafik BB menurut Umur (BB/U) - WHO")
+    ax.grid(True, linestyle="--", alpha=0.4)
+
+    y_vals = np.concatenate([curves[z][1] for z in (-3, -2, 0, 2, 3)])
+    ax.set_ylim(max(0, y_vals.min() - 1), y_vals.max() + 2)
+
+    ax.legend(fontsize=7, ncol=2, loc="upper left")
+    fig.tight_layout()
+    return fig
+
+
+def plot_hfa_curve(payload: Dict[str, Any]) -> Optional[plt.Figure]:
+    if calc is None:
+        return None
+    age_mo = payload.get("age_mo")
+    h = payload.get("h")
+    sex_label = payload.get("sex_label") or ""
+    if age_mo is None or h is None:
+        return None
+
+    sex = _sex_code(sex_label)
+    sd_levels = [-3, -2, -1, 0, 1, 2, 3]
+
+    curves = {}
+    for z in sd_levels:
+        ages, heights = generate_hfa_curve_cached(sex, float(z))
+        curves[z] = (ages, heights)
+
+    fig, ax = plt.subplots(figsize=(5.5, 3.5))
+
+    ages = curves[0][0]
+    ax.fill_between(ages, curves[-2][1], curves[2][1], color="#E3F2FD", alpha=0.6, label="Normal (-2 s/d +2 SD)")
+
+    for z in sd_levels:
+        ages, heights = curves[z]
+        if z == 0:
+            style, width = "-", 2.2
+        elif abs(z) == 1:
+            style, width = "--", 1.3
+        else:
+            style, width = ":", 1.0
+        ax.plot(ages, heights, linestyle=style, linewidth=width, label=f"{z:+d} SD")
+
+    haz = payload.get("z", {}).get("haz")
+    color = "tab:green"
+    if haz is not None:
+        if abs(haz) > 3:
+            color = "tab:red"
+        elif abs(haz) > 2:
+            color = "orange"
+    ax.scatter([age_mo], [h], s=40, color=color, zorder=5, label="Data anak")
+
+    ax.set_xlim(0, 60)
+    ax.set_xlabel("Usia (bulan)")
+    ax.set_ylabel("Panjang/Tinggi (cm)")
+    ax.set_title("Grafik TB menurut Umur (TB/U) - WHO")
+    ax.grid(True, linestyle="--", alpha=0.4)
+
+    y_vals = np.concatenate([curves[z][1] for z in (-3, -2, 0, 2, 3)])
+    ax.set_ylim(max(45, y_vals.min() - 1), y_vals.max() + 2)
+
+    ax.legend(fontsize=7, ncol=2, loc="upper left")
+    fig.tight_layout()
+    return fig
+
+
+def plot_hcfa_curve(payload: Dict[str, Any]) -> Optional[plt.Figure]:
+    if calc is None:
+        return None
+    age_mo = payload.get("age_mo")
+    hc = payload.get("hc")
+    sex_label = payload.get("sex_label") or ""
+    if age_mo is None or hc is None:
+        return None
+
+    sex = _sex_code(sex_label)
+    sd_levels = [-3, -2, -1, 0, 1, 2, 3]
+
+    curves = {}
+    for z in sd_levels:
+        ages, vals = generate_hcfa_curve_cached(sex, float(z))
+        curves[z] = (ages, vals)
+
+    fig, ax = plt.subplots(figsize=(5.5, 3.5))
+
+    ages = curves[0][0]
+    ax.fill_between(ages, curves[-2][1], curves[2][1], color="#FFF9C4", alpha=0.6, label="Normal (-2 s/d +2 SD)")
+
+    for z in sd_levels:
+        ages, vals = curves[z]
+        if z == 0:
+            style, width = "-", 2.2
+        elif abs(z) == 1:
+            style, width = "--", 1.3
+        else:
+            style, width = ":", 1.0
+        ax.plot(ages, vals, linestyle=style, linewidth=width, label=f"{z:+d} SD")
+
+    hcz = payload.get("z", {}).get("hcz")
+    color = "tab:green"
+    if hcz is not None:
+        if abs(hcz) > 3:
+            color = "tab:red"
+        elif abs(hcz) > 2:
+            color = "orange"
+    ax.scatter([age_mo], [hc], s=40, color=color, zorder=5, label="Data anak")
+
+    ax.set_xlim(0, 60)
+    ax.set_xlabel("Usia (bulan)")
+    ax.set_ylabel("Lingkar kepala (cm)")
+    ax.set_title("Grafik LK menurut Umur (LK/U) - WHO")
+    ax.grid(True, linestyle="--", alpha=0.4)
+
+    y_vals = np.concatenate([curves[z][1] for z in (-3, -2, 0, 2, 3)])
+    ax.set_ylim(max(30, y_vals.min() - 1), y_vals.max() + 2)
+
+    ax.legend(fontsize=7, ncol=2, loc="upper left")
+    fig.tight_layout()
+    return fig
+
+
+def plot_wfl_curve(payload: Dict[str, Any]) -> Optional[plt.Figure]:
+    if calc is None:
+        return None
+    age_mo = payload.get("age_mo")
+    w = payload.get("w")
+    h = payload.get("h")
+    sex_label = payload.get("sex_label") or ""
+    if age_mo is None or w is None or h is None:
+        return None
+
+    sex = _sex_code(sex_label)
+    sd_levels = [-3, -2, -1, 0, 1, 2, 3]
+
+    age_key = round(age_mo * 2) / 2.0  # dibulatkan 0.5 bulan untuk caching
+    curves = {}
+    for z in sd_levels:
+        lengths, weights = generate_wfl_curve_cached(sex, age_key, float(z))
+        curves[z] = (lengths, weights)
+
+    fig, ax = plt.subplots(figsize=(5.5, 3.5))
+
+    lengths = curves[0][0]
+    ax.fill_between(lengths, curves[-2][1], curves[2][1], color="#E8F5E9", alpha=0.6, label="Normal (-2 s/d +2 SD)")
+
+    for z in sd_levels:
+        lengths, weights = curves[z]
+        if z == 0:
+            style, width = "-", 2.2
+        elif abs(z) == 1:
+            style, width = "--", 1.3
+        else:
+            style, width = ":", 1.0
+        ax.plot(lengths, weights, linestyle=style, linewidth=width, label=f"{z:+d} SD")
+
+    whz = payload.get("z", {}).get("whz")
+    color = "tab:green"
+    if whz is not None:
+        if abs(whz) > 3:
+            color = "tab:red"
+        elif abs(whz) > 2:
+            color = "orange"
+    ax.scatter([h], [w], s=40, color=color, zorder=5, label="Data anak")
+
+    ax.set_xlabel("Panjang/Tinggi (cm)")
+    ax.set_ylabel("Berat badan (kg)")
+    ax.set_title("Grafik BB menurut TB (BB/TB) - WHO")
+    ax.grid(True, linestyle="--", alpha=0.4)
+
+    y_vals = np.concatenate([curves[z][1] for z in (-3, -2, 0, 2, 3)])
+    ax.set_ylim(max(0, y_vals.min() - 1), y_vals.max() + 2)
+    ax.set_xlim(BOUNDS["wfl_l"][0], BOUNDS["wfl_l"][1])
+
+    ax.legend(fontsize=7, ncol=2, loc="upper left")
+    fig.tight_layout()
+    return fig
 
 # -------------------------------------------------
 # PDF generator
@@ -564,6 +865,7 @@ def generate_pdf_report(payload: Dict[str, Any]) -> str:
 
     # Z-score
     text.textLine("Z-score WHO & klasifikasi Permenkes:")
+
     def z_line(label: str, key: str, fn_perm):
         zv = z.get(key)
         if zv is None:
@@ -599,9 +901,86 @@ def generate_pdf_report(payload: Dict[str, Any]) -> str:
     c.save()
     return path
 
+# -------------------------------------------------
+# EduParenting helpers
+# -------------------------------------------------
+def get_random_quote() -> str:
+    if not MOM_QUOTES:
+        return "Ibu/Ayah, kamu sudah melakukan yang terbaik hari ini. Terima kasih sudah berjuang untuk Si Kecil. 💖"
+    return random.choice(MOM_QUOTES)
+
+
+def get_recommended_videos(age_mo: Optional[float]):
+    if age_mo is None:
+        keys = ["imunisasi"]
+    else:
+        a = age_mo
+        keys = []
+        if a < 5:
+            keys.append("imunisasi")
+        if 5 <= a <= 8:
+            keys.extend(["mpasi_6bln", "motorik_6bln"])
+        if 8 < a <= 11:
+            keys.extend(["mpasi_9bln", "motorik_6bln"])
+        if a >= 11:
+            keys.extend(["bahasa_12bln", "imunisasi"])
+
+    seen = set()
+    videos = []
+    for k in keys:
+        if k in seen:
+            continue
+        v = YOUTUBE_VIDEOS.get(k)
+        if v:
+            videos.append(v)
+            seen.add(k)
+
+    if not videos:
+        videos = [YOUTUBE_VIDEOS["imunisasi"]]
+
+    return videos
+
+
+def edu_callback(
+    sex_label,
+    age_mode,
+    dob_str,
+    dom_str,
+    age_months_manual,
+):
+    if age_mode == "Tanggal":
+        dob = parse_date(dob_str) if dob_str else None
+        dom = parse_date(dom_str) if dom_str else date.today()
+        age_mo = age_months_from_dates(dob, dom) if (dob and dom) else None
+    else:
+        age_mo = as_float(age_months_manual)
+
+    quote = "### 💌 Pesan untuk Ibu/Ayah\n\n"
+    quote += f"> {get_random_quote()}\n\n"
+
+    if age_mo is None:
+        quote += "_Isi tanggal lahir atau usia anak terlebih dahulu agar rekomendasi lebih spesifik._\n\n"
+    else:
+        quote += f"_Rekomendasi ini disesuaikan untuk usia sekitar **{age_mo:.1f} bulan**._\n\n"
+
+    videos = get_recommended_videos(age_mo)
+    md = "### 🎥 Rekomendasi tontonan edukatif\n\n"
+    md += "Video-video berikut membantu orang tua memahami gizi, stimulasi, dan imunisasi sesuai usia anak.\n\n"
+
+    for i, v in enumerate(videos, start=1):
+        title = v["title"]
+        url = v["url"]
+        thumb = v["thumbnail"]
+        md += f"{i}. **{title}**  \n"
+        md += f"[Tonton di YouTube]({url})  \n"
+        md += f"![thumbnail]({thumb})  \n\n"
+
+    md += "_Catatan: Link mengarah ke YouTube, pastikan kuota & koneksi aman digunakan._"
+
+    return quote, md
 
 # -------------------------------------------------
-# Analisis utama (shared oleh 2 tombol)
+# Analisis utama & callbacks
 # -------------------------------------------------
 def compute_analysis(
     name_child,
@@ -618,7 +997,6 @@ def compute_analysis(
     h = as_float(h_cm)
     hc = as_float(hc_cm)
 
-    # usia
     if age_mode == "Tanggal":
         dob = parse_date(dob_str) if dob_str else None
         dom = parse_date(dom_str) if dom_str else date.today()
@@ -630,9 +1008,6 @@ def compute_analysis(
         age_mo = None
 
     z = compute_zscores(sex_label, age_mo, w, h, hc)
-    md = build_interpretation(name_child or "", sex_label, age_mo, w, h, hc, z)
-    fig = make_zscore_bar_chart(z) if any(v is not None for v in z.values()) else None
-
     payload = {
         "name_child": name_child,
         "sex_label": sex_label,
@@ -642,12 +1017,29 @@ def compute_analysis(
         "hc": hc,
         "z": z,
     }
-    return md, fig, payload
+    md = build_interpretation(name_child or "", sex_label, age_mo, w, h, hc, z)
+    return payload, md
 
 
-# -------------------------------------------------
-# Gradio callbacks
-# -------------------------------------------------
+def generate_all_plots(payload: Dict[str, Any]):
+    z = payload.get("z", {})
+    any_valid = any(v is not None for v in z.values())
+    summary_fig = make_zscore_bar_chart(z) if any_valid else None
+
+    def safe_plot(fn):
+        try:
+            return fn(payload)
+        except Exception:
+            return None
+
+    wfa_fig = safe_plot(plot_wfa_curve)
+    hfa_fig = safe_plot(plot_hfa_curve)
+    hcfa_fig = safe_plot(plot_hcfa_curve)
+    wfl_fig = safe_plot(plot_wfl_curve)
+
+    return summary_fig, wfa_fig, hfa_fig, hcfa_fig, wfl_fig
+
+
 def analyze_callback(
     name_child,
     sex_label,
@@ -660,7 +1052,7 @@ def analyze_callback(
     hc_cm,
 ):
     try:
-        md, fig, _ = compute_analysis(
+        payload, md = compute_analysis(
             name_child,
             sex_label,
             age_mode,
@@ -671,9 +1063,11 @@ def analyze_callback(
             h_cm,
             hc_cm,
         )
-        return md, fig
+        summary_fig, wfa_fig, hfa_fig, hcfa_fig, wfl_fig = generate_all_plots(payload)
+        return md, summary_fig, wfa_fig, hfa_fig, hcfa_fig, wfl_fig
     except Exception as e:
-        return f"❌ Terjadi error saat analisis: {e}", None
+        msg = f"❌ Terjadi error saat analisis: {e}"
+        return msg, None, None, None, None, None
 
 
 def pdf_callback(
@@ -688,7 +1082,7 @@ def pdf_callback(
     hc_cm,
 ):
     try:
-        _, _, payload = compute_analysis(
+        payload, _ = compute_analysis(
             name_child,
             sex_label,
             age_mode,
@@ -702,7 +1096,6 @@ def pdf_callback(
         path = generate_pdf_report(payload)
         return path
     except Exception as e:
-        # Jika gagal, tidak usah meledakkan server — kirim file kosong dengan pesan error
         dummy_path = os.path.join(OUTPUTS_DIR, "ERROR.txt")
         with open(dummy_path, "w", encoding="utf-8") as f:
             f.write(f"Gagal membuat PDF: {e}")
@@ -725,7 +1118,6 @@ def toggle_age_inputs(mode):
     else:
         return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
 
-
 # -------------------------------------------------
 # Build Gradio UI
 # -------------------------------------------------
@@ -737,7 +1129,7 @@ def build_demo() -> gr.Blocks:
         gr.Markdown(
             f"# 🏥 GiziSiKecil\n"
             f"Monitor pertumbuhan anak berbasis **WHO Child Growth Standards**\n\n"
-            f"_Versi stabil + PDF + EduParenting (v{APP_VERSION})_"
+            f"_Versi lengkap: Z-score, kurva WHO, PDF, checklist, EduParenting (v{APP_VERSION})_"
         )
 
         # ===================== TAB 1: KALKULATOR GIZI =====================
@@ -776,9 +1168,15 @@ def build_demo() -> gr.Blocks:
                     btn_analyze = gr.Button("🔍 Analisis sekarang", variant="primary")
                     btn_pdf = gr.Button("📄 Buat laporan PDF", variant="secondary")
 
-                with gr.Column(scale=1):
+                with gr.Column(scale=2):
                     result_md = gr.Markdown("Hasil analisis akan muncul di sini.")
-                    plot = gr.Plot()
+                    summary_plot = gr.Plot(label="Ringkasan Z-score WHO")
+                    with gr.Row():
+                        wfa_plot = gr.Plot(label="BB menurut Umur (BB/U)")
+                        hfa_plot = gr.Plot(label="TB menurut Umur (TB/U)")
+                    with gr.Row():
+                        hcfa_plot = gr.Plot(label="LK menurut Umur (LK/U)")
+                        wfl_plot = gr.Plot(label="BB menurut TB (BB/TB)")
                     pdf_file = gr.File(label="Laporan PDF", interactive=False)
 
             age_mode.change(
@@ -800,7 +1198,7 @@ def build_demo() -> gr.Blocks:
                     h_cm,
                     hc_cm,
                 ],
-                outputs=[result_md, plot],
+                outputs=[result_md, summary_plot, wfa_plot, hfa_plot, hcfa_plot, wfl_plot],
             )
 
             btn_pdf.click(
@@ -887,14 +1285,12 @@ def build_demo() -> gr.Blocks:
 
     return demo
 
-
-
 # -------------------------------------------------
 # FastAPI + mounting Gradio
 # -------------------------------------------------
 app_fastapi = FastAPI(
     title="GiziSiKecil API",
-    description="WHO Child Growth Standards + checklist & PDF",
+    description="WHO Child Growth Standards + Permenkes + checklist & EduParenting",
     version=APP_VERSION,
 )
 
