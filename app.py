@@ -3266,4 +3266,280 @@ def run_comprehensive_analysis(
 ## ❌ Error Sistem
 
 Terjadi kesalahan saat memproses data:
+Silakan:
+1. Periksa kembali semua input Anda
+2. Pastikan format tanggal benar (YYYY-MM-DD)
+3. Pastikan angka menggunakan titik (.) bukan koma (,)
+4. Refresh halaman dan coba lagi
 
+Jika masalah berlanjut, hubungi: +{CONTACT_WA}
+"""
+        
+        return (
+            error_msg,
+            None, None, None, None, None,
+            gr.update(visible=False), gr.update(visible=False),
+            {}
+        )
+
+
+print("✅ Section 9 loaded: Analysis handler & interpretation engine")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 10: CHECKLIST, KPSP, LIBRARY & VIDEO FUNCTIONS (Updated for v3.1)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# --- Helper functions (from v3.0, still required) ---
+
+def get_immunization_for_month(month: int) -> List[str]:
+    """Get immunization schedule for specific month"""
+    return IMMUNIZATION_SCHEDULE.get(month, [])
+
+
+def get_kpsp_questions_for_month(month: int) -> List[str]:
+    """Get KPSP questions for specific month (nearest available)"""
+    # Find nearest month with KPSP questions
+    available_months = sorted(KPSP_QUESTIONS.keys())
+    nearest = min(available_months, key=lambda x: abs(x - month))
+    return KPSP_QUESTIONS.get(nearest, [])
+
+# --- NEW Helper functions (from v3.1) ---
+
+def generate_video_links_html(videos: List[Dict]) -> str:
+    """Generate HTML for video links with cards"""
+    if not videos:
+        return "<p>Tidak ada video tersedia untuk usia ini.</p>"
+    
+    html = "<div style='display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin: 20px 0;'>"
+    
+    for video in videos:
+        html += f"""
+        <div class='video-card'>
+            <div class='video-title'>{video['title']}</div>
+            <div class='video-description'>{video['description']}</div>
+            <div class='video-duration'>⏱️ Durasi: {video['duration']}</div>
+            <div style='margin-top: 10px;'>
+                <a href='{video['url']}' target='_blank' 
+                   style='display: inline-block; background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);
+                          color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none;
+                          font-weight: 600; font-size: 13px;'>
+                    ▶️ Tonton Video
+                </a>
+            </div>
+        </div>
+        """
+    
+    html += "</div>"
+    return html
+
+
+def generate_library_article_html(article: Dict) -> str:
+    """Generate HTML for a single article card"""
+    
+    # Determine category class
+    category_map = {
+        "ASI & Menyusui": "asi",
+        "MPASI": "mpasi",
+        "Stunting": "stunting",
+        "Perkembangan": "perkembangan",
+        "Imunisasi": "imunisasi",
+        "Penyakit Umum": "penyakit",
+        "Kesehatan Ibu": "ibu",
+        "Pola Asuh": "pola-asuh",
+        "Kebersihan": "kebersihan",
+        "Nutrisi": "nutrisi",
+        "Alergi": "alergi",
+        "Kondisi Khusus": "khusus",
+        "ASI Lanjutan": "asi",
+        "Tumbuh Kembang": "perkembangan"
+    }
+    
+    category_class = category_map.get(article['category'], 'nutrisi')
+    
+    html = f"""
+    <div class='article-card'>
+        <div class='article-title'>{article['title']}</div>
+        
+        <div class='article-meta'>
+            <span class='category-badge category-{category_class}'>{article['category']}</span>
+            <span style='margin-left: 10px;'>📖 {article['reading_time']}</span>
+            <span style='margin-left: 10px;'>🏛️ {article['source']}</span>
+        </div>
+        
+        <div class='article-summary'>{article['summary']}</div>
+        
+        <div class='article-tags'>
+            {''.join([f"<span class='article-tag'>#{tag}</span>" for tag in article['tags']])}
+        </div>
+        
+        <a href='{article['url']}' target='_blank' class='article-link-btn'>
+            📚 Baca Artikel Lengkap →
+        </a>
+    </div>
+    """
+    
+    return html
+
+
+def filter_library_articles(category: str = "Semua") -> str:
+    """Filter and display library articles by category"""
+    
+    if category == "Semua":
+        filtered = PERPUSTAKAAN_IBU_BALITA
+    else:
+        filtered = [a for a in PERPUSTAKAAN_IBU_BALITA if a['category'] == category]
+    
+    if not filtered:
+        return "<p>Tidak ada artikel untuk kategori ini.</p>"
+    
+    html = f"<h3 style='color: #ff6b9d; margin-bottom: 20px;'>📚 {len(filtered)} Artikel Tersedia</h3>"
+    
+    for article in filtered:
+        html += generate_library_article_html(article)
+    
+    return html
+
+
+# --- Main Checklist Function (UPDATED for v3.1) ---
+
+def generate_checklist_with_videos(month: int, payload: Dict) -> str:
+    """
+    MODIFIED: Generate checklist with integrated YouTube videos
+    (Replaces generate_checklist_recommendations from v3.0)
+    
+    Args:
+        month: Month number (0-24)
+        payload: Analysis payload with z-scores
+        
+    Returns:
+        Markdown formatted recommendations
+    """
+    lines = []
+    
+    lines.append(f"## 📋 Checklist Bulan ke-{month}")
+    lines.append(f"")
+    
+    # Get nutritional status
+    z_scores = payload.get('z', {}) if payload else {}
+    waz = z_scores.get('waz', 0)
+    haz = z_scores.get('haz', 0)
+    whz = z_scores.get('whz', 0)
+    
+    # ═══ NEW: ADD YOUTUBE VIDEOS ═══
+    lines.append(f"### 🎥 Video Edukasi untuk Usia {month} Bulan")
+    lines.append(f"")
+    
+    # KPSP Videos
+    if KPSP_YOUTUBE_VIDEOS:
+        lines.append(f"**📊 Panduan Skrining KPSP:**")
+        lines.append(f"")
+        video_html = generate_video_links_html(KPSP_YOUTUBE_VIDEOS)
+        lines.append(video_html)
+        lines.append(f"")
+    
+    # MP-ASI Videos for this month
+    # Find nearest month with videos
+    mpasi_age_key = min(MPASI_YOUTUBE_VIDEOS.keys(), key=lambda x: abs(x - month) if x <= month else float('inf'))
+    
+    if month >= 6 and MPASI_YOUTUBE_VIDEOS.get(mpasi_age_key):
+        lines.append(f"**🍽️ Panduan MP-ASI (relevan untuk {mpasi_age_key} bulan):**")
+        lines.append(f"")
+        mpasi_video_html = generate_video_links_html(MPASI_YOUTUBE_VIDEOS[mpasi_age_key])
+        lines.append(mpasi_video_html)
+        lines.append(f"")
+    
+    lines.append(f"---")
+    lines.append(f"")
+    
+    # ═══ EXISTING CHECKLIST CONTENT ═══
+    lines.append(f"### 🎯 Target Perkembangan")
+    lines.append(f"")
+    
+    if month < 3:
+        lines.append(f"- ✅ Mengangkat kepala saat tengkurap")
+        lines.append(f"- ✅ Tersenyum saat diajak bicara")
+        lines.append(f"- ✅ Mengikuti objek dengan mata")
+    elif month < 6:
+        lines.append(f"- ✅ Berguling dari telentang ke tengkurap")
+        lines.append(f"- ✅ Duduk dengan bantuan")
+        lines.append(f"- ✅ Mengoceh (ba-ba, ma-ma)")
+    elif month < 9:
+        lines.append(f"- ✅ Duduk sendiri tanpa bantuan")
+        lines.append(f"- ✅ Merangkak atau bergerak")
+        lines.append(f"- ✅ Memindahkan mainan antar tangan")
+    elif month < 12:
+        lines.append(f"- ✅ Berdiri berpegangan")
+        lines.append(f"- ✅ Mengucapkan 1-2 kata")
+        lines.append(f"- ✅ Melambaikan tangan")
+    elif month < 18:
+        lines.append(f"- ✅ Berjalan sendiri")
+        lines.append(f"- ✅ Mengucapkan 3-6 kata")
+        lines.append(f"- ✅ Minum dari gelas sendiri")
+    else:
+        lines.append(f"- ✅ Berlari dan melompat")
+        lines.append(f"- ✅ Membuat kalimat 2-3 kata")
+        lines.append(f"- ✅ Menggambar garis")
+    
+    lines.append(f"")
+    
+    # Nutrition recommendations
+    lines.append(f"### 🍽️ Rekomendasi Gizi")
+    lines.append(f"")
+    
+    if whz < -2 or waz < -2:
+        lines.append(f"⚠️ **PRIORITAS TINGGI**: Perbaikan status gizi")
+        lines.append(f"")
+        lines.append(f"- 🥛 Tingkatkan frekuensi makan 5-6x/hari")
+        lines.append(f"- 🍖 Tambahkan protein hewani (telur, daging, ikan)")
+        lines.append(f"- 🥑 Makanan padat energi (alpukat, kacang)")
+        lines.append(f"- 💊 Konsultasi suplemen dengan dokter")
+    elif month < 6:
+        lines.append(f"- 🤱 ASI eksklusif on demand")
+        lines.append(f"- 💧 Tidak perlu air atau makanan lain")
+        lines.append(f"- 😴 Tidur dekat ibu untuk bonding")
+    elif month < 12:
+        lines.append(f"- 🥕 MPASI bertahap sesuai usia")
+        lines.append(f"- 🤱 Lanjutkan ASI hingga 2 tahun")
+        lines.append(f"- 🍚 Tekstur makanan disesuaikan")
+        lines.append(f"- 💊 Suplemen zat besi jika perlu")
+    else:
+        lines.append(f"- 🍽️ Makanan keluarga dengan tekstur lembut")
+        lines.append(f"- 🥗 Variasi menu 4 bintang")
+        lines.append(f"- 🤱 ASI dilanjutkan sebagai pelengkap")
+        lines.append(f"- 💧 Air putih cukup (600-1000ml/hari)")
+    
+    lines.append(f"")
+    
+    # Immunization schedule
+    imm = get_immunization_for_month(month)
+    if imm:
+        lines.append(f"### 💉 Jadwal Imunisasi Bulan Ini")
+        lines.append(f"")
+        for vaccine in imm:
+            lines.append(f"- 💉 {vaccine}")
+        lines.append(f"")
+    
+    # KPSP questions
+    kpsp = get_kpsp_questions_for_month(month)
+    if kpsp:
+        lines.append(f"### 🧠 Skrining Perkembangan (KPSP)")
+        lines.append(f"")
+        lines.append(f"Jawab YA/TIDAK untuk setiap pertanyaan:")
+        lines.append(f"")
+        for i, q in enumerate(kpsp, 1):
+            lines.append(f"{i}. {q}")
+        lines.append(f"")
+        lines.append(f"**Interpretasi**: Jika ada ≥2 jawaban TIDAK, konsultasi ke tenaga kesehatan.")
+    
+    lines.append(f"")
+    lines.append(f"---")
+    lines.append(f"")
+    lines.append(f"💡 **Motivasi**: {get_random_quote()}")
+    
+    return "\n".join(lines)
+
+
+print("✅ Section 10 loaded: Checklist & KPSP functions (Updated with videos & library helpers)")
+
+                    
+                                                        
