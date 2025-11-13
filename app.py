@@ -34,10 +34,10 @@ warnings.filterwarnings('ignore')
 
 # Di bagian import (sekitar line 50)
 try:
-    from pygrowup2 import Calculator  # GANTI SINI
-    print("✅ WHO Calculator (pygrowup2) loaded successfully")
+    from pygrowup import Calculator
+    print("✅ WHO Calculator (pygrowup LOCAL) loaded successfully")
 except ImportError as e:
-    print(f"❌ CRITICAL: pygrowup2 not found! Install: pip install pygrowup2==0.8.2")
+    print(f"❌ CRITICAL: pygrowup local not found! Error: {e}")
     sys.exit(1)
 
 # Hapus duplikat import yang ada (cari 'pygrowup' lainnya)
