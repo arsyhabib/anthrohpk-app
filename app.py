@@ -9,6 +9,9 @@ Version: 2.0.0
 Run: uvicorn app:app --host 0.0.0.0 --port 8000
 """
 
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 # -------------------- IMPORTS --------------------
 import os
 import sys
@@ -26,6 +29,14 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+# Import pygrowup dari folder lokal
+try:
+    from pygrowup import Calculator
+    print("✅ WHO Calculator (pygrowup LOCAL) loaded successfully")
+except ImportError as e:
+    print(f"❌ CRITICAL: pygrowup local not found! Error: {e}")
+    sys.exit(1)
+    
 # Numeric & Scientific
 import numpy as np
 from scipy.special import erf
