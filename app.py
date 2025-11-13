@@ -2616,6 +2616,59 @@ with gr.Blocks(
     ),
     css=CUSTOM_CSS
 ) as demo:
+
+# ============================================================
+# ENTRYPOINT UNTUK RENDER / UVICORN
+# ============================================================
+
+"""
+Render (dan platform sejenis) biasanya menjalankan:
+    uvicorn app:app --host 0.0.0.0 --port $PORT
+
+Karena itu kita perlu menyediakan variabel `app` berupa FastAPI
+yang sudah mem-mount Gradio Blocks `demo` di path root ("/").
+"""
+
+from fastapi import FastAPI
+import gradio as gr
+import os
+import uvicorn
+
+
+# FastAPI utama (backend)
+fastapi_app = FastAPI(
+    title="AnthroHPK / GiziSiKecil API",
+    description="WHO Child Growth Standards + Checklist Sehat Bulanan",
+    version="1.0.0",
+)
+
+
+# Mount Gradio di path root "/"
+# - `demo` sudah didefinisikan di atas (with gr.Blocks(...) as demo)
+app = gr.mount_gradio_app(
+    fastapi_app,
+    demo,
+    path="/",          # root path
+)
+
+
+# Opsional: route healthcheck sederhana untuk Render
+@fastapi_app.get("/health")
+async def healthcheck():
+    return {"status": "ok"}
+
+
+# Mode lokal (jika suatu saat kamu ingin tes di laptop/PC):
+#   python app.py
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "7860"))
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        log_level="info",
+    )
+
     
     # Header
     gr.Markdown("""
@@ -2940,6 +2993,59 @@ with gr.Blocks(
     ),
     css=CUSTOM_CSS
 ) as demo:
+
+    # ============================================================
+# ENTRYPOINT UNTUK RENDER / UVICORN
+# ============================================================
+
+"""
+Render (dan platform sejenis) biasanya menjalankan:
+    uvicorn app:app --host 0.0.0.0 --port $PORT
+
+Karena itu kita perlu menyediakan variabel `app` berupa FastAPI
+yang sudah mem-mount Gradio Blocks `demo` di path root ("/").
+"""
+
+from fastapi import FastAPI
+import gradio as gr
+import os
+import uvicorn
+
+
+# FastAPI utama (backend)
+fastapi_app = FastAPI(
+    title="AnthroHPK / GiziSiKecil API",
+    description="WHO Child Growth Standards + Checklist Sehat Bulanan",
+    version="1.0.0",
+)
+
+
+# Mount Gradio di path root "/"
+# - `demo` sudah didefinisikan di atas (with gr.Blocks(...) as demo)
+app = gr.mount_gradio_app(
+    fastapi_app,
+    demo,
+    path="/",          # root path
+)
+
+
+# Opsional: route healthcheck sederhana untuk Render
+@fastapi_app.get("/health")
+async def healthcheck():
+    return {"status": "ok"}
+
+
+# Mode lokal (jika suatu saat kamu ingin tes di laptop/PC):
+#   python app.py
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "7860"))
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        log_level="info",
+    )
+
     
     # Header
     gr.Markdown(f"""
