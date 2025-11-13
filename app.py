@@ -2967,7 +2967,7 @@ with gr.Blocks(
                         
                         weight = gr.Number(
                             label="Berat Badan (kg)",
-                            placeholder="Contoh: 8.5",
+                            value=None,
                             minimum=1,
                             maximum=30,
                             info="Gunakan timbangan digital (presisi 0.1 kg)"
@@ -2975,7 +2975,7 @@ with gr.Blocks(
                         
                         height = gr.Number(
                             label="Panjang/Tinggi Badan (cm)",
-                            placeholder="Contoh: 68.5",
+                            value=None,
                             minimum=35,
                             maximum=130,
                             info="Panjang badan (< 24 bln) atau Tinggi badan (≥ 24 bln)"
@@ -2983,7 +2983,7 @@ with gr.Blocks(
                         
                         head_circ = gr.Number(
                             label="Lingkar Kepala (cm) - Opsional",
-                            placeholder="Contoh: 44.5",
+                            value=None,
                             minimum=20,
                             maximum=60,
                             info="Ukur lingkar terbesar kepala dengan meteran fleksibel"
