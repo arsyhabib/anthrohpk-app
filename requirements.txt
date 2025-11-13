@@ -5,3 +5,4 @@ pygrowup==0.8.2
 matplotlib
 numpy
 python-multipart
+reportlab
