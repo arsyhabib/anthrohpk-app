@@ -31,10 +31,10 @@ warnings.filterwarnings('ignore')
 
 # Import pygrowup dari folder lokal
 try:
-    from pygrowup import Calculator
-    print("✅ WHO Calculator (pygrowup LOCAL) loaded successfully")
+    from pygrowup2 import Calculator  # GANTI dari pygrowup
+    print("✅ WHO Calculator (pygrowup2) loaded successfully")
 except ImportError as e:
-    print(f"❌ CRITICAL: pygrowup local not found! Error: {e}")
+    print(f"❌ CRITICAL: pygrowup2 not installed! Run: pip install pygrowup2")
     sys.exit(1)
     
 # Numeric & Scientific
