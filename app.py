@@ -1,5 +1,5 @@
 """
-GiziSiKecil (simplified stable version)
+GiziSiKecil (stable + PDF)
 --------------------------------------
 FastAPI + Gradio app for child growth monitoring (WHO + Permenkes)
 """
@@ -7,7 +7,7 @@ FastAPI + Gradio app for child growth monitoring (WHO + Permenkes)
 import os
 import math
 from datetime import datetime, date
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 import numpy as np
 import matplotlib
@@ -21,11 +21,14 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import gradio as gr
 
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+
 # -------------------------------------------------
 # Global config & folders
 # -------------------------------------------------
-APP_VERSION = "2.1.0"
-APP_TITLE = "GiziSiKecil - Monitor Pertumbuhan Anak (Stable)"
+APP_VERSION = "2.2.0"
+APP_TITLE = "GiziSiKecil - Monitor Pertumbuhan Anak (Stable + PDF)"
 
 BASE_URL = os.getenv("BASE_URL", "https://anthrohpk-app.onrender.com")
 STATIC_DIR = "static"
@@ -88,7 +91,7 @@ def age_months_from_dates(dob: date, dom: date) -> Optional[float]:
     days = (dom - dob).days
     if days < 0:
         return None
-    return days / 30.4375  # rata-rata hari per bulan
+    return days / 30.4375  # rata-rata hari per bulan (365.25 / 12)
 
 
 def z_to_percentile(z: Optional[float]) -> Optional[float]:
@@ -108,25 +111,29 @@ def compute_zscores(
     h_cm: Optional[float],
     hc_cm: Optional[float],
 ) -> Dict[str, Optional[float]]:
-    out = {k: None for k in ("waz", "haz", "whz", "baz", "hcz")}
+    out: Dict[str, Optional[float]] = {k: None for k in ("waz", "haz", "whz", "baz", "hcz")}
     if calc is None or age_months is None:
         return out
 
     sex = "M" if sex_label.lower().startswith("l") else "F"
 
-    if w_kg is not None:
-        out["waz"] = calc.wfa(w_kg, age_months, sex)
-    if h_cm is not None:
-        out["haz"] = calc.lhfa(h_cm, age_months, sex)
-    if w_kg is not None and h_cm is not None:
-        out["whz"] = calc.wfl(w_kg, age_months, sex, h_cm)
-        try:
-            bmi = w_kg / ((h_cm / 100) ** 2)
-            out["baz"] = calc.bmifa(bmi, age_months, sex)
-        except Exception:
-            out["baz"] = None
-    if hc_cm is not None:
-        out["hcz"] = calc.hcfa(hc_cm, age_months, sex)
+    try:
+        if w_kg is not None:
+            out["waz"] = calc.wfa(w_kg, age_months, sex)
+        if h_cm is not None:
+            out["haz"] = calc.lhfa(h_cm, age_months, sex)
+        if w_kg is not None and h_cm is not None:
+            out["whz"] = calc.wfl(w_kg, age_months, sex, h_cm)
+            try:
+                bmi = w_kg / ((h_cm / 100) ** 2)
+                out["baz"] = calc.bmifa(bmi, age_months, sex)
+            except Exception:
+                out["baz"] = None
+        if hc_cm is not None:
+            out["hcz"] = calc.hcfa(hc_cm, age_months, sex)
+    except Exception:
+        # Jangan biarkan satu error menjatuhkan seluruh analisis
+        pass
 
     # sanitasi
     for k, v in list(out.items()):
@@ -198,6 +205,7 @@ def classify_hcz(z: Optional[float]) -> str:
 
 def build_interpretation(
     name_child: str,
+    sex_label: str,
     age_mo: Optional[float],
     w_kg: Optional[float],
     h_cm: Optional[float],
@@ -208,10 +216,13 @@ def build_interpretation(
     if age_mo is None:
         return title + "❌ Usia tidak valid. Pastikan tanggal lahir & tanggal ukur benar."
 
+    sex_text = sex_label or "Tidak diketahui"
+
     lines = [
+        f"- **Jenis kelamin:** {sex_text}",
         f"- **Usia:** {age_mo:.1f} bulan",
         f"- **Berat badan:** {w_kg:.1f} kg" if w_kg is not None else "- **Berat badan:** (tidak diisi)",
-        f"- **Tinggi/Panjang:** {h_cm:.1f} cm" if h_cm is not None else "- **Tinggi/Panjang:** (tidak diisi)",
+        f"- **Tinggi/panjang:** {h_cm:.1f} cm" if h_cm is not None else "- **Tinggi/panjang:** (tidak diisi)",
         f"- **Lingkar kepala:** {hc_cm:.1f} cm" if hc_cm is not None else "- **Lingkar kepala:** (tidak diisi)",
         "",
         "### Ringkasan Z-score (WHO) & Klasifikasi Permenkes",
@@ -222,12 +233,12 @@ def build_interpretation(
         if zv is None:
             return f"- **{label}:** Z = —  |  klasifikasi: (data tidak cukup)"
         per = z_to_percentile(zv)
-        perm = permenkes_fn(zv)
         per_txt = f"{per} persentil" if per is not None else "—"
+        perm = permenkes_fn(zv)
         return f"- **{label}:** Z = {zv:.2f}  (≈ {per_txt})  →  **{perm}**"
 
     lines.append(row("Berat menurut umur (WAZ)", "waz", classify_permenkes_waz))
-    lines.append(row("Tinggi/Panjang menurut umur (HAZ)", "haz", classify_permenkes_haz))
+    lines.append(row("Tinggi/panjang menurut umur (HAZ)", "haz", classify_permenkes_haz))
     lines.append(row("Berat menurut panjang/tinggi (WHZ)", "whz", classify_permenkes_whz))
 
     hcz = z.get("hcz")
@@ -245,7 +256,7 @@ def build_interpretation(
 
 
 # -------------------------------------------------
-# Checklist bulanan sederhana (imunisasi + KPSP)
+# Checklist bulanan & KPSP (sederhana)
 # -------------------------------------------------
 IMMUNIZATION_SCHEDULE = {
     0: ["HB 0", "BCG", "Polio 0"],
@@ -365,6 +376,142 @@ def make_zscore_bar_chart(z: Dict[str, Optional[float]]) -> plt.Figure:
 
 
 # -------------------------------------------------
+# PDF generator
+# -------------------------------------------------
+def generate_pdf_report(payload: Dict[str, Any]) -> str:
+    """
+    Buat laporan PDF sederhana dari payload analisis.
+    Mengembalikan path file PDF di folder outputs/.
+    """
+    os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+    name = (payload.get("name_child") or "anak").strip().replace(" ", "_")
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"gizisikecil_report_{name}_{ts}.pdf"
+    path = os.path.join(OUTPUTS_DIR, filename)
+
+    c = canvas.Canvas(path, pagesize=A4)
+    width, height = A4
+    margin = 40
+
+    z = payload.get("z", {})
+    age_mo = payload.get("age_mo")
+    sex_label = payload.get("sex_label") or "Tidak diketahui"
+    w_kg = payload.get("w")
+    h_cm = payload.get("h")
+    hc_cm = payload.get("hc")
+
+    text = c.beginText()
+    text.setTextOrigin(margin, height - margin - 20)
+    text.setFont("Helvetica-Bold", 14)
+    text.textLine("Laporan Status Gizi Anak (GiziSiKecil)")
+    text.setFont("Helvetica", 9)
+    text.textLine(f"Tanggal cetak: {datetime.now().strftime('%d %B %Y, %H:%M WIB')}")
+    text.textLine("")
+
+    # Identitas singkat
+    text.textLine("Identitas:")
+    text.textLine(f"- Nama anak      : {payload.get('name_child') or '-'}")
+    text.textLine(f"- Jenis kelamin  : {sex_label}")
+    if age_mo is not None:
+        text.textLine(f"- Usia           : {age_mo:.1f} bulan")
+    else:
+        text.textLine("- Usia           : (tidak valid)")
+    text.textLine(
+        f"- Berat badan    : {w_kg:.1f} kg" if w_kg is not None else "- Berat badan    : (tidak diisi)"
+    )
+    text.textLine(
+        f"- Tinggi/Panjang : {h_cm:.1f} cm" if h_cm is not None else "- Tinggi/Panjang : (tidak diisi)"
+    )
+    text.textLine(
+        f"- Lingkar kepala : {hc_cm:.1f} cm" if hc_cm is not None else "- Lingkar kepala : (tidak diisi)"
+    )
+    text.textLine("")
+
+    # Z-score
+    text.textLine("Z-score WHO & klasifikasi Permenkes:")
+    def z_line(label: str, key: str, fn_perm):
+        zv = z.get(key)
+        if zv is None:
+            return f"- {label}: Z = — | (data tidak cukup)"
+        per = z_to_percentile(zv)
+        per_txt = f"{per} persentil" if per is not None else "—"
+        klas = fn_perm(zv)
+        return f"- {label}: Z = {zv:.2f} (~ {per_txt}) → {klas}"
+
+    text.textLine(z_line("Berat menurut umur (WAZ)", "waz", classify_permenkes_waz))
+    text.textLine(z_line("Tinggi/Panjang menurut umur (HAZ)", "haz", classify_permenkes_haz))
+    text.textLine(z_line("Berat menurut panjang/tinggi (WHZ)", "whz", classify_permenkes_whz))
+
+    hcz = z.get("hcz")
+    if hcz is not None:
+        text.textLine(
+            f"- Lingkar kepala (HCZ): Z = {hcz:.2f} → {classify_hcz(hcz)}"
+        )
+
+    text.textLine("")
+    text.textLine("Catatan penting:")
+    text.textLine(
+        "- Laporan ini bersifat skrining edukatif, bukan pengganti diagnosis klinis."
+    )
+    text.textLine(
+        "- Untuk penilaian menyeluruh, konsultasikan hasil ini dengan tenaga kesehatan."
+    )
+    text.textLine("- Data diolah berdasarkan WHO Child Growth Standards & Permenkes No. 2/2020.")
+    text.textLine("")
+
+    c.drawText(text)
+    c.showPage()
+    c.save()
+    return path
+
+
+# -------------------------------------------------
+# Analisis utama (shared oleh 2 tombol)
+# -------------------------------------------------
+def compute_analysis(
+    name_child,
+    sex_label,
+    age_mode,
+    dob_str,
+    dom_str,
+    age_months_manual,
+    w_kg,
+    h_cm,
+    hc_cm,
+):
+    w = as_float(w_kg)
+    h = as_float(h_cm)
+    hc = as_float(hc_cm)
+
+    # usia
+    if age_mode == "Tanggal":
+        dob = parse_date(dob_str) if dob_str else None
+        dom = parse_date(dom_str) if dom_str else date.today()
+        age_mo = age_months_from_dates(dob, dom) if (dob and dom) else None
+    else:
+        age_mo = as_float(age_months_manual)
+
+    if age_mo is not None and age_mo < 0:
+        age_mo = None
+
+    z = compute_zscores(sex_label, age_mo, w, h, hc)
+    md = build_interpretation(name_child or "", sex_label, age_mo, w, h, hc, z)
+    fig = make_zscore_bar_chart(z) if any(v is not None for v in z.values()) else None
+
+    payload = {
+        "name_child": name_child,
+        "sex_label": sex_label,
+        "age_mo": age_mo,
+        "w": w,
+        "h": h,
+        "hc": hc,
+        "z": z,
+    }
+    return md, fig, payload
+
+
+# -------------------------------------------------
 # Gradio callbacks
 # -------------------------------------------------
 def analyze_callback(
@@ -379,27 +526,53 @@ def analyze_callback(
     hc_cm,
 ):
     try:
-        w = as_float(w_kg)
-        h = as_float(h_cm)
-        hc = as_float(hc_cm)
-
-        # usia
-        if age_mode == "Tanggal":
-            dob = parse_date(dob_str) if dob_str else None
-            dom = parse_date(dom_str) if dom_str else date.today()
-            age_mo = age_months_from_dates(dob, dom) if (dob and dom) else None
-        else:
-            age_mo = as_float(age_months_manual)
-
-        if age_mo is not None and age_mo < 0:
-            age_mo = None
-
-        z = compute_zscores(sex_label, age_mo, w, h, hc)
-        md = build_interpretation(name_child or "", age_mo, w, h, hc, z)
-        fig = make_zscore_bar_chart(z) if any(v is not None for v in z.values()) else None
+        md, fig, _ = compute_analysis(
+            name_child,
+            sex_label,
+            age_mode,
+            dob_str,
+            dom_str,
+            age_months_manual,
+            w_kg,
+            h_cm,
+            hc_cm,
+        )
         return md, fig
     except Exception as e:
         return f"❌ Terjadi error saat analisis: {e}", None
+
+
+def pdf_callback(
+    name_child,
+    sex_label,
+    age_mode,
+    dob_str,
+    dom_str,
+    age_months_manual,
+    w_kg,
+    h_cm,
+    hc_cm,
+):
+    try:
+        _, _, payload = compute_analysis(
+            name_child,
+            sex_label,
+            age_mode,
+            dob_str,
+            dom_str,
+            age_months_manual,
+            w_kg,
+            h_cm,
+            hc_cm,
+        )
+        path = generate_pdf_report(payload)
+        return path
+    except Exception as e:
+        # Jika gagal, tidak usah meledakkan server — kirim file kosong dengan pesan error
+        dummy_path = os.path.join(OUTPUTS_DIR, "ERROR.txt")
+        with open(dummy_path, "w", encoding="utf-8") as f:
+            f.write(f"Gagal membuat PDF: {e}")
+        return dummy_path
 
 
 def checklist_callback(age_months):
@@ -430,7 +603,7 @@ def build_demo() -> gr.Blocks:
         gr.Markdown(
             f"# 🏥 GiziSiKecil\n"
             f"Monitor pertumbuhan anak berbasis **WHO Child Growth Standards**\n\n"
-            f"_Versi stabil untuk penggunaan sehari-hari & deployment Render (v{APP_VERSION})_"
+            f"_Versi stabil + PDF (v{APP_VERSION})_"
         )
 
         with gr.Tab("📊 Kalkulator Gizi"):
@@ -465,11 +638,13 @@ def build_demo() -> gr.Blocks:
                     h_cm = gr.Number(label="Tinggi/panjang (cm)")
                     hc_cm = gr.Number(label="Lingkar kepala (cm)", value=None)
 
-                    btn = gr.Button("🔍 Analisis sekarang", variant="primary")
+                    btn_analyze = gr.Button("🔍 Analisis sekarang", variant="primary")
+                    btn_pdf = gr.Button("📄 Buat laporan PDF", variant="secondary")
 
                 with gr.Column(scale=1):
                     result_md = gr.Markdown("Hasil analisis akan muncul di sini.")
                     plot = gr.Plot()
+                    pdf_file = gr.File(label="Laporan PDF", interactive=False)
 
             age_mode.change(
                 toggle_age_inputs,
@@ -477,7 +652,7 @@ def build_demo() -> gr.Blocks:
                 outputs=[dob, dom, age_months_manual],
             )
 
-            btn.click(
+            btn_analyze.click(
                 analyze_callback,
                 inputs=[
                     name_child,
@@ -491,6 +666,22 @@ def build_demo() -> gr.Blocks:
                     hc_cm,
                 ],
                 outputs=[result_md, plot],
+            )
+
+            btn_pdf.click(
+                pdf_callback,
+                inputs=[
+                    name_child,
+                    sex,
+                    age_mode,
+                    dob,
+                    dom,
+                    age_months_manual,
+                    w_kg,
+                    h_cm,
+                    hc_cm,
+                ],
+                outputs=[pdf_file],
             )
 
         with gr.Tab("📅 Checklist bulanan & KPSP"):
@@ -515,7 +706,7 @@ def build_demo() -> gr.Blocks:
 # -------------------------------------------------
 app_fastapi = FastAPI(
     title="GiziSiKecil API",
-    description="WHO Child Growth Standards + simple checklist",
+    description="WHO Child Growth Standards + checklist & PDF",
     version=APP_VERSION,
 )
 
