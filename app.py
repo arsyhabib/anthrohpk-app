@@ -3633,7 +3633,7 @@ def interpret_growth_velocity(velocity_data: Dict, gender: str) -> Dict:
     concern_level = "normal"
     
     for wv in velocity_data['weight_velocity']:
-        period_start = int(wv['period'].split('-')[0])
+        period_start = int(float(wv['period'].split('-')[0]))
         vel = wv['velocity']
         
         if period_start < 3: expected, optimal = (0.6, 1.0), 0.8
@@ -3666,7 +3666,7 @@ def interpret_growth_velocity(velocity_data: Dict, gender: str) -> Dict:
             })
     
     for hv in velocity_data['height_velocity']:
-        period_start = int(hv['period'].split('-')[0])
+        period_start = int(float(hv['period'].split('-')[0]))
         vel = hv['velocity']
         
         if period_start < 3: expected, optimal = (3.0, 4.0), 3.5
