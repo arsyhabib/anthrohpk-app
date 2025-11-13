@@ -3835,6 +3835,164 @@ def kalkulator_kejar_tumbuh_handler(
     except Exception as e:
         return f"<div style='padding: 20px; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 8px;'><h3 style='color: #721c24; margin-top: 0;'>❌ Error</h3><p>Terjadi kesalahan saat memproses data: {str(e)}</p><p>Pastikan format data benar: <code>tanggal,usia_bulan,bb,tb</code></p></div>", None
 
+def format_data_terinput_html(data_list: List[Dict]) -> str:
+    """
+    Helper (BARU v3.2.1): Mengubah list data state menjadi tabel HTML yang cantik.
+    """
+    if not data_list:
+        return "<p style='text-align: center; color: #888; padding: 10px;'>Belum ada data yang ditambahkan.</p>"
+    
+    html = """
+    <table style='width: 100%; border-collapse: collapse; margin-top: 10px;'>
+    <thead>
+        <tr style='background: #f4f4f4; border-bottom: 2px solid #ddd;'>
+            <th style='padding: 10px; border: 1px solid #ddd; text-align: center;'>#</th>
+            <th style='padding: 10px; border: 1px solid #ddd; text-align: left;'>Tanggal</th>
+            <th style='padding: 10px; border: 1px solid #ddd; text-align: right;'>Usia (bln)</th>
+            <th style='padding: 10px; border: 1px solid #ddd; text-align: right;'>Berat (kg)</th>
+            <th style='padding: 10px; border: 1px solid #ddd; text-align: right;'>Tinggi (cm)</th>
+        </tr>
+    </thead>
+    <tbody>
+    """
+    
+    for i, data in enumerate(data_list):
+        html += f"""
+        <tr>
+            <td style='padding: 8px; border: 1px solid #eee; text-align: center;'>{i+1}</td>
+            <td style='padding: 8px; border: 1px solid #eee;'>{data['date'].strftime('%Y-%m-%d')}</td>
+            <td style='padding: 8px; border: 1px solid #eee; text-align: right;'>{data['age_months']:.2f}</td>
+            <td style='padding: 8px; border: 1px solid #eee; text-align: right;'>{data['weight']:.1f}</td>
+            <td style='padding: 8px; border: 1px solid #eee; text-align: right;'>{data['height']:.1f}</td>
+        </tr>
+        """
+    
+    html += "</tbody></table>"
+    return html
+
+def tambah_data_kejar_tumbuh(
+    current_data: List[Dict],
+    mode: str,
+    dob_str: str,
+    dom_str: str,
+    usia: float,
+    bb: float,
+    tb: float
+) -> Tuple[List[Dict], str, str, Optional[float], Optional[float], Optional[float]]:
+    """
+    Handler (BARU v3.2.1): Menambahkan satu data pengukuran ke dalam state list.
+    """
+    
+    # Validasi input dasar
+    if bb is None or tb is None:
+        gr.Warning("Berat Badan (BB) dan Tinggi Badan (TB) wajib diisi!")
+        return current_data, format_data_terinput_html(current_data), dom_str, usia, bb, tb
+    
+    usia_calc = None
+    dom_obj = None
+    
+    try:
+        if mode == "Tanggal":
+            if not dob_str:
+                raise ValueError("Tanggal Lahir Anak (DOB) wajib diisi pada form '1. Informasi Dasar'.")
+            if not dom_str:
+                raise ValueError("Tanggal Pengukuran (DOM) wajib diisi.")
+            
+            dob_obj = parse_date(dob_str)
+            dom_obj = parse_date(dom_str)
+            
+            if dob_obj is None: raise ValueError("Format Tanggal Lahir salah. Gunakan YYYY-MM-DD.")
+            if dom_obj is None: raise ValueError("Format Tanggal Pengukuran salah. Gunakan YYYY-MM-DD.")
+            
+            usia_calc, _ = calculate_age_from_dates(dob_obj, dom_obj)
+            if usia_calc is None:
+                raise ValueError("Tanggal Pengukuran harus setelah Tanggal Lahir.")
+        
+        else: # Mode "Usia (bulan)"
+            if usia is None:
+                raise ValueError("Usia (bulan) wajib diisi.")
+            if usia < 0:
+                raise ValueError("Usia tidak boleh negatif.")
+            usia_calc = float(usia)
+            # Buat tanggal "dummy" hanya untuk sorting. Usia adalah kunci utamanya.
+            # Kita gunakan tanggal hari ini + offset usia agar sortingnya benar
+            dom_obj = date.today() + timedelta(days=int(usia_calc * 30.4375))
+
+        new_entry = {
+            'date': dom_obj, # Digunakan untuk sorting
+            'age_months': usia_calc,
+            'weight': float(bb),
+            'height': float(tb)
+        }
+        
+        # Tambah dan urutkan berdasarkan usia
+        updated_data = current_data + [new_entry]
+        updated_data = sorted(updated_data, key=lambda x: x['age_months'])
+        
+        # Siapkan input form untuk data berikutnya
+        next_dom_str = (dom_obj + timedelta(days=30)).strftime('%Y-%m-%d') if mode == "Tanggal" else ""
+        next_usia = math.ceil(usia_calc + 1) if mode == "Usia (bulan)" else None
+        
+        gr.Info(f"Data ke-{len(updated_data)} (Usia {usia_calc:.1f} bln) berhasil ditambahkan!")
+        return updated_data, format_data_terinput_html(updated_data), next_dom_str, next_usia, None, None
+    
+    except Exception as e:
+        gr.Error(str(e))
+        return current_data, format_data_terinput_html(current_data), dom_str, usia, bb, tb
+
+def hapus_data_terakhir(current_data: List[Dict]) -> Tuple[List[Dict], str]:
+    """
+    Handler (BARU v3.2.1): Menghapus data terakhir dari state list.
+    """
+    if not current_data:
+        gr.Warning("Tidak ada data untuk dihapus.")
+        return [], format_data_terinput_html([])
+    
+    updated_data = current_data[:-1]
+    gr.Info("Data terakhir berhasil dihapus.")
+    return updated_data, format_data_terinput_html(updated_data)
+
+def kalkulator_kejar_tumbuh_handler(
+    data_list: List[Dict],
+    gender: str
+) -> Tuple[str, Optional[str]]:
+    """
+    Handler (DIMODIFIKASI v3.2.1): Menerima LIST data, bukan STRING.
+    
+    Args:
+        data_list: List data pengukuran dari gr.State
+        gender: Jenis kelamin anak
+    
+    Returns:
+        Tuple of (HTML report, plot image path)
+    """
+    try:
+        # Bagian parsing string dihapus. Data sudah bersih dari `data_list`.
+        if len(data_list) < 2:
+            return """
+            <div style='padding: 20px; background: #fff3cd; border-left: 5px solid #ffc107; border-radius: 8px;'>
+                <h3 style='color: #856404; margin-top: 0;'>⚠️ Data Tidak Cukup</h3>
+                <p>Minimal <strong>2 pengukuran</strong> diperlukan untuk analisis velocity pertumbuhan.</p>
+                <p>Silakan tambahkan data menggunakan formulir di atas.</p>
+            </div>
+            """, None
+        
+        # Sisa logikanya SAMA PERSIS, hanya mengganti nama variabel
+        velocity_data = calculate_growth_velocity(data_list)
+        analysis = interpret_growth_velocity(velocity_data, gender)
+        plot_path = plot_growth_trajectory(data_list, gender) # Menggunakan data_list
+        html_report = generate_kejar_tumbuh_report(analysis, gender)
+        
+        return html_report, plot_path
+        
+    except Exception as e:
+        traceback.print_exc() # Print error ke console server untuk debug
+        return f"""
+        <div style='padding: 20px; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 8px;'>
+            <h3 style='color: #721c24; margin-top: 0;'>❌ Error</h3>
+            <p>Terjadi kesalahan internal saat memproses data: {str(e)}</p>
+        </div>
+        """, None
 
 def generate_kejar_tumbuh_report(analysis: Dict, gender: str) -> str:
     """
@@ -5707,6 +5865,7 @@ checklist yang disesuaikan dengan status gizi anak.
                     )
                 
                 # --- SUB-TAB 2: KALKULATOR KEJAR TUMBUH ---
+                # --- SUB-TAB 2: KALKULATOR KEJAR TUMBUH (UI BARU v3.2.1) ---
                 with gr.Tab("📈 Kalkulator Target Kejar Tumbuh"):
                     gr.Markdown("""
                     ### Kalkulator Target Kejar Tumbuh (Growth Velocity)
@@ -5722,39 +5881,81 @@ checklist yang disesuaikan dengan status gizi anak.
                     
                     #### 📝 Cara Menggunakan:
                     
-                    1. **Masukkan data pengukuran** (minimal 2 kali pengukuran)
-                    2. Format: `tanggal,usia_bulan,berat_badan,tinggi_badan` (satu data per baris)
-                    3. Contoh:
-                       ```
-                       2025-01-15,6,7.5,67.0
-                       2025-02-15,7,7.9,68.5
-                       2025-03-15,8,8.3,70.0
-                       ```
-                    4. Klik **Analisis Pertumbuhan**
+                    1.  Pilih **Jenis Kelamin** dan **Mode Input** (Tanggal atau Usia).
+                    2.  Jika mode "Tanggal", isi **Tanggal Lahir** (cukup sekali).
+                    3.  Isi formulir **"Input Data Pengukuran"** (Tanggal/Usia, BB, TB).
+                    4.  Klik **"Tambah Data"**. Ulangi untuk setiap pengukuran (minimal 2 data).
+                    5.  Data yang Anda tambahkan akan muncul di tabel **"Data Terinput"**.
+                    6.  Jika salah, klik **"Hapus Data Terakhir"**.
+                    7.  Setelah semua data terisi, klik **"Analisis Pertumbuhan"**.
                     """)
+                    
+                    # State untuk menyimpan list data
+                    kejar_tumbuh_data_state = gr.State([])
                     
                     with gr.Row():
                         with gr.Column(scale=1):
+                            gr.Markdown("#### 1. Informasi Dasar Anak")
                             kejar_gender = gr.Radio(
                                 choices=["Laki-laki", "Perempuan"],
                                 value="Laki-laki",
                                 label="Jenis Kelamin Anak"
                             )
-                            
-                            kejar_data = gr.Textbox(
-                                label="Data Pengukuran",
-                                placeholder="2025-01-15,6,7.5,67.0\n2025-02-15,7,7.9,68.5\n2025-03-15,8,8.3,70.0",
-                                lines=10,
-                                info="Format: tanggal,usia_bulan,bb,tb"
+                            kejar_tumbuh_mode = gr.Radio(
+                                choices=["Tanggal", "Usia (bulan)"],
+                                value="Tanggal",
+                                label="Mode Input Data",
+                                info="Pilih cara Anda memasukkan data"
+                            )
+                            kejar_tumbuh_dob = gr.Textbox(
+                                label="Tanggal Lahir Anak (DOB)",
+                                placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                                info="Diperlukan jika mode 'Tanggal'",
+                                visible=True
                             )
                             
+                            gr.Markdown("#### 2. Input Data Pengukuran")
+                            with gr.Group():
+                                kejar_tumbuh_dom = gr.Textbox(
+                                    label="Tanggal Pengukuran (DOM)",
+                                    placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                                    info="Tanggal saat anak diukur",
+                                    visible=True
+                                )
+                                kejar_tumbuh_usia = gr.Number(
+                                    label="Usia (bulan)",
+                                    info="Usia anak saat diukur",
+                                    visible=False
+                                )
+                                kejar_tumbuh_bb = gr.Number(
+                                    label="Berat Badan (kg)",
+                                    placeholder="Contoh: 7.5"
+                                )
+                                kejar_tumbuh_tb = gr.Number(
+                                    label="Panjang/Tinggi Badan (cm)",
+                                    placeholder="Contoh: 67.0"
+                                )
+                            
+                            with gr.Row():
+                                tambah_data_btn = gr.Button("➕ Tambah Data", variant="secondary")
+                                hapus_data_btn = gr.Button("🗑️ Hapus Data Terakhir")
+                            
+                            gr.Markdown("#### 3. Analisis")
                             kejar_btn = gr.Button(
                                 "📊 Analisis Pertumbuhan",
                                 variant="primary",
                                 size="lg"
                             )
-                        
+
                         with gr.Column(scale=2):
+                            gr.Markdown("#### Data Terinput")
+                            data_terinput_display = gr.HTML(
+                                "<p style='text-align: center; color: #888; padding: 10px;'>Belum ada data yang ditambahkan.</p>"
+                            )
+                            
+                            gr.Markdown("---")
+                            gr.Markdown("#### Hasil Analisis")
+                            
                             kejar_output_html = gr.HTML(
                                 label="Hasil Analisis Velocity",
                                 value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil analisis akan tampil di sini...</p>"
@@ -5765,6 +5966,58 @@ checklist yang disesuaikan dengan status gizi anak.
                                 type="filepath",
                                 visible=False
                             )
+
+                    # --- Handlers untuk UI Kejar Tumbuh ---
+                    
+                    # Toggle visibilitas input Tanggal vs Usia
+                    def toggle_kejar_tumbuh_mode(mode):
+                        is_tanggal_mode = (mode == "Tanggal")
+                        return (
+                            gr.update(visible=is_tanggal_mode), # DOB
+                            gr.update(visible=is_tanggal_mode), # DOM
+                            gr.update(visible=not is_tanggal_mode) # Usia
+                        )
+                    
+                    kejar_tumbuh_mode.change(
+                        fn=toggle_kejar_tumbuh_mode,
+                        inputs=[kejar_tumbuh_mode],
+                        outputs=[kejar_tumbuh_dob, kejar_tumbuh_dom, kejar_tumbuh_usia]
+                    )
+                    
+                    # Handler Tombol "Tambah Data"
+                    tambah_data_btn.click(
+                        fn=tambah_data_kejar_tumbuh,
+                        inputs=[
+                            kejar_tumbuh_data_state, kejar_tumbuh_mode, kejar_tumbuh_dob,
+                            kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
+                        ],
+                        outputs=[
+                            kejar_tumbuh_data_state, data_terinput_display,
+                            kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
+                        ]
+                    )
+                    
+                    # Handler Tombol "Hapus Data Terakhir"
+                    hapus_data_btn.click(
+                        fn=hapus_data_terakhir,
+                        inputs=[kejar_tumbuh_data_state],
+                        outputs=[kejar_tumbuh_data_state, data_terinput_display]
+                    )
+                    
+                    # Handler Tombol "Analisis Pertumbuhan"
+                    def kejar_tumbuh_handler_wrapper(data_list, gender):
+                        # Panggil handler baru yang dimodifikasi
+                        html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender) 
+                        if plot_path:
+                            return html, gr.update(value=plot_path, visible=True)
+                        else:
+                            return html, gr.update(visible=False)
+
+                    kejar_btn.click(
+                        fn=kejar_tumbuh_handler_wrapper,
+                        inputs=[kejar_tumbuh_data_state, kejar_gender],
+                        outputs=[kejar_output_html, kejar_output_plot]
+                    )
                     
                     # Connect handler
                     def kejar_tumbuh_handler_wrapper(data, gender):
