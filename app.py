@@ -2612,10 +2612,70 @@ with gr.Blocks(
         primary_hue="pink",
         secondary_hue="teal",
         neutral_hue="slate",
-        font=["Segoe UI", "Arial", "sans-serif"]
+        font=["Segoe UI", "Arial", "sans-serif"],
     ),
-    css=CUSTOM_CSS
+    css=CUSTOM_CSS,
 ) as demo:
+
+    # Header
+    gr.Markdown("""
+⚠️ **Server free tier akan sleep setelah 15 menit idle**.
+Data checklist akan hilang. SELALU gunakan tombol Export PDF untuk menyimpan!
+""")
+
+    gr.Markdown(f"""
+    # 🏥 **GiziSiKecil** - Monitor Pertumbuhan Anak Profesional
+    ### 💕 WHO Child Growth Standards + Checklist Sehat Bulanan (0-60 Bulan)
+
+    #### 🔒 Privasi Terjaga | ⚕️ Standar Resmi Permenkes & WHO | 📊 Analisis Komprehensif
+
+    ---
+    """)
+
+    # State variables
+    state_payload = gr.State({})
+    state_checklist_progress = gr.State({})
+
+    # Main Tabs
+    with gr.Tabs():
+
+        # ========== TAB 1: KALKULATOR GIZI ==========
+        with gr.TabItem("📊 Kalkulator Gizi", id=0):
+            gr.Markdown("## 🧮 Analisis Status Gizi WHO + Permenkes")
+
+            with gr.Row():
+                # Left Column: Input
+                with gr.Column(scale=6):
+                    gr.Markdown("### 📝 Input Data Anak")
+
+                    with gr.Group():
+                        nama_anak = gr.Textbox(
+                            label="Nama Anak",
+                            placeholder="Budi Andika",
+                        )
+                        nama_ortu = gr.Textbox(
+                            label="Nama Orang Tua/Wali (opsional)",
+                            placeholder="Ibu Siti Aminah",
+                        )
+
+                        sex = gr.Radio(
+                            choices=["Laki-laki", "Perempuan"],
+                            label="Jenis Kelamin",
+                            value="Laki-laki",
+                            info="Penting untuk standar WHO yang berbeda",
+                        )
+
+                    with gr.Group():
+                        gr.Markdown("#### 📅 Usia")
+                        age_mode = gr.Radio(
+                            choices=["Tanggal", "Usia (bulan)"],
+                            label="Mode Input Usia",
+                            value="Tanggal",
+                        )
+
+                        # dst… (lanjutkan isi TAB 1, TAB 2, TAB 3 kamu di sini
+                        # dengan indent 12 spasi / 3 level seperti semula)
+
 
 # ============================================================
 # ENTRYPOINT UNTUK RENDER / UVICORN
@@ -2989,10 +3049,69 @@ with gr.Blocks(
         primary_hue="pink",
         secondary_hue="teal",
         neutral_hue="slate",
-        font=["Segoe UI", "Arial", "sans-serif"]
+        font=["Segoe UI", "Arial", "sans-serif"],
     ),
-    css=CUSTOM_CSS
+    css=CUSTOM_CSS,
 ) as demo:
+
+    # Header
+    gr.Markdown("""
+⚠️ **Server free tier akan sleep setelah 15 menit idle**.
+Data checklist akan hilang. SELALU gunakan tombol Export PDF untuk menyimpan!
+""")
+
+    gr.Markdown(f"""
+    # 🏥 **GiziSiKecil** - Monitor Pertumbuhan Anak Profesional
+    ### 💕 WHO Child Growth Standards + Checklist Sehat Bulanan (0-60 Bulan)
+
+    #### 🔒 Privasi Terjaga | ⚕️ Standar Resmi Permenkes & WHO | 📊 Analisis Komprehensif
+
+    ---
+    """)
+
+    # State variables
+    state_payload = gr.State({})
+    state_checklist_progress = gr.State({})
+
+    # Main Tabs
+    with gr.Tabs():
+
+        # ========== TAB 1: KALKULATOR GIZI ==========
+        with gr.TabItem("📊 Kalkulator Gizi", id=0):
+            gr.Markdown("## 🧮 Analisis Status Gizi WHO + Permenkes")
+
+            with gr.Row():
+                # Left Column: Input
+                with gr.Column(scale=6):
+                    gr.Markdown("### 📝 Input Data Anak")
+
+                    with gr.Group():
+                        nama_anak = gr.Textbox(
+                            label="Nama Anak",
+                            placeholder="Budi Andika",
+                        )
+                        nama_ortu = gr.Textbox(
+                            label="Nama Orang Tua/Wali (opsional)",
+                            placeholder="Ibu Siti Aminah",
+                        )
+
+                        sex = gr.Radio(
+                            choices=["Laki-laki", "Perempuan"],
+                            label="Jenis Kelamin",
+                            value="Laki-laki",
+                            info="Penting untuk standar WHO yang berbeda",
+                        )
+
+                    with gr.Group():
+                        gr.Markdown("#### 📅 Usia")
+                        age_mode = gr.Radio(
+                            choices=["Tanggal", "Usia (bulan)"],
+                            label="Mode Input Usia",
+                            value="Tanggal",
+                        )
+
+                        # dst… (lanjutkan isi TAB 1, TAB 2, TAB 3 kamu di sini
+                        # dengan indent 12 spasi / 3 level seperti semula)
 
     # ============================================================
 # ENTRYPOINT UNTUK RENDER / UVICORN
