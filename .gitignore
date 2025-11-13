@@ -1,3 +1,9 @@
+# Tambahkan ini di bagian atas
+!pygrowup/
+!pygrowup/*.py
+!pygrowup/tables/
+!pygrowup/tables/*.csv
+
 # Byte-compiled
 __pycache__/
 *.py[cod]
