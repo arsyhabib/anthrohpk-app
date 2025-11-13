@@ -5929,11 +5929,9 @@ checklist yang disesuaikan dengan status gizi anak.
                                 )
                                 kejar_tumbuh_bb = gr.Number(
                                     label="Berat Badan (kg)",
-                                    placeholder="Contoh: 7.5"
                                 )
                                 kejar_tumbuh_tb = gr.Number(
                                     label="Panjang/Tinggi Badan (cm)",
-                                    placeholder="Contoh: 67.0"
                                 )
                             
                             with gr.Row():
