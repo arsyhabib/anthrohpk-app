@@ -3539,7 +3539,1728 @@ def generate_checklist_with_videos(month: int, payload: Dict) -> str:
     return "\n".join(lines)
 
 
-print("✅ Section 10 loaded: Checklist & KPSP functions (Updated with videos & library helpers)")
+print("✅ Section 10 loaded: Checklist & KPSP functions (Updated with videos & library 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 11: GRADIO UI (Fully Updated for v3.1)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# UPDATED Custom CSS with Dark Mode Optimization
+CUSTOM_CSS = """
+/* ═══════════════════════════════════════════════════════════════════
+   GLOBAL STYLES
+   ═══════════════════════════════════════════════════════════════════ */
+
+.gradio-container {
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK MODE OPTIMIZATION - HIGH CONTRAST
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Dark mode detection and optimization */
+@media (prefers-color-scheme: dark) {
+    /* Improve text contrast in dark mode */
+    .gradio-container {
+        color: #f0f0f0 !important;
+    }
+    
+    /* Headers with better contrast */
+    h1, h2, h3, h4, h5, h6 {
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+    
+    /* Paragraphs and body text */
+    p, span, div, label {
+        color: #e8e8e8 !important;
+    }
+    
+    /* Input fields in dark mode */
+    .gr-input, .gr-textbox, .gr-box, .gr-form {
+        background-color: #2d2d2d !important;
+        color: #ffffff !important;
+        border-color: #505050 !important;
+    }
+    
+    .gr-input::placeholder {
+        color: #999999 !important;
+    }
+    
+    /* Buttons in dark mode */
+    .gr-button {
+        background-color: #404040 !important;
+        color: #ffffff !important;
+        border-color: #606060 !important;
+    }
+    
+    .gr-button:hover {
+        background-color: #505050 !important;
+        border-color: #707070 !important;
+    }
+    
+    .gr-button-primary {
+        background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%) !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border: none !important;
+    }
+    
+    .gr-button-secondary {
+        background: linear-gradient(135deg, #4ecdc4 0%, #6de0d9 100%) !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border: none !important;
+    }
+    
+    /* Cards and panels in dark mode */
+    .gr-panel, .gr-box, .gr-accordion {
+        background-color: #2a2a2a !important;
+        border-color: #505050 !important;
+        color: #e8e8e8 !important;
+    }
+    
+    /* Tabs in dark mode */
+    .gr-tab {
+        background-color: #333333 !important;
+        color: #ffffff !important;
+        border-color: #505050 !important;
+    }
+    
+    .gr-tab.selected {
+        background-color: #ff6b9d !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Markdown content in dark mode */
+    .markdown-body {
+        color: #e8e8e8 !important;
+    }
+    
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+        color: #ffffff !important;
+        border-bottom-color: #505050 !important;
+    }
+    
+    .markdown-body a {
+        color: #6db4ff !important;
+    }
+    
+    .markdown-body code {
+        background-color: #1e1e1e !important;
+        color: #d4d4d4 !important;
+        border-color: #404040 !important;
+    }
+    
+    .markdown-body pre {
+        background-color: #1e1e1e !important;
+        border-color: #404040 !important;
+    }
+    
+    /* Status indicators in dark mode */
+    .status-success {
+        color: #5cff5c !important;
+        font-weight: 600;
+    }
+    
+    .status-warning {
+        color: #ffd45c !important;
+        font-weight: 600;
+    }
+    
+    .status-error {
+        color: #ff5c5c !important;
+        font-weight: 600;
+    }
+    
+    /* Premium cards in dark mode */
+    .premium-gold {
+        background: linear-gradient(135deg, #b8860b 0%, #daa520 100%) !important;
+        color: #ffffff !important;
+        border: 2px solid #b8860b !important;
+    }
+    
+    .premium-silver {
+        background: linear-gradient(135deg, #787878 0%, #a0a0a0 100%) !important;
+        color: #ffffff !important;
+        border: 2px solid #787878 !important;
+    }
+    
+    /* Article cards in dark mode */
+    .article-card {
+        background-color: #2a2a2a !important;
+        border: 1px solid #505050 !important;
+        color: #e8e8e8 !important;
+    }
+    
+    .article-card:hover {
+        background-color: #353535 !important;
+        border-color: #606060 !important;
+        box-shadow: 0 4px 12px rgba(255,255,255,0.1) !important;
+    }
+    
+    .article-title {
+        color: #ffffff !important;
+    }
+    
+    .article-meta {
+        color: #b0b0b0 !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT MODE (Default)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Status Colors */
+.status-success { 
+    color: #28a745 !important; 
+    font-weight: 600; 
+}
+.status-warning { 
+    color: #ffc107 !important; 
+    font-weight: 600; 
+}
+.status-error { 
+    color: #dc3545 !important; 
+    font-weight: 600; 
+}
+
+/* Big Buttons */
+.big-button {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    padding: 20px 40px !important;
+    margin: 15px 0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease !important;
+}
+
+.big-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
+}
+
+/* Premium Buttons */
+.premium-silver {
+    background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%) !important;
+    color: #333 !important;
+    border: 2px solid #A0A0A0 !important;
+    font-weight: bold !important;
+    padding: 15px 30px !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
+}
+
+.premium-gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+    color: #000 !important;
+    border: 2px solid #DAA520 !important;
+    font-weight: bold !important;
+    padding: 15px 30px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4) !important;
+    transition: all 0.3s ease !important;
+}
+
+.premium-gold:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LIBRARY ARTICLE CARDS (v3.1)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.article-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.article-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-color: #ff6b9d;
+}
+
+.article-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.article-meta {
+    font-size: 13px;
+    color: #6c757d;
+    margin-bottom: 12px;
+}
+
+.article-summary {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #495057;
+    margin-bottom: 15px;
+}
+
+.article-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.article-tag {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.article-link-btn {
+    display: inline-block;
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.article-link-btn:hover {
+    background: linear-gradient(135deg, #44a08d 0%, #4ecdc4 100%);
+    transform: translateX(3px);
+}
+
+/* Category badges */
+.category-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.category-asi { background: #e3f2fd; color: #1565c0; }
+.category-mpasi { background: #fff3e0; color: #e65100; }
+.category-stunting { background: #fce4ec; color: #c2185b; }
+.category-perkembangan { background: #f3e5f5; color: #7b1fa2; }
+.category-imunisasi { background: #e8f5e9; color: #2e7d32; }
+.category-penyakit { background: #ffebee; color: #c62828; }
+.category-ibu { background: #fce4ec; color: #ad1457; }
+.category-pola-asuh { background: #e1f5fe; color: #0277bd; }
+.category-kebersihan { background: #e0f2f1; color: #00695c; }
+.category-nutrisi { background: #fff9c4; color: #f57f17; }
+.category-alergi { background: #ffccbc; color: #d84315; }
+.category-khusus { background: #f1f8e9; color: #558b2f; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   VIDEO CARDS (v3.1)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.video-card {
+    background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%);
+    border: 2px solid #ffd4e0;
+    border-radius: 12px;
+    padding: 15px;
+    margin: 10px 0;
+    transition: all 0.3s ease;
+}
+
+.video-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 15px rgba(255, 107, 157, 0.2);
+    border-color: #ff6b9d;
+}
+
+.video-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ff6b9d;
+    margin-bottom: 8px;
+}
+
+.video-description {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.video-duration {
+    font-size: 12px;
+    color: #999;
+    font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   OTHER COMPONENTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Input Fields */
+.gr-input, .gr-textbox {
+    border-radius: 8px !important;
+    border: 2px solid #e8e8e8 !important;
+    transition: border-color 0.3s ease !important;
+}
+
+.gr-input:focus, .gr-textbox:focus {
+    border-color: #ff6b9d !important;
+    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1) !important;
+}
+
+/* Cards and Panels */
+.gr-panel, .gr-box {
+    border-radius: 12px !important;
+    border: 1px solid #e8e8e8 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
+}
+
+/* Tabs */
+.gr-tab {
+    border-radius: 8px 8px 0 0 !important;
+    font-weight: 600 !important;
+}
+
+/* Plots */
+.gr-plot {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+
+/* Blockquotes */
+blockquote {
+    background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%);
+    border-left: 6px solid #ff6b9d;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Notification Panel */
+.notification-panel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 15px;
+    color: white;
+    margin: 15px 0;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.notification-enabled {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    margin: 10px 0;
+}
+"""
+
+print("✅ Custom CSS loaded with v3.1 dark mode optimizations & new styles")
+
+# Build Gradio Interface
+with gr.Blocks(
+    title=APP_TITLE,
+    theme=gr.themes.Soft(
+        primary_hue="pink",
+        secondary_hue="teal",
+        neutral_hue="slate",
+        font=["Inter", "Segoe UI", "Arial", "sans-serif"],
+        font_mono=["Fira Code", "Consolas", "monospace"],
+    ),
+    css=CUSTOM_CSS,
+    analytics_enabled=False,
+) as demo:
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # HEADER
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    gr.Markdown(f"""
+    # 🏥 **AnthroHPK v{APP_VERSION}**
+    ### 💕 Monitor Pertumbuhan Anak Profesional Berbasis WHO Standards
+    
+    **Fitur Unggulan v3.1:**
+    - ✅ Standar WHO Child Growth Standards 2006
+    - ✅ Klasifikasi Permenkes RI No. 2 Tahun 2020
+    - ✅ Grafik pertumbuhan interaktif 5 indeks
+    - ✅ Export PDF & CSV profesional
+    - 📚 **NEW!** Perpustakaan Ibu Balita (50 Artikel Resmi)
+    - 🎥 **NEW!** Video Edukasi KPSP & MP-ASI
+    - 🌙 **NEW!** Optimalisasi Dark Mode
+    - 🔔 **NEW!** Reminder Notifikasi dalam hitungan Jam
+    
+    ---
+    
+    ⚠️ **PENTING**: Aplikasi ini untuk skrining awal. Konsultasikan hasil dengan tenaga kesehatan.
+    
+    📱 **Butuh bantuan?** WhatsApp: [+{CONTACT_WA}](https://wa.me/{CONTACT_WA})
+    
+    ---
+    """)
+    
+    # JavaScript for Browser Notifications
+    notification_js = """
+    <script>
+    // Browser Notification Manager
+    window.AnthroNotification = {
+        permission: 'default',
+        
+        // Request notification permission
+        async requestPermission() {
+            if (!("Notification" in window)) {
+                console.log("Browser tidak support notifikasi");
+                return false;
+            }
+            
+            if (Notification.permission === 'granted') {
+                this.permission = 'granted';
+                return true;
+            }
+            
+            if (Notification.permission !== 'denied') {
+                const permission = await Notification.requestPermission();
+                this.permission = permission;
+                return permission === 'granted';
+            }
+            
+            return false;
+        },
+        
+        // Send notification
+        send(title, body, icon = '🔔', tag = 'anthro-notification') {
+            if (this.permission !== 'granted') {
+                console.log('Permission not granted');
+                return;
+            }
+            
+            const options = {
+                body: body,
+                icon: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/' + icon.codePointAt(0).toString(16) + '.png',
+                tag: tag,
+                badge: 'https://img.icons8.com/color/96/baby.png',
+                vibrate: [200, 100, 200],
+                requireInteraction: false,
+                silent: false
+            };
+            
+            try {
+                const notification = new Notification(title, options);
+                
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    window.focus();
+                    notification.close();
+                };
+                
+                // Auto close after 10 seconds
+                setTimeout(() => notification.close(), 10000);
+                
+            } catch (e) {
+                console.error('Notification error:', e);
+            }
+        },
+        
+        // Schedule notification (delay in minutes)
+        schedule(title, body, delayMinutes, icon = '🔔') {
+            const delayMs = delayMinutes * 60 * 1000;
+            setTimeout(() => {
+                this.send(title, body, icon, 'scheduled-notification');
+            }, delayMs);
+            console.log(`Notifikasi dijadwalkan ${delayMinutes} menit dari sekarang`);
+        },
+        
+        // Check permission status
+        checkPermission() {
+            if ("Notification" in window) {
+                this.permission = Notification.permission;
+                return this.permission;
+            }
+            return 'unsupported';
+        }
+    };
+    
+    // Initialize on load
+    window.addEventListener('load', function() {
+        window.AnthroNotification.checkPermission();
+        console.log('AnthroHPK Notification System Ready');
+    });
+    </script>
+    """
+    
+    gr.HTML(notification_js)
+    
+    # State untuk menyimpan payload
+    state_payload = gr.State({})
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # MAIN TABS
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    with gr.Tabs() as main_tabs:
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # TAB 1: KALKULATOR GIZI (from v3.0, unchanged)
+        # ═══════════════════════════════════════════════════════════════════
+        
+        with gr.TabItem("📊 Kalkulator Gizi WHO", id=0):
+            gr.Markdown("## 🧮 Analisis Status Gizi Komprehensif")
+            
+            with gr.Row():
+                # LEFT COLUMN: INPUTS
+                with gr.Column(scale=6):
+                    gr.Markdown("### 📝 Data Anak")
                     
+                    with gr.Group():
+                        nama_anak = gr.Textbox(
+                            label="Nama Anak",
+                            placeholder="Contoh: Budi Santoso",
+                            info="Nama lengkap anak (opsional)"
+                        )
+                        
+                        nama_ortu = gr.Textbox(
+                            label="Nama Orang Tua/Wali",
+                            placeholder="Contoh: Ibu Siti Aminah",
+                            info="Opsional, untuk identifikasi laporan"
+                        )
+                        
+                        sex = gr.Radio(
+                            choices=["Laki-laki", "Perempuan"],
+                            label="Jenis Kelamin",
+                            value="Laki-laki",
+                            info="PENTING: Standar WHO berbeda untuk laki-laki dan perempuan"
+                        )
+                    
+                    with gr.Group():
+                        gr.Markdown("### 📅 Usia")
+                        
+                        age_mode = gr.Radio(
+                            choices=["Tanggal", "Usia (bulan)"],
+                            label="Cara Input Usia",
+                            value="Tanggal",
+                            info="Pilih metode input yang paling mudah"
+                        )
+                        
+                        with gr.Column(visible=True) as date_inputs:
+                            dob = gr.Textbox(
+                                label="Tanggal Lahir",
+                                placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                                info="Contoh: 2023-01-15 atau 15/01/2023"
+                            )
+                            
+                            dom = gr.Textbox(
+                                label="Tanggal Pengukuran",
+                                value=datetime.now().strftime("%Y-%m-%d"),
+                                info="Hari ini atau tanggal pengukuran aktual"
+                            )
+                        
+                        with gr.Column(visible=False) as month_input:
+                            age_months = gr.Number(
+                                label="Usia (bulan)",
+                                value=6,
+                                minimum=0,
+                                maximum=60,
+                                info="Masukkan usia dalam bulan (0-60)"
+                            )
+                    
+                    with gr.Group():
+                        gr.Markdown("### 📏 Pengukuran Antropometri")
+                        
+                        weight = gr.Number(
+                            label="Berat Badan (kg)",
+                            value=None,
+                            minimum=1,
+                            maximum=30,
+                            info="Gunakan timbangan digital (presisi 0.1 kg)"
+                        )
+                        
+                        height = gr.Number(
+                            label="Panjang/Tinggi Badan (cm)",
+                            value=None,
+                            minimum=35,
+                            maximum=130,
+                            info="Panjang badan (< 24 bln) atau Tinggi badan (≥ 24 bln)"
+                        )
+                        
+                        head_circ = gr.Number(
+                            label="Lingkar Kepala (cm) - Opsional",
+                            value=None,
+                            minimum=20,
+                            maximum=60,
+                            info="Ukur lingkar terbesar kepala dengan meteran fleksibel"
+                        )
+                    
+                    with gr.Group():
+                        gr.Markdown("### 🎨 Tema Grafik")
+                        
+                        theme_choice = gr.Radio(
+                            choices=[
+                                "pink_pastel",
+                                "mint_pastel",
+                                "lavender_pastel"
+                            ],
+                            value="pink_pastel",
+                            label="Pilih Tema",
+                            info="Pilih warna grafik sesuai selera"
+                        )
+                    
+                    analyze_btn = gr.Button(
+                        "🔬 Analisis Sekarang",
+                        variant="primary",
+                        size="lg",
+                        elem_classes=["big-button"]
+                    )
+                
+                # RIGHT COLUMN: GUIDE
+                with gr.Column(scale=4):
+                    gr.Markdown("### 💡 Panduan Pengukuran Akurat")
+                    
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+                                padding: 25px; border-radius: 15px; 
+                                border-left: 6px solid #4caf50; 
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.1);'>
+                        
+                        <h4 style='color: #1b5e20; margin-top: 0; font-size: 18px;'>
+                            📏 Tips Pengukuran Profesional
+                        </h4>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>⚖️ Berat Badan:</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Timbang pagi hari sebelum makan</li>
+                                <li>Pakai timbangan digital (presisi 100g)</li>
+                                <li>Anak tanpa sepatu & pakaian tebal</li>
+                                <li>Bayi: timbangan bayi khusus</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>📐 Panjang (0-24 bulan):</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Gunakan <strong>infantometer</strong></li>
+                                <li>Bayi telentang, kepala menempel papan</li>
+                                <li>Butuh 2 orang: 1 kepala, 1 kaki</li>
+                                <li>Pastikan bayi rileks (tidak menangis)</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>📏 Tinggi (>24 bulan):</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Gunakan <strong>stadiometer</strong></li>
+                                <li>Anak berdiri tegak tanpa sepatu</li>
+                                <li>Punggung menempel dinding</li>
+                                <li>Pandangan lurus ke depan</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>⭕ Lingkar Kepala:</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Meteran <strong>fleksibel</strong> (non-stretch)</li>
+                                <li>Lingkar terbesar: atas alis & telinga</li>
+                                <li>Ulangi 3x, ambil rata-rata</li>
+                                <li>Penting untuk usia < 36 bulan</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='background: #fff8e1; padding: 15px; border-radius: 10px; 
+                                    margin-top: 20px; border-left: 4px solid #ffa000;'>
+                            <strong style='color: #ff6f00; font-size: 14px;'>⚠️ Penting:</strong>
+                            <p style='color: #e65100; margin: 8px 0 0 0; font-size: 13px;'>
+                                Kesalahan 0.5 cm pada tinggi = perbedaan Z-score signifikan!
+                                Akurasi pengukuran sangat menentukan hasil analisis.
+                            </p>
+                        </div>
+                    </div>
+                    """)
+                    
+                    gr.Markdown("### 🎯 Interpretasi Z-Score")
+                    
+                    gr.HTML("""
+                    <table style='width: 100%; border-collapse: collapse; 
+                                  margin-top: 15px; background: white; 
+                                  border-radius: 12px; overflow: hidden; 
+                                  box-shadow: 0 3px 10px rgba(0,0,0,0.1);'>
+                        <thead>
+                            <tr style='background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%); 
+                                       color: white;'>
+                                <th style='padding: 15px; text-align: center; font-weight: 700;'>Z-Score</th>
+                                <th style='padding: 15px; font-weight: 700;'>Kategori</th>
+                                <th style='padding: 15px; text-align: center; font-weight: 700;'>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style='border-bottom: 1px solid #f0f0f0;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>&lt; -3</td>
+                                <td style='padding: 12px;'>Sangat Kurang/Gizi Buruk</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🔴</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fff5f5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>-3 to -2</td>
+                                <td style='padding: 12px;'>Kurang/Stunted/Wasted</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟠</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>-2 to +1</td>
+                                <td style='padding: 12px;'><strong>Normal/Baik</strong></td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟢</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fffef5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>+1 to +2</td>
+                                <td style='padding: 12px;'>Kemungkinan Risiko Lebih</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟡</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fff5f5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>+2 to +3</td>
+                                <td style='padding: 12px;'>Berisiko Gizi Lebih</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟠</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>&gt; +3</td>
+                                <td style='padding: 12px;'>Obesitas</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🔴</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    """)
+            
+            gr.Markdown("---")
+            gr.Markdown("## 📊 Hasil Analisis")
+            
+            result_interpretation = gr.Markdown(
+                "*Hasil interpretasi akan tampil di sini setelah analisis...*",
+                elem_classes=["status-success"]
+            )
+            
+            gr.Markdown("### 📈 Grafik Pertumbuhan")
+            
+            with gr.Row():
+                plot_wfa = gr.Plot(label="Berat menurut Umur (BB/U)")
+                plot_hfa = gr.Plot(label="Tinggi menurut Umur (TB/U)")
+            
+            with gr.Row():
+                plot_hcfa = gr.Plot(label="Lingkar Kepala (LK/U)")
+                plot_wfl = gr.Plot(label="Berat menurut Tinggi (BB/TB)")
+            
+            plot_bars = gr.Plot(label="📊 Ringkasan Z-Score Semua Indeks")
+            
+            gr.Markdown("### 💾 Export & Simpan Hasil")
+            
+            with gr.Row():
+                pdf_btn = gr.Button("📄 Download PDF Lengkap", variant="primary", size="lg")
+                csv_btn = gr.Button("📊 Download CSV Data", variant="secondary", size="lg")
+            
+            with gr.Row():
+                pdf_file = gr.File(label="PDF Report", visible=False)
+                csv_file = gr.File(label="CSV Data", visible=False)
+            
+            # Toggle age input visibility
+            def toggle_age_input(mode):
+                return (
+                    gr.update(visible=(mode == "Tanggal")),
+                    gr.update(visible=(mode == "Usia (bulan)"))
+                )
+            
+            age_mode.change(
+                toggle_age_input,
+                inputs=[age_mode],
+                outputs=[date_inputs, month_input]
+            )
+            
+            # Main analysis handler
+            analyze_btn.click(
+                run_comprehensive_analysis,
+                inputs=[
+                    nama_anak, nama_ortu, sex, age_mode,
+                    dob, dom, age_months,
+                    weight, height, head_circ,
+                    theme_choice
+                ],
+                outputs=[
+                    result_interpretation,
+                    plot_wfa, plot_hfa, plot_hcfa, plot_wfl, plot_bars,
+                    pdf_file, csv_file,
+                    state_payload
+                ]
+            )
+            
+            # PDF download (just update visibility)
+            pdf_btn.click(
+                lambda: gr.update(visible=True),
+                outputs=[pdf_file]
+            )
+            
+            # CSV download (just update visibility)
+            csv_btn.click(
+                lambda: gr.update(visible=True),
+                outputs=[csv_file]
+            )
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # TAB 2: CHECKLIST BULANAN (UPDATED for v3.1)
+        # ═══════════════════════════════════════════════════════════════════
+        
+        with gr.TabItem("📋 Checklist Sehat Bulanan", id=1):
+            gr.Markdown("""
+            ## 🗓️ Panduan Checklist Bulanan (0-24 Bulan)
+            
+            Dapatkan rekomendasi **perkembangan**, **gizi**, **imunisasi**, dan **KPSP** yang disesuaikan dengan usia dan status gizi anak.
+            
+            💡 **Cara Pakai:**
+            1. Lakukan analisis di tab "Kalkulator Gizi" terlebih dahulu
+            2. Pilih bulan checklist yang diinginkan
+            3. Lihat rekomendasi lengkap, KPSP, dan **Video Edukasi** yang relevan
+            """)
+            
+            with gr.Row():
+                month_slider = gr.Slider(
+                    minimum=0,
+                    maximum=24,
+                    step=1,
+                    value=6,
+                    label="Pilih Bulan Checklist (0-24)",
+                    info="Geser untuk memilih bulan yang sesuai"
+                )
+                
+                generate_checklist_btn = gr.Button(
+                    "📋 Generate Checklist",
+                    variant="primary",
+                    size="lg"
+                )
+            
+            checklist_output = gr.Markdown(
+                "*Pilih bulan dan klik tombol untuk melihat checklist...*"
+            )
+            
+            def generate_checklist_handler(month, payload):
+                """Handler untuk generate checklist (UPDATED for v3.1)"""
+                if not payload:
+                    return """
+## ⚠️ Data Belum Tersedia
+
+Silakan lakukan analisis di tab **Kalkulator Gizi** terlebih dahulu untuk mendapatkan 
+checklist yang disesuaikan dengan status gizi anak.
+"""
+                
+                try:
+                    # Use the NEW function that includes videos
+                    recommendations = generate_checklist_with_videos(int(month), payload)
+                    return recommendations
+                except Exception as e:
+                    return f"## ❌ Error\n\nTerjadi kesalahan: {str(e)}"
+            
+            generate_checklist_btn.click(
+                generate_checklist_handler,
+                inputs=[month_slider, state_payload],
+                outputs=[checklist_output]
+            )
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # TAB 3: NEW - PERPUSTAKAAN IBU BALITA (from v3.1)
+        # ═══════════════════════════════════════════════════════════════════
+        
+        with gr.TabItem("📚 Perpustakaan Ibu Balita", id=2):
+            gr.Markdown("""
+            ## 📚 Perpustakaan Ibu Balita
+            
+            ### Koleksi 50 Artikel Terstandarisasi tentang Gizi & Kesehatan Anak
+            
+            Semua artikel berasal dari sumber resmi dan terpercaya:
+            - 🏛️ Kementerian Kesehatan RI
+            - 🩺 IDAI (Ikatan Dokter Anak Indonesia)
+            - 🔬 BPOM RI
+            - 👶 Lembaga Kesehatan Nasional lainnya
+            
+            💡 **Tips**: Klik artikel untuk membaca ringkasan, lalu buka link untuk membaca artikel lengkap di sumber resmi.
+            """)
+            
+            with gr.Row():
+                category_filter = gr.Dropdown(
+                    choices=["Semua", "ASI & Menyusui", "MPASI", "Stunting", "Perkembangan", 
+                             "Imunisasi", "Penyakit Umum", "Kesehatan Ibu", "Pola Asuh", 
+                             "Kebersihan", "Nutrisi", "Alergi", "Kondisi Khusus", 
+                             "Tumbuh Kembang", "ASI Lanjutan"],
+                    value="Semua",
+                    label="🔍 Filter berdasarkan Kategori",
+                    info="Pilih kategori untuk menyaring artikel"
+                )
+                
+                search_btn = gr.Button("🔎 Tampilkan Artikel", variant="primary")
+            
+            library_output = gr.HTML(
+                value=filter_library_articles("Semua"),
+                label="Artikel"
+            )
+            
+            search_btn.click(
+                fn=filter_library_articles,
+                inputs=[category_filter],
+                outputs=[library_output]
+            )
+
+        # ═══════════════════════════════════════════════════════════════════
+        # TAB 4: TENTANG & BANTUAN (from v3.0, re-numbered to id=3)
+        # ═══════════════════════════════════════════════════════════════════
+        
+        with gr.TabItem("ℹ️ Tentang & Bantuan", id=3):
+            gr.Markdown(f"""
+            ## 🏥 Tentang AnthroHPK
+            
+            **AnthroHPK** (Anthropometry & Health for Kids) adalah aplikasi pemantauan 
+            pertumbuhan anak berbasis standar WHO Child Growth Standards 2006 dan 
+            Permenkes RI No. 2 Tahun 2020.
+            
+            ### ✨ Fitur Utama
+            
+            1. **📊 Kalkulator Z-Score WHO**
+               - 5 indeks antropometri: WAZ, HAZ, WHZ, BAZ, HCZ
+               - Klasifikasi ganda: Permenkes & WHO
+               - Perhitungan persentil otomatis
+            
+            2. **📈 Grafik Pertumbuhan Interaktif**
+               - Kurva WHO standar dengan zona warna
+               - Plot data anak dengan interpretasi visual
+               - 3 tema warna profesional
+            
+            3. **💾 Export Profesional**
+               - PDF laporan lengkap dengan QR code
+               - CSV data untuk analisis lanjutan
+               - Hasil siap konsultasi dengan dokter
+            
+            4. **📋 Checklist Bulanan**
+               - Milestone perkembangan per bulan
+               - Rekomendasi gizi personalized
+               - Jadwal imunisasi (Permenkes)
+               - KPSP screening
+               - **BARU (v3.1):** Integrasi video edukasi
+            
+            5. **📚 Perpustakaan Ibu Balita (v3.1)**
+               - 50 artikel terkurasi dari Kemenkes & IDAI
+               - Ringkasan & link ke sumber resmi
+            
+            ### 📚 Referensi Ilmiah
+            
+            - **WHO Child Growth Standards 2006** [https://www.who.int/tools/child-growth-standards](https://www.who.int/tools/child-growth-standards)
+            
+            - **Permenkes RI No. 2 Tahun 2020** Tentang Standar Antropometri Anak
+            
+            - **KPSP (Kuesioner Pra Skrining Perkembangan)** Kementerian Kesehatan RI
+            
+            ### 🔒 Privasi & Keamanan
+            
+            - ✅ Tidak ada penyimpanan data permanen
+            - ✅ Semua perhitungan dilakukan lokal
+            - ✅ Tidak ada tracking atau analytics
+            - ✅ Data hanya ada selama sesi aktif
+            
+            ### ⚠️ Disclaimer
+            
+            Aplikasi ini adalah **alat skrining awal**, BUKAN pengganti konsultasi medis.
+            Hasil analisis harus dikonsultasikan dengan:
+            - Dokter spesialis anak
+            - Ahli gizi anak
+            - Tenaga kesehatan terlatih
+            
+            ### 📱 Kontak & Dukungan
+            
+            **WhatsApp:** [+{CONTACT_WA}](https://wa.me/{CONTACT_WA})  
+            **Website:** {BASE_URL}  
+            **Versi:** {APP_VERSION}
+            
+            ### 👨‍💻 Developer
+            
+            Dikembangkan oleh **HABIB** Mahasiswa Fakultas Kedokteran dan Ilmu Kesehatan  
+            Universitas Jambi
+            
+            ---
+            
+            ### 🎯 Cara Penggunaan
+            
+            1. **Input Data Anak**
+               - Masukkan identitas dan jenis kelamin
+               - Pilih cara input usia (tanggal atau bulan)
+               - Masukkan hasil pengukuran antropometri
+            
+            2. **Analisis**
+               - Klik tombol "Analisis Sekarang"
+               - Tunggu proses kalkulasi selesai
+               - Lihat hasil interpretasi dan grafik
+            
+            3. **Checklist & Library**
+               - Buka tab "Checklist" untuk rekomendasi bulanan & video
+               - Buka tab "Perpustakaan" untuk artikel edukasi
+            
+            4. **Export Hasil**
+               - Pilih format export (PDF/CSV)
+               - Download file untuk konsultasi
+            
+            ### 💡 Tips Penggunaan Optimal
+            
+            - 📏 **Akurasi adalah Kunci**: Pastikan pengukuran dilakukan dengan benar
+            - 📅 **Rutin Monitoring**: Lakukan pengukuran minimal 3 bulan sekali
+            - 📊 **Tren Lebih Penting**: Perhatikan pola pertumbuhan, bukan single point
+            - 🏥 **Konsultasi Profesional**: Diskusikan hasil dengan tenaga kesehatan
+            - 💾 **Simpan Hasil**: Export PDF untuk dokumentasi lengkap
+            
+            ### 🐛 Laporkan Bug
+            
+            Temukan bug atau ada saran? Hubungi kami via WhatsApp!
+            
+            ---
+            
+            © 2024 AnthroHPK. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
+            """)
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # TAB 5: PREMIUM & NOTIFIKASI (UPDATED for v3.1, re-numbered to id=4)
+        # ═══════════════════════════════════════════════════════════════════
+        
+        with gr.TabItem("⭐ Premium & Notifikasi", id=4):
+            gr.Markdown("""
+            ## 🎁 Upgrade ke Premium AnthroHPK
+            
+            Nikmati fitur eksklusif untuk pemantauan pertumbuhan anak yang lebih optimal!
+            """)
+            
+            # PREMIUM PACKAGES
+            with gr.Row():
+                # SILVER PACKAGE
+                with gr.Column():
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #E8E8E8 0%, #F5F5F5 100%); 
+                                padding: 30px; border-radius: 20px; 
+                                border: 3px solid #C0C0C0;
+                                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                                text-align: center;'>
+                        <h2 style='color: #555; margin-top: 0;'>
+                            🥈 Paket SILVER
+                        </h2>
+                        <div style='font-size: 48px; font-weight: bold; color: #333; margin: 20px 0;'>
+                            Rp 10.000
+                        </div>
+                        <div style='font-size: 14px; color: #666; margin-bottom: 20px;'>
+                            /bulan
+                        </div>
+                        
+                        <div style='text-align: left; background: white; padding: 20px; 
+                                    border-radius: 10px; margin: 20px 0;'>
+                            <h4 style='color: #333; margin-top: 0;'>✨ Fitur Silver:</h4>
+                            <ul style='list-style: none; padding: 0;'>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🚫 <strong>Bebas Iklan</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    📊 Semua fitur dasar
+                                </li>
+                                <li style='padding: 8px 0;'>
+                                    💾 Export unlimited
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    """)
+                    
+                    silver_btn = gr.Button(
+                        "💳 Upgrade ke Silver",
+                        variant="secondary",
+                        size="lg",
+                        elem_classes=["premium-silver", "big-button"]
+                    )
+                
+                # GOLD PACKAGE (RECOMMENDED)
+                with gr.Column():
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
+                                padding: 30px; border-radius: 20px; 
+                                border: 3px solid #DAA520;
+                                box-shadow: 0 12px 30px rgba(255, 215, 0, 0.4);
+                                text-align: center;
+                                position: relative;'>
+                        <div style='position: absolute; top: -15px; right: 20px; 
+                                    background: #FF4444; color: white; 
+                                    padding: 8px 20px; border-radius: 20px;
+                                    font-weight: bold; font-size: 12px;'>
+                            🔥 REKOMENDASI
+                        </div>
+                        
+                        <h2 style='color: #000; margin-top: 0;'>
+                            🥇 Paket GOLD
+                        </h2>
+                        <div style='font-size: 48px; font-weight: bold; color: #000; margin: 20px 0;'>
+                            Rp 50.000
+                        </div>
+                        <div style='font-size: 14px; color: #333; margin-bottom: 20px;'>
+                            /bulan - Hemat 50%!
+                        </div>
+                        
+                        <div style='text-align: left; background: white; padding: 20px; 
+                                    border-radius: 10px; margin: 20px 0;'>
+                            <h4 style='color: #333; margin-top: 0;'>⭐ Fitur Gold:</h4>
+                            <ul style='list-style: none; padding: 0;'>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🚫 <strong>Bebas Iklan</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🔔 <strong>Notifikasi Browser Customizable</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    💬 <strong>3x Konsultasi 30 menit</strong><br/>
+                                    <span style='font-size: 12px; color: #666;'>
+                                    via WhatsApp dengan Ahli Gizi
+                                    </span>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    📊 Semua fitur dasar
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    💾 Export unlimited
+                                </li>
+                                <li style='padding: 8px 0;'>
+                                    ⚡ Priority support
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    """)
+                    
+                    gold_btn = gr.Button(
+                        "👑 Upgrade ke Gold",
+                        variant="primary",
+                        size="lg",
+                        elem_classes=["premium-gold", "big-button"]
+                    )
+            
+            premium_status = gr.Markdown("", visible=False)
+            
+            gr.Markdown("---")
+            
+            # NOTIFICATION SYSTEM (MODIFIED for v3.1)
+            gr.Markdown("""
+            ## 🔔 Sistem Notifikasi Browser (Premium Gold)
+            
+            Dapatkan pengingat otomatis untuk:
+            - 🩺 Jadwal pemeriksaan bulanan
+            - 💉 Jadwal imunisasi
+            - 🎯 Milestone perkembangan
+            - 🍽️ Reminder nutrisi/MPASI
+            - ⏰ Custom reminder
+            """)
+            
+            with gr.Row():
+                with gr.Column(scale=6):
+                    gr.Markdown("### 🔐 Aktifkan Notifikasi Browser")
+                    
+                    enable_notif_btn = gr.Button(
+                        "🔔 Aktifkan Notifikasi",
+                        variant="primary",
+                        size="lg"
+                    )
+                    
+                    notif_status = gr.HTML("""
+                    <div id='notif-status' style='padding: 15px; background: #f0f0f0; 
+                                                   border-radius: 10px; margin: 15px 0;
+                                                   text-align: center;'>
+                        <p style='margin: 0; color: #666;'>
+                            ℹ️ Klik tombol di atas untuk mengaktifkan notifikasi browser
+                        </p>
+                    </div>
+                    """)
+                    
+                    gr.Markdown("### ⏰ Atur Reminder Custom")
+                    
+                    with gr.Group():
+                        reminder_title = gr.Textbox(
+                            label="Judul Reminder",
+                            placeholder="Contoh: Beri makan Si Kecil",
+                            value="Reminder Gizi SiKecil"
+                        )
+                        
+                        reminder_message = gr.Textbox(
+                            label="Pesan Reminder",
+                            placeholder="Contoh: Waktunya beri makan bubur bayi",
+                            lines=2
+                        )
+                        
+                        # --- MODIFIED SLIDER (v3.1) ---
+                        reminder_delay = gr.Slider(
+                            minimum=0.5,  # 30 menit minimum
+                            maximum=24,   # 24 jam maximum
+                            value=3,      # default 3 jam
+                            step=0.5,
+                            label="Delay (jam) ⏰",
+                            info="Notifikasi akan muncul setelah X jam"
+                        )
+                        # --- END MODIFIED SLIDER ---
+                        
+                        schedule_btn = gr.Button(
+                            "⏰ Jadwalkan Reminder",
+                            variant="secondary",
+                            size="lg"
+                        )
+                    
+                    reminder_status = gr.Markdown("", visible=False)
+                
+                with gr.Column(scale=4):
+                    gr.Markdown("### 💡 Panduan Notifikasi")
+                    
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                padding: 25px; border-radius: 15px; color: white;
+                                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);'>
+                        
+                        <h4 style='color: white; margin-top: 0;'>
+                            📱 Cara Mengaktifkan:
+                        </h4>
+                        
+                        <ol style='margin: 15px 0; padding-left: 25px; line-height: 1.8;'>
+                            <li>Klik tombol "Aktifkan Notifikasi"</li>
+                            <li>Browser akan minta izin - klik <strong>Allow/Izinkan</strong></li>
+                            <li>Setelah aktif, Anda bisa atur reminder custom</li>
+                            <li>Notifikasi akan muncul otomatis sesuai jadwal</li>
+                        </ol>
+                        
+                        <div style='background: rgba(255,255,255,0.2); padding: 15px; 
+                                    border-radius: 10px; margin-top: 20px;'>
+                            <strong>⚠️ Penting:</strong>
+                            <ul style='margin: 10px 0; padding-left: 20px; font-size: 13px;'>
+                                <li>Browser harus support notifikasi (Chrome, Firefox, Edge)</li>
+                                <li>Jangan tutup tab browser jika ingin menerima notifikasi</li>
+                                <li>Pastikan notifikasi tidak di-block di pengaturan browser</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='background: rgba(255,255,255,0.2); padding: 15px; 
+                                    border-radius: 10px; margin-top: 15px;'>
+                            <strong>🎯 Tips:</strong>
+                            <p style='margin: 10px 0 0 0; font-size: 13px;'>
+                                Gunakan reminder untuk jadwal rutin seperti:<br/>
+                                • Beri makan bayi (setiap 3 jam)<br/>
+                                • Cek popok (setiap 2 jam)<br/>
+                                • Waktu tidur siang<br/>
+                                • Jadwal imunisasi
+                            </p>
+                        </div>
+                    </div>
+                    """)
+                    
+                    gr.Markdown("### 🎁 Template Reminder")
+                    
+                    template_choice = gr.Dropdown(
+                        choices=[
+                            "Pemeriksaan Bulanan",
+                            "Jadwal Imunisasi",
+                            "Milestone Perkembangan",
+                            "Reminder Nutrisi",
+                            "Custom"
+                        ],
+                        value="Custom",
+                        label="Pilih Template",
+                        info="Pilih template untuk quick setup"
+                    )
+                    
+                    use_template_btn = gr.Button(
+                        "📋 Gunakan Template",
+                        variant="secondary"
+                    )
+            
+            # JavaScript Handlers for Notifications
+            enable_notif_js = """
+            <script>
+            function enableNotifications() {
+                window.AnthroNotification.requestPermission().then(granted => {
+                    const statusDiv = document.getElementById('notif-status');
+                    if (granted) {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>✅ Notifikasi Berhasil Diaktifkan!</strong><br/>
+                                <span style='font-size: 13px;'>Anda akan menerima reminder sesuai jadwal</span>
+                            </div>
+                        `;
+                        
+                        // Send test notification
+                        setTimeout(() => {
+                            window.AnthroNotification.send(
+                                '🎉 Selamat!',
+                                'Notifikasi browser berhasil diaktifkan. Anda akan menerima reminder untuk tumbuh kembang anak.',
+                                '🔔'
+                            );
+                        }, 1000);
+                        
+                        return 'Notifikasi diaktifkan! Cek notifikasi test yang muncul.';
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: #ff6b6b; 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>❌ Notifikasi Ditolak</strong><br/>
+                                <span style='font-size: 13px;'>
+                                    Mohon izinkan notifikasi di pengaturan browser Anda
+                                </span>
+                            </div>
+                        `;
+                        return 'Notifikasi ditolak. Cek pengaturan browser.';
+                    }
+                });
+                return 'Memproses...';
+            }
+            </script>
+            """
+            
+            gr.HTML(enable_notif_js)
+            
+            # Event Handlers
+            def handle_enable_notification():
+                return gr.HTML.update(value="""
+                <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                           border-radius: 10px; color: white; text-align: center; margin: 15px 0;'>
+                    <strong>✅ Notifikasi Browser Diaktifkan!</strong><br/>
+                    <span style='font-size: 13px;'>
+                        Browser notification sudah aktif. Anda akan menerima reminder otomatis.
+                    </span>
+                </div>
+                <script>
+                enableNotifications();
+                </script>
+                """)
+            
+            # --- MODIFIED Handler (v3.1) ---
+            def handle_schedule_reminder_hours(title, message, delay_hours):
+                """Handle reminder with HOUR-based delay"""
+                if not title or not message:
+                    return "❌ Judul dan pesan tidak boleh kosong!"
+                
+                # Convert hours to minutes for the JavaScript
+                delay_minutes = int(delay_hours * 60)
+                
+                js_code = f"""
+                <script>
+                window.AnthroNotification.schedule(
+                    '{title}',
+                    '{message}',
+                    {delay_minutes},
+                    '⏰'
+                );
+                alert('✅ Reminder dijadwalkan! Akan muncul dalam {delay_hours} jam.');
+                </script>
+                """
+                
+                return (
+                    f"✅ **Reminder Dijadwalkan!**\n\n"
+                    f"**Judul:** {title}\n\n"
+                    f"**Pesan:** {message}\n\n"
+                    f"**Waktu:** {delay_hours} jam dari sekarang\n\n"
+                    f"Notifikasi akan muncul otomatis. Jangan tutup tab browser!" +
+                    js_code
+                )
+            # --- END MODIFIED Handler ---
+            
+            def handle_use_template(template):
+                templates = {
+                    "Pemeriksaan Bulanan": (
+                        "🩺 Pemeriksaan Bulanan",
+                        "Sudah saatnya pemeriksaan bulanan! Ukur berat, tinggi, dan lingkar kepala anak.",
+                        8 # 8 jam
+                    ),
+                    "Jadwal Imunisasi": (
+                        "💉 Jadwal Imunisasi",
+                        "Jangan lupa jadwal imunisasi hari ini! Cek jadwal lengkap di aplikasi.",
+                        1 # 1 jam
+                    ),
+                    "Milestone Perkembangan": (
+                        "🎯 Cek Milestone",
+                        "Waktunya cek milestone perkembangan anak. Lihat checklist KPSP.",
+                        12 # 12 jam
+                    ),
+                    "Reminder Nutrisi": (
+                        "🍽️ Waktu Makan",
+                        "Saatnya memberi makan anak. Pastikan menu 4 bintang!",
+                        3 # 3 jam
+                    )
+                }
+                
+                if template in templates:
+                    title, message, delay = templates[template]
+                    return title, message, delay
+                return "", "", 3
+            
+            def handle_premium_upgrade(package):
+                pkg_info = PREMIUM_PACKAGES.get(package, {})
+                price = pkg_info.get('price', 0)
+                price_formatted = f"Rp {price:,}".replace(',', '.')
+                
+                wa_message = f"Halo AnthroHPK, saya ingin upgrade ke paket {package.upper()} ({price_formatted}/bulan)"
+                wa_link = f"https://wa.me/{CONTACT_WA}?text={wa_message.replace(' ', '%20')}"
+                
+                return gr.Markdown.update(
+                    value=f"""
+## 🎉 Terima kasih telah memilih paket {package.upper()}!
+
+**Harga:** {price_formatted}/bulan
+
+**Langkah selanjutnya:**
+1. Klik tombol WhatsApp di bawah
+2. Konfirmasi pembelian dengan admin
+3. Lakukan pembayaran
+4. Akun premium akan diaktifkan dalam 5 menit
+
+<div style='text-align: center; margin: 30px 0;'>
+    <a href='{wa_link}' target='_blank'
+       style='display: inline-block; padding: 20px 40px; 
+              background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+              color: white; text-decoration: none; border-radius: 15px;
+              font-size: 18px; font-weight: bold;
+              box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);'>
+        💬 Hubungi Admin via WhatsApp
+    </a>
+</div>
+
+**Metode Pembayaran:**
+- 💳 Transfer Bank (BCA, Mandiri, BRI)
+- 📱 E-Wallet (GoPay, OVO, DANA)
+- 💰 QRIS
+
+*Fitur premium akan aktif otomatis setelah pembayaran terverifikasi*
+""",
+                    visible=True
+                )
+            
+            # Connect event handlers
+            enable_notif_btn.click(
+                fn=handle_enable_notification,
+                outputs=[notif_status]
+            )
+            
+            # --- MODIFIED Click Handler (v3.1) ---
+            schedule_btn.click(
+                fn=handle_schedule_reminder_hours, # Use new handler
+                inputs=[reminder_title, reminder_message, reminder_delay],
+                outputs=[reminder_status]
+            ).then(
+                lambda: gr.update(visible=True),
+                outputs=[reminder_status]
+            )
+            # --- END MODIFIED Click Handler ---
+            
+            use_template_btn.click(
+                fn=handle_use_template,
+                inputs=[template_choice],
+                outputs=[reminder_title, reminder_message, reminder_delay]
+            )
+            
+            silver_btn.click(
+                fn=lambda: handle_premium_upgrade("silver"),
+                outputs=[premium_status]
+            ).then(
+                lambda: gr.update(visible=True),
+                outputs=[premium_status]
+            )
+            
+            gold_btn.click(
+                fn=lambda: handle_premium_upgrade("gold"),
+                outputs=[premium_status]
+            ).then(
+                lambda: gr.update(visible=True),
+                outputs=[premium_status]
+            )
+    
+    # Footer
+    gr.Markdown(f"""
+    ---
+    
+    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
+                border-radius: 12px; margin-top: 30px;'>
+        <p style='font-size: 14px; color: #666; margin: 10px 0;'>
+            <strong>AnthroHPK v{APP_VERSION}</strong> | 
+            WHO Child Growth Standards 2006 | 
+            Permenkes RI No. 2/2020
+        </p>
+        <p style='font-size: 13px; color: #888; margin: 10px 0;'>
+            Developed by <strong>HABIB</strong> - FKIK Universitas Jambi
+        </p>
+        <p style='font-size: 12px; color: #999; margin: 10px 0;'>
+            📱 Contact: <a href="https://wa.me/{CONTACT_WA}" target="_blank">+{CONTACT_WA}</a> | 
+            🌐 <a href="{BASE_URL}" target="_blank">{BASE_URL}</a>
+        </p>
+    </div>
+    """)
+
+print("✅ Section 11 loaded: Gradio UI complete (v3.1 features integrated)")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 12: FASTAPI INTEGRATION (from v3.0)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Initialize FastAPI
+app_fastapi = FastAPI(
+    title="AnthroHPK API",
+    description="Professional Child Growth Monitoring based on WHO Standards",
+    version=APP_VERSION,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+)
+
+# CORS middleware
+app_fastapi.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files
+if os.path.exists(STATIC_DIR):
+    try:
+        app_fastapi.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+        print(f"✅ Static files mounted: /static -> {STATIC_DIR}")
+    except Exception as e:
+        print(f"⚠️ Static mount warning: {e}")
+
+if os.path.exists(OUTPUTS_DIR):
+    try:
+        app_fastapi.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
+        print(f"✅ Outputs files mounted: /outputs -> {OUTPUTS_DIR}")
+    except Exception as e:
+        print(f"⚠️ Outputs mount warning: {e}")
+
+# Health check endpoint
+@app_fastapi.get("/health")
+async def health_check():
+    """API health check endpoint"""
+    return {
+        "status": "healthy",
+        "version": APP_VERSION,
+        "timestamp": datetime.now().isoformat(),
+        "calculator_status": "operational" if calc else "unavailable",
+        "features": {
+            "who_standards": True,
+            "permenkes_2020": True,
+            "growth_charts": True,
+            "pdf_export": True,
+            "csv_export": True,
+            "kpsp_screening": True,
+            "education_library": True, # Added v3.1
+            "video_integration": True, # Added v3.1
+        },
+        "endpoints": {
+            "main_app": "/",
+            "api_docs": "/api/docs",
+            "health": "/health",
+        }
+    }
+
+# API info endpoint
+@app_fastapi.get("/api/info")
+async def api_info():
+    """Get API information"""
+    return {
+        "app_name": APP_TITLE,
+        "version": APP_VERSION,
+        "description": APP_DESCRIPTION,
+        "author": "HABIB - FKIK Universitas Jambi",
+        "contact": f"+{CONTACT_WA}",
+        "base_url": BASE_URL,
+        "standards": {
+            "who": "Child Growth Standards 2006",
+            "permenkes": "No. 2 Tahun 2020"
+        },
+        "supported_indices": ["WAZ", "HAZ", "WHZ", "BAZ", "HCZ"],
+        "age_range": "0-60 months",
+        "features": [
+            "WHO z-score calculation",
+            "Permenkes 2020 classification",
+            "Growth charts visualization",
+            "PDF report export",
+            "CSV data export",
+            "KPSP screening",
+            "Monthly checklist recommendations",
+            "Educational Article Library (v3.1)",
+            "YouTube Video Integration (v3.1)"
+        ]
+    }
+
+# Root redirect (optional - if you want / to show info before Gradio)
+@app_fastapi.get("/api")
+async def api_root():
+    """API root endpoint"""
+    return {
+        "message": "AnthroHPK API is running",
+        "version": APP_VERSION,
+        "docs": "/api/docs",
+        "health": "/health",
+        "main_app": "/"
+    }
+
+print("✅ Section 12 loaded: FastAPI routes configured")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 13: APPLICATION STARTUP (from v3.0)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Mount Gradio to FastAPI
+try:
+    app = gr.mount_gradio_app(
+        app=app_fastapi,
+        blocks=demo,
+        path="/"
+    )
+    print("✅ Gradio app successfully mounted to FastAPI at root path '/'")
+except Exception as e:
+    print(f"⚠️ Gradio mount failed, using FastAPI only: {e}")
+    app = app_fastapi
+
+# Print startup banner
+print("")
+print("=" * 80)
+print(f"🚀 AnthroHPK v{APP_VERSION} - READY FOR DEPLOYMENT".center(80))
+print("=" * 80)
+print(f"📊 WHO Calculator: {'✅ Operational' if calc else '❌ Unavailable'}")
+print(f"🌐 Base URL: {BASE_URL}")
+print(f"📱 Contact: +{CONTACT_WA}")
+print(f"🎨 Themes: {len(UI_THEMES)} available")
+print(f"💉 Immunization: {len(IMMUNIZATION_SCHEDULE)} schedules")
+print(f"🧠 KPSP: {len(KPSP_QUESTIONS)} question sets")
+print(f"📚 Library: {len(PERPUSTAKAAN_IBU_BALITA)} articles")
+print(f"🎥 Videos: {len(KPSP_YOUTUBE_VIDEOS) + sum(len(v) for v in MPASI_YOUTUBE_VIDEOS.values())} video links")
+print("=" * 80)
+print("▶️  Run Command: uvicorn app:app --host 0.0.0.0 --port $PORT")
+print("=" * 80)
+print("")
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    port = int(os.environ.get("PORT", 8000))
+    
+    print(f"🚀 Starting server on port {port}...")
+    
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=port,
+        log_level="info",
+        access_log=True
+    )
+
                                                         
