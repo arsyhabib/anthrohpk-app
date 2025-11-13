@@ -1,10 +1,7 @@
-# ⚠️ PIN versi ini karena Gradio 5.6.0 membutuhkan HfFolder yang sudah deprecated
-huggingface_hub==0.25.1
-
 # Core Web Framework
 fastapi==0.115.4
 uvicorn[standard]==0.32.0
-gradio==5.6.0
+gradio==5.7.0  # <-- GANTI dari 5.6.0 ke 5.7.0
 
 # WHO Growth Standards - Import langsung dari folder lokal
 # Folder: ./pygrowup/ dengan __init__.py
