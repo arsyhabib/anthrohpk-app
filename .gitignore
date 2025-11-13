@@ -1,9 +1,4 @@
-# Tambahkan ini di bagian atas
-!pygrowup/
-!pygrowup/*.py
-!pygrowup/tables/
-!pygrowup/tables/*.csv
-
+# File: .gitignore (versi FIX)
 # Byte-compiled
 __pycache__/
 *.py[cod]
@@ -16,14 +11,11 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Outputs (tapi tidak folder-nya)
+# Tapi JANGAN ignore static dan outputs sepenuhnya
+# Hanya ignore isi dinamisnya, TAPI buat folder-nya tetap
 outputs/*.pdf
 outputs/*.csv
+static/sticker_*.png  # Hanya ignore file PNG, bukan folder
 
-# Static files dinamis (tapi tidak folder-nya)
-static/sticker_*.png
-
-# ⭐ JANGAN ignore ini:
+# Keep WHO tables!
 !pygrowup/tables/*.csv
-!static/.gitkeep
-!outputs/.gitkeep
