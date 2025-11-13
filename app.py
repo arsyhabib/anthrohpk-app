@@ -2956,6 +2956,1002 @@ def generate_checklist_with_videos(month: int, payload: Dict) -> str:
     # Return as a single HTML string
     return "\n".join(lines)
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 10B: NEW FEATURES v3.2 (Termasuk Modifikasi Perpustakaan Lokal)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# --- FITUR 1: MODE MUDAH (Dipertahankan dari v3.2) ---
+
+def get_normal_ranges_by_age(age_months: float, gender: str) -> Dict[str, Tuple[float, float]]:
+    """
+    Mendapatkan range normal (batas bawah dan atas) untuk BB, TB/PB, dan LK
+    berdasarkan usia dan jenis kelamin menggunakan WHO standards (Z-score -2 SD hingga +2 SD).
+    """
+    gender_code = 'M' if gender == "Laki-laki" else 'F'
+    
+    try:
+        if calc is None:
+            raise Exception("Kalkulator WHO (pygrowup) tidak terinisialisasi.")
+        
+        age_lookup = round(age_months * 2) / 2
+        if age_lookup > 60: age_lookup = 60.0 # Batas atas tabel
+        if age_lookup < 0: age_lookup = 0.0 # Batas bawah tabel
+            
+        wfa_range = calc.wfa_table[gender_code].get(age_lookup, None)
+        hfa_range = calc.lhfa_table[gender_code].get(age_lookup, None)
+        hcfa_range = calc.hcfa_table[gender_code].get(age_lookup, None)
+        
+        if wfa_range and hfa_range and hcfa_range:
+            return {
+                'weight': (wfa_range.get('SD2neg', 0), wfa_range.get('SD2', 0)),
+                'height': (hfa_range.get('SD2neg', 0), hfa_range.get('SD2', 0)),
+                'head_circ': (hcfa_range.get('SD2neg', 0), hcfa_range.get('SD2', 0))
+            }
+        else:
+            raise Exception(f"Data tidak ditemukan untuk usia {age_lookup} bulan")
+            
+    except Exception as e:
+        print(f"Error di get_normal_ranges_by_age (akan fallback): {e}")
+        # Fallback: Approximate values
+        if gender == "Laki-laki":
+            weight_base = 3.3 + (age_months * 0.5)
+            height_base = 50 + (age_months * 1.5)
+            head_base = 34.5 + (age_months * 0.35)
+        else:
+            weight_base = 3.2 + (age_months * 0.45)
+            height_base = 49 + (age_months * 1.45)
+            head_base = 33.9 + (age_months * 0.33)
+        
+        return {
+            'weight': (round(weight_base - 2, 1), round(weight_base + 2, 1)),
+            'height': (round(height_base - 5, 1), round(height_base + 5, 1)),
+            'head_circ': (round(head_base - 1.5, 1), round(head_base + 1.5, 1))
+        }
+
+
+def mode_mudah_handler(age_months: int, gender: str) -> str:
+    """
+    Handler untuk Mode Mudah - menampilkan range normal dengan UI yang friendly.
+    """
+    if age_months is None or age_months < 0 or age_months > 60:
+        return """
+        <div style='padding: 20px; background: #fff3cd; border-left: 5px solid #ffc107; border-radius: 8px;'>
+            <h3 style='color: #856404; margin-top: 0;'>⚠️ Input Tidak Valid</h3>
+            <p>Mohon masukkan usia antara 0-60 bulan.</p>
+        </div>
+        """
+    
+    ranges = get_normal_ranges_by_age(float(age_months), gender)
+    check_date = datetime.now().strftime("%d %B %Y")
+    postur = "Berbaring (PB)" if age_months < 24 else "Berdiri (TB)"
+    
+    html_output = f"""
+    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 30px; border-radius: 20px; color: white; margin-bottom: 20px;
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);'>
+        <h2 style='margin: 0 0 10px 0; font-size: 28px;'>
+            🎯 Mode Mudah - Referensi Cepat
+        </h2>
+        <p style='margin: 0; opacity: 0.9; font-size: 14px;'>
+            Standar WHO 2006 | Tanggal: {check_date}
+        </p>
+    </div>
+    <div style='background: white; padding: 25px; border-radius: 15px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;'>
+        <h3 style='color: #667eea; margin-top: 0; display: flex; align-items: center;'>
+            👶 Informasi Anak
+        </h3>
+        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;'>
+            <div style='padding: 15px; background: #f8f9ff; border-radius: 10px;'>
+                <div style='font-size: 13px; color: #666; margin-bottom: 5px;'>Usia</div>
+                <div style='font-size: 24px; font-weight: bold; color: #667eea;'>{age_months} Bulan</div>
+            </div>
+            <div style='padding: 15px; background: #fff8f8; border-radius: 10px;'>
+                <div style='font-size: 13px; color: #666; margin-bottom: 5px;'>Jenis Kelamin</div>
+                <div style='font-size: 24px; font-weight: bold; color: #e91e63;'>
+                    {'👦 Laki-laki' if gender == 'Laki-laki' else '👧 Perempuan'}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style='background: white; padding: 25px; border-radius: 15px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;'>
+        <h3 style='color: #667eea; margin-top: 0;'>📊 Rentang Normal (Z-score: -2 SD hingga +2 SD)</h3>
+        <p style='color: #666; font-size: 14px; margin-bottom: 20px;'>
+            Nilai di bawah ini adalah <strong>rentang normal</strong> sesuai standar WHO. 
+            Anak dianggap <strong>normal</strong> jika pengukurannya berada dalam rentang ini.
+        </p>
+        
+        <div style='margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+                    border-radius: 12px; box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);'>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                <div>
+                    <h4 style='margin: 0 0 10px 0; color: white; font-size: 18px;'>
+                        ⚖️ Berat Badan (BB)
+                    </h4>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Bawah Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['weight'][0]:.1f} kg
+                        </div>
+                    </div>
+                </div>
+                <div style='font-size: 40px; color: rgba(255,255,255,0.5);'>→</div>
+                <div>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Atas Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['weight'][1]:.1f} kg
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style='margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.15); 
+                        border-radius: 8px; font-size: 13px; color: white;'>
+                💡 <strong>Interpretasi:</strong> Jika BB anak Anda berada di antara {ranges['weight'][0]:.1f} - {ranges['weight'][1]:.1f} kg, 
+                maka berat badan anak tergolong <strong>normal</strong>.
+            </div>
+        </div>
+        
+        <div style='margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                    border-radius: 12px; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);'>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                <div>
+                    <h4 style='margin: 0 0 10px 0; color: white; font-size: 18px;'>
+                        📏 Panjang/Tinggi Badan ({postur})
+                    </h4>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Bawah Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['height'][0]:.1f} cm
+                        </div>
+                    </div>
+                </div>
+                <div style='font-size: 40px; color: rgba(255,255,255,0.5);'>→</div>
+                <div>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Atas Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['height'][1]:.1f} cm
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style='margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.15); 
+                        border-radius: 8px; font-size: 13px; color: white;'>
+                💡 <strong>Interpretasi:</strong> Jika TB/PB anak Anda berada di antara {ranges['height'][0]:.1f} - {ranges['height'][1]:.1f} cm, 
+                maka tinggi badan anak tergolong <strong>normal</strong>.
+            </div>
+        </div>
+        
+        <div style='margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); 
+                    border-radius: 12px; box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);'>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                <div>
+                    <h4 style='margin: 0 0 10px 0; color: white; font-size: 18px;'>
+                        🎩 Lingkar Kepala (LK)
+                    </h4>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Bawah Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['head_circ'][0]:.1f} cm
+                        </div>
+                    </div>
+                </div>
+                <div style='font-size: 40px; color: rgba(255,255,255,0.5);'>→</div>
+                <div>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Atas Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['head_circ'][1]:.1f} cm
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style='margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.15); 
+                        border-radius: 8px; font-size: 13px; color: white;'>
+                💡 <strong>Interpretasi:</strong> Jika LK anak Anda berada di antara {ranges['head_circ'][0]:.1f} - {ranges['head_circ'][1]:.1f} cm, 
+                maka lingkar kepala anak tergolong <strong>normal</strong>.
+            </div>
+        </div>
+    </div>
+    <div style='background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 5px solid #2196f3;'>
+        <h4 style='color: #1976d2; margin-top: 0;'>📋 Catatan Penting:</h4>
+        <ul style='color: #555; line-height: 1.8; margin: 10px 0; padding-left: 20px;'>
+            <li><strong>Rentang Normal:</strong> Nilai antara -2 SD dan +2 SD dianggap normal menurut WHO</li>
+            <li><strong>Di Bawah Batas:</strong> Jika pengukuran &lt; batas bawah, anak mungkin mengalami malnutrisi/stunting</li>
+            <li><strong>Di Atas Batas:</strong> Jika pengukuran &gt; batas atas, anak mungkin mengalami overweight/makrosefali</li>
+            <li><strong>Konsultasi:</strong> Jika nilai anak di luar rentang, <strong>segera konsultasi ke dokter/ahli gizi</strong></li>
+            <li><strong>Monitoring Rutin:</strong> Lakukan pemeriksaan antropometri minimal 1 bulan sekali</li>
+        </ul>
+    </div>
+    <div style='background: #fff9e6; padding: 15px; border-radius: 10px; margin-top: 20px;
+                border: 2px dashed #ffc107; text-align: center;'>
+        <p style='margin: 0; color: #856404; font-weight: 500;'>
+            🌟 <strong>Tips:</strong> Untuk analisis yang lebih akurat, gunakan 
+            <strong>"Kalkulator Gizi WHO"</strong> di tab utama untuk menghitung Z-score lengkap!
+        </p>
+    </div>
+    """
+    
+    return html_output
+
+# --- FITUR 2: PERPUSTAKAAN LOKAL (PENGGANTI v3.2) ---
+# Menggantikan PERPUSTAKAAN_IBU_BALITA_UPDATED dan render_perpustakaan_updated
+
+ARTIKEL_LOKAL_DATABASE = [
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Panduan MPASI Menu Lengkap (WHO & Kemenkes)",
+        "summary": "Panduan MPASI perdana 6 bulan sesuai standar WHO dan Kemenkes, fokus pada Protein Hewani.",
+        "source": "WHO, Kemenkes RI (Permenkes No. 2 Th 2020)",
+        "full_content": """
+        # Panduan MPASI Menu Lengkap (WHO & Kemenkes)
+        
+        Memberikan Makanan Pendamping ASI (MPASI) adalah tahap krusial dalam 1000 Hari Pertama Kehidupan (HPK). Kesalahan dalam pemberian MPASI dapat berkontribusi pada risiko stunting.
+        
+        ## Kapan Memulai MPASI?
+        
+        WHO dan Ikatan Dokter Anak Indonesia (IDAI) merekomendasikan pemberian MPASI dimulai saat bayi berusia **tepat 6 bulan (180 hari)**. 
+        
+        Tanda bayi siap menerima MPASI:
+        * Kepala sudah tegak dan bisa duduk dengan bantuan.
+        * Menunjukkan ketertarikan pada makanan (misalnya, mencoba meraih makanan).
+        * Refleks menjulurkan lidah (menjilat) sudah berkurang.
+        
+        ## Prinsip MPASI 4 Kuadran (Menu Lengkap)
+        
+        Konsep "menu 4 bintang" yang lama (nasi, sayur, lauk nabati, lauk hewani) **sudah tidak memadai**. Standar terbaru Kemenkes dan WHO menekankan **MPASI Menu Lengkap** yang harus mengandung:
+        
+        1.  **Karbohidrat (Sumber Energi):** Nasi, kentang, ubi, jagung.
+        2.  **Protein Hewani (Wajib!):** Ikan, ayam, daging sapi, telur, hati ayam. Ini adalah komponen terpenting untuk mencegah stunting.
+        3.  **Protein Nabati (Pendukung):** Tahu, tempe, kacang-kacangan.
+        4.  **Lemak Tambahan (Penting!):** Minyak (minyak kelapa, minyak zaitun), santan, mentega. Lemak sangat penting untuk perkembangan otak dan penyerapan vitamin.
+        
+        ## Mengapa Protein Hewani SANGAT PENTING?
+        
+        Protein hewani adalah kunci utama pencegahan stunting. ASI setelah 6 bulan sudah tidak mencukupi kebutuhan zat besi dan zinc bayi.
+        
+        * **Zat Besi (Fe):** Protein hewani (terutama hati ayam dan daging merah) mengandung zat besi *heme* yang penyerapannya jauh lebih baik (hingga 40%) dibanding zat besi *non-heme* dari sayuran (penyerapan <10%).
+        * **Zinc:** Penting untuk pertumbuhan dan sistem imun.
+        * **Vitamin B12 & Asam Amino Esensial:** Vital untuk perkembangan otak.
+        
+        > **Rekomendasi Kemenkes:** Berikan protein hewani **setiap hari** dalam menu MPASI sejak usia 6 bulan.
+        
+        ## Evolusi Tekstur MPASI
+        
+        * **6 Bulan:** *Puree* (saring halus). Makanan dilumatkan hingga halus dan disaring.
+        * **7-8 Bulan:** *Mashed* (lumat kasar). Makanan dilumatkan kasar tanpa disaring.
+        * **9-11 Bulan:** *Minced/Chopped* (cincang halus/kasar). Makanan dicincang. Mulai ajarkan *finger food* (makanan yang bisa dipegang).
+        * **12+ Bulan:** Makanan Keluarga. Anak makan menu yang sama dengan keluarga, dicincang atau disesuaikan seperlunya.
+        
+        ## Aturan Pemberian Makan (Responsive Feeding)
+        
+        * Buat jadwal makan yang teratur (3x makan utama, 2x snack).
+        * Durasi makan maksimal 30 menit.
+        * Ciptakan suasana makan yang menyenangkan.
+        * Jangan memaksa anak. Jika anak menolak, coba tawarkan lagi tanpa marah.
+        * Jauhkan distraksi seperti mainan atau gadget saat makan.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  World Health Organization (WHO). (2023). *Guideline for complementary feeding of infants and young children 6–23 months of age.*
+        2.  Kementerian Kesehatan RI. (2020). *Peraturan Menteri Kesehatan No. 2 Tahun 2020 tentang Standar Antropometri Anak.*
+        3.  Ikatan Dokter Anak Indonesia (IDAI). *Rekomendasi Praktik Pemberian Makan Berbasis Bukti pada Bayi dan Batita di Indonesia untuk Mencegah Malnutrisi.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Apa itu Stunting dan 1000 Hari Pertama Kehidupan (HPK)",
+        "summary": "Memahami Stunting dan pentingnya 1000 HPK sebagai jendela emas pencegahan.",
+        "source": "Kemenkes RI, UNICEF",
+        "full_content": """
+        # Apa itu Stunting dan 1000 Hari Pertama Kehidupan (HPK)
+        
+        Stunting adalah masalah gizi kronis yang menjadi fokus utama kesehatan anak di Indonesia. Memahaminya adalah langkah awal pencegahan.
+        
+        ## Definisi Stunting
+        
+        Stunting **bukan** berarti "pendek" biasa karena faktor genetik.
+        
+        **Stunting adalah** kondisi gagal tumbuh pada anak balita akibat kekurangan gizi kronis (jangka panjang), terutama pada 1000 Hari Pertama Kehidupan (HPK).
+        
+        Secara klinis, stunting didiagnosis ketika panjang atau tinggi badan anak berada di bawah minus dua standar deviasi (<-2 SD) kurva pertumbuhan WHO. (Indikator TB/U atau PB/U).
+        
+        ## Dampak Stunting
+        
+        Stunting bukan hanya masalah fisik (pendek). Dampak yang paling berbahaya justru tidak terlihat:
+        
+        1.  **Perkembangan Otak Terhambat:** Gagal tumbuh seringkali disertai gagal kembang. Anak stunting berisiko memiliki kecerdasan (IQ) lebih rendah.
+        2.  **Sistem Imun Lemah:** Anak menjadi lebih mudah dan lebih sering sakit (misal: diare, ISPA berulang).
+        3.  **Dampak Jangka Panjang:** Saat dewasa, anak stunting berisiko lebih tinggi menderita penyakit kronis seperti diabetes, hipertensi, dan penyakit jantung.
+        
+        ## 1000 Hari Pertama Kehidupan (HPK)
+        
+        1000 HPK adalah "Jendela Emas" pencegahan stunting. Periode ini adalah waktu di mana pertumbuhan otak dan fisik terjadi sangat pesat.
+        
+        **Periode 1000 HPK dihitung sejak:**
+        
+        > **Masa Kehamilan (270 hari) + Usia 0-2 Tahun (730 hari) = 1000 Hari**
+        
+        Kekurangan gizi yang terjadi pada periode ini bersifat *irreversible* (tidak dapat diperbaiki sepenuhnya) jika sudah melewati usia 2 tahun.
+        
+        ## Strategi Pencegahan Stunting
+        
+        Pencegahan stunting harus dimulai bahkan sebelum anak lahir:
+        
+        1.  **Saat Ibu Hamil:**
+            * Ibu harus cukup gizi (makan makanan bergizi seimbang).
+            * Minum Tablet Tambah Darah (TTD) untuk mencegah anemia.
+            * Rutin periksa kehamilan (ANC).
+        
+        2.  **Bayi Lahir (0-6 Bulan):**
+            * Inisiasi Menyusu Dini (IMD) segera setelah lahir.
+            * **ASI Eksklusif** selama 6 bulan. ASI adalah nutrisi terbaik.
+        
+        3.  **Bayi 6-24 Bulan (MPASI):**
+            * Berikan MPASI Menu Lengkap (lihat artikel MPASI).
+            * **Wajib mengandung Protein Hewani** (ikan, telur, daging, hati) setiap hari untuk memenuhi kebutuhan zat besi dan zinc.
+            * Lanjutkan ASI hingga usia 2 tahun atau lebih.
+        
+        4.  **Faktor Pendukung:**
+            * **Imunisasi Lengkap:** Mencegah anak sakit berulang.
+            * **Sanitasi & Air Bersih:** Mencegah diare dan infeksi cacing, yang dapat mengganggu penyerapan gizi.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Kementerian Kesehatan RI. *Buku Saku Pencegahan Stunting.*
+        2.  UNICEF Indonesia. *Stunting in Indonesia: Situation, Causes, and Solutions.*
+        3.  World Health Organization (WHO). *Stunting in a nutshell.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Milestone (Tonggak) Perkembangan Anak 0-12 Bulan",
+        "summary": "Panduan memantau tonggak perkembangan penting anak di tahun pertama kehidupannya.",
+        "source": "CDC (USA), IDAI (KPSP)",
+        "full_content": """
+        # Milestone (Tonggak) Perkembangan Anak 0-12 Bulan
+        
+        Perkembangan anak tidak hanya soal berat dan tinggi badan, tetapi juga kemampuan (skill) yang mereka capai. Ini disebut "milestone" atau tonggak perkembangan. Pemantauan milestone penting untuk deteksi dini keterlambatan.
+        
+        Perkembangan dipantau melalui 4 aspek:
+        1.  **Motorik Kasar:** Gerakan otot besar (duduk, merangkak, berjalan).
+        2.  **Motorik Halus:** Gerakan otot kecil (menjimpit, meraih).
+        3.  **Bahasa & Bicara:** Mengoceh, memahami kata, berbicara.
+        4.  **Sosial & Emosional:** Interaksi, tersenyum, meniru.
+        
+        Berikut adalah panduan umum (rentang usia adalah wajar):
+        
+        ## Usia 0-3 Bulan
+        
+        * **Motorik Kasar:** Mengangkat kepala 45° saat tengkurap.
+        * **Motorik Halus:** Mengikuti objek dengan mata, tangan mulai sering terbuka.
+        * **Bahasa:** Bereaksi terhadap suara keras, mulai mengeluarkan suara "ooh" / "aah".
+        * **Sosial:** Menatap wajah, tersenyum saat diajak bicara.
+        
+        ## Usia 4-6 Bulan
+        
+        * **Motorik Kasar:** Mampu berguling (telentang ke tengkurap, dan sebaliknya), mulai belajar duduk dengan bantuan/sandaran.
+        * **Motorik Halus:** Meraih mainan yang digantung, memasukkan benda ke mulut.
+        * **Bahasa:** Mengoceh (babbling) seperti "ba-ba-ba", "ma-ma-ma".
+        * **Sosial:** Tertawa, mengenali wajah orang terdekat (ibu/ayah).
+        
+        ## Usia 7-9 Bulan
+        
+        * **Motorik Kasar:** **Duduk mandiri** tanpa sandaran, merangkak (atau *ngesot*), menarik badan untuk berdiri.
+        * **Motorik Halus:** Memindahkan mainan dari satu tangan ke tangan lain, mulai menjimpit benda dengan ibu jari dan telunjuk (*pincer grasp*).
+        * **Bahasa:** Menoleh saat namanya dipanggil, mengerti kata "tidak".
+        * **Sosial:** Mulai takut pada orang asing (*stranger anxiety*), bermain "Cilukba".
+        
+        ## Usia 10-12 Bulan
+        
+        * **Motorik Kasar:** Berdiri berpegangan (*cruising*/merambat), beberapa anak mulai berjalan beberapa langkah.
+        * **Motorik Halus:** Menjimpit benda kecil dengan rapi, memasukkan benda ke wadah.
+        * **Bahasa:** Mengucapkan 1-2 kata bermakna (misal "mama" atau "papa" untuk orangnya), meniru suara, melambaikan tangan ("dadah").
+        * **Sosial:** Menunjukkan benda yang diinginkan, menunjukkan afeksi.
+        
+        ## 🚩 Red Flags (Waspada Keterlambatan)
+        
+        Segera konsultasi ke dokter jika:
+        * **Usia 4 Bulan:** Tidak bisa menahan kepala tetap tegak.
+        * **Usia 6 Bulan:** Tidak bisa berguling, tidak tersenyum sosial.
+        * **Usia 9 Bulan:** Tidak bisa duduk mandiri, tidak mengoceh.
+        * **Usia 12 Bulan:** Tidak bisa berdiri berpegangan, tidak merespon saat dipanggil.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Centers for Disease Control and Prevention (CDC). *Milestone Moments Booklet.*
+        2.  Ikatan Dokter Anak Indonesia (IDAI). *Skrining Tumbuh Kembang (KPSP).*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Pentingnya Stimulasi untuk Perkembangan Otak",
+        "summary": "Perkembangan anak tidak otomatis, perlu stimulasi (rangsangan) yang tepat dari orang tua.",
+        "source": "Kemenkes RI (Buku KIA), AAP",
+        "full_content": """
+        # Pentingnya Stimulasi untuk Perkembangan Otak
+        
+        Otak anak berkembang sangat pesat pada 1000 Hari Pertama Kehidupan. Perkembangan ini tidak terjadi begitu saja; ia membutuhkan **stimulasi** atau rangsangan dari lingkungan sekitarnya, terutama orang tua.
+        
+        Nutrisi yang baik (seperti MPASI kaya protein hewani) menyediakan "bahan bakar" untuk otak, sementara stimulasi adalah "latihan" yang membangun koneksi antar sel saraf.
+        
+        ## Apa itu Stimulasi?
+        
+        Stimulasi adalah kegiatan bermain atau berinteraksi dengan anak yang bertujuan untuk merangsang semua inderanya (penglihatan, pendengaran, sentuhan, penciuman, rasa) dan 4 aspek kemampuannya (motorik kasar, motorik halus, bahasa, sosial).
+        
+        ## Cara Stimulasi Sesuai Usia
+        
+        Stimulasi tidak perlu mahal. Interaksi sederhana adalah kuncinya.
+        
+        ### Usia 0-3 Bulan
+        
+        * **Sentuhan & Sosial:** Peluk, gendong, dan timang anak. Lakukan kontak mata dan ajak tersenyum.
+        * **Pendengaran:** Ajak bicara dengan nada lembut. Putarkan musik atau nyanyikan lagu.
+        * **Motorik Kasar:** Lakukan **Tummy Time** (tengkurap) beberapa menit setiap hari (selalu awasi!). Ini sangat penting untuk menguatkan otot leher dan punggung.
+        * **Penglihatan:** Gantung mainan berwarna cerah atau hitam-putih di atas tempat tidurnya.
+        
+        ### Usia 4-6 Bulan
+        
+        * **Motorik Halus:** Berikan mainan kerincingan (rattle) atau mainan yang mudah digenggam untuk diraihnya.
+        * **Sosial:** Bermain "Cilukba".
+        * **Bahasa:** Tirukan ocehan ("babbling") anak Anda untuk mendorongnya "berbicara".
+        * **Motorik Kasar:** Bantu anak belajar duduk dengan disandarkan di bantal.
+        
+        ### Usia 7-9 Bulan
+        
+        * **Bahasa:** Sering panggil nama anak agar ia menoleh. Ajarkan kata "tidak".
+        * **Motorik Halus:** Berikan *finger food* (potongan buah/biskuit) agar ia belajar menjimpit.
+        * **Motorik Kasar:** Sediakan area lantai yang aman dan bersih agar anak bebas merangkak. Jangan terlalu banyak digendong atau ditaruh di *walker* (tidak direkomendasikan).
+        * **Sosial:** Ajarkan melambaikan tangan ("dadah") atau tepuk tangan.
+        
+        ### Usia 10-12 Bulan
+        
+        * **Membaca Buku:** Ini adalah stimulasi terbaik! Bacakan buku cerita bergambar setiap hari. Tunjuk gambar dan sebutkan namanya (misal: "Ini Kucing", "Itu Bola").
+        * **Motorik Kasar:** Latih anak berdiri dan merambat (*cruising*). Bantu ia berjalan dengan memegang kedua tangannya.
+        * **Motorik Halus:** Ajarkan anak memasukkan balok ke dalam kotak atau mengambil benda kecil.
+        * **Bahasa:** Ajarkan anak menunjuk bagian tubuh ("Mana hidung?", "Mana mata?").
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Kementerian Kesehatan RI. *Buku Kesehatan Ibu dan Anak (Buku KIA).*
+        2.  American Academy of Pediatrics (AAP). *Activities to Promote Your Baby’s Development.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Kesehatan & Imunisasi",
+        "title": "Pentingnya Imunisasi Dasar Lengkap",
+        "summary": "Mengapa imunisasi sangat penting dan daftar vaksin yang wajib diterima anak Indonesia.",
+        "source": "IDAI (Jadwal 2023), Kemenkes RI",
+        "full_content": """
+        # Pentingnya Imunisasi Dasar Lengkap
+        
+        Imunisasi adalah proses membuat seseorang imun atau kebal terhadap suatu penyakit. Ini adalah salah satu intervensi kesehatan paling efektif dan hemat biaya di dunia.
+        
+        ## Mengapa Imunisasi PentING?
+        
+        1.  **Melindungi Anak Anda:** Vaksin melatih sistem kekebalan tubuh anak untuk mengenali dan melawan virus atau bakteri berbahaya sebelum penyakit tersebut sempat menyerang.
+        2.  **Melindungi Orang Lain (Herd Immunity):** Ketika sebagian besar orang di komunitas sudah diimunisasi, penyebaran penyakit akan terhenti. Ini melindungi mereka yang tidak bisa divaksin (misal: bayi baru lahir, orang dengan masalah imun).
+        3.  **Mencegah Penyakit Berbahaya:** Imunisasi mencegah penyakit yang dapat menyebabkan kecacatan permanen atau kematian, seperti Polio (lumpuh layu), Campak (radang otak), dan Difteri (sumbatan napas).
+        
+        ## Imunisasi Dasar Lengkap (Program Pemerintah RI)
+        
+        Pastikan anak Anda mendapatkan imunisasi dasar berikut sesuai jadwal:
+        
+        * **HB-0:** (Hepatitis B) 1 dosis, diberikan < 24 jam setelah lahir.
+        * **BCG:** 1 dosis, mencegah TBC berat. Diberikan sebelum usia 1 bulan.
+        * **Polio:** 4 dosis (Polio tetes/OPV dan Polio suntik/IPV).
+        * **DPT-HB-Hib:** 4 dosis (mencegah Difteri, Pertusis/batuk rejan, Tetanus, Hepatitis B, dan infeksi Hib). Diberikan pada usia 2, 3, 4 bulan (dosis primer) dan 18 bulan (booster).
+        * **Campak-Rubella (MR):** 2 dosis. Diberikan pada usia 9 bulan dan 18 bulan.
+        
+        ## Imunisasi Tambahan (Sangat Direkomendasikan IDAI)
+        
+        Selain vaksin wajib di atas, IDAI sangat merekomendasikan vaksin tambahan untuk perlindungan optimal:
+        
+        * **PCV (Pneumokokus):** Mencegah radang paru (pneumonia) dan radang otak (meningitis) akibat bakteri pneumokokus.
+        * **Rotavirus:** Mencegah diare berat akibat rotavirus, yang merupakan penyebab utama rawat inap pada bayi.
+        * **Influenza:** Diberikan setiap tahun mulai usia 6 bulan.
+        * **Varisela (Cacar Air):** Diberikan mulai usia 12 bulan.
+        
+        ## Apakah Vaksin Aman? (Mengenal KIPI)
+        
+        Vaksin yang digunakan di Indonesia sangat aman dan telah melalui uji klinis bertahun-tahun.
+        
+        **KIPI** (Kejadian Ikutan Pasca Imunisasi) adalah reaksi yang mungkin timbul setelah imunisasi.
+        
+        * **KIPI Ringan (Wajar):** Demam ringan, bengkak/nyeri di lokasi suntikan, rewel. Ini adalah tanda vaksin sedang bekerja.
+        * **KIPI Berat (Sangat Jarang):** Reaksi alergi berat (anafilaksis). Terjadi 1 dalam 1 juta dosis. Tenaga kesehatan sudah terlatih menanganinya.
+        
+        Manfaat perlindungan dari vaksinasi **jauh lebih besar** daripada risiko KIPI ringan.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Jadwal Imunisasi Anak Usia 0-18 Tahun Rekomendasi IDAI 2023.*
+        2.  Kementerian Kesehatan RI. *Program Imunisasi Nasional.*
+        3.  World Health Organization (WHO). *Vaccines and immunization.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Kesehatan & Imunisasi",
+        "title": "Panduan Tepat Mengatasi Demam pada Anak",
+        "summary": "Kapan harus khawatir saat anak demam, dan pertolongan pertama yang benar (bukan kompres dingin!).",
+        "source": "IDAI, American Academy of Pediatrics (AAP)",
+        "full_content": """
+        # Panduan Tepat Mengatasi Demam pada Anak
+        
+        Demam adalah keluhan paling umum pada anak. Demam **bukanlah penyakit**, melainkan respons sistem kekebalan tubuh yang sedang melawan infeksi.
+        
+        ## Apa itu Demam?
+        
+        Seorang anak dianggap demam jika suhu tubuhnya (diukur dengan termometer) **≥ 38°C** (derajat Celsius).
+        
+        Suhu 37.5°C - 37.9°C dianggap *subfebris* (hangat), umumnya belum memerlukan obat.
+        
+        **Cara Mengukur Suhu yang Benar:**
+        * **Termometer Digital:** Paling direkomendasikan. Bisa digunakan di ketiak (tahan 1-2 menit), mulut, atau rektal (anus).
+        * **Termometer Dahi (Inframerah):** Cepat, namun akurasinya bisa bervariasi.
+        * **JANGAN:** Mengukur dengan punggung tangan. Ini sangat tidak akurat.
+        
+        ## Pertolongan Pertama Saat Anak Demam
+        
+        Tujuan utama bukan "menghilangkan" demam, tetapi membuat anak **nyaman**.
+        
+        1.  **Cukupi Kebutuhan Cairan:** Demam membuat cairan tubuh cepat menguap. Berikan ASI, susu, atau air putih lebih sering untuk mencegah dehidrasi.
+        2.  **Pakaian Tipis:** Jangan selimuti anak tebal-tebal. Gunakan pakaian katun tipis agar panas tubuh bisa keluar.
+        3.  **Kompres Air Hangat (Bukan Dingin!)**
+            * Gunakan waslap yang dibasahi **air hangat kuku** (bukan air es/dingin).
+            * Letakkan kompres di lipatan tubuh (ketiak, leher, selangkangan).
+            * **Mengapa air hangat?** Air hangat membuka pori-pori dan membantu panas menguap. Kompres air dingin/alkohol akan membuat tubuh menggigil (shivering), yang justru akan *meningkatkan* suhu inti tubuh.
+        
+        ## Kapan Memberikan Obat Penurun Panas?
+        
+        Obat diberikan jika:
+        * Suhu ≥ 38.5°C
+        * Anak tampak sangat tidak nyaman, rewel, atau kesakitan (meskipun suhu < 38.5°C).
+        
+        **Obat yang Aman (Pilih Salah Satu):**
+        * **Paracetamol (Asetaminofen):** Dosis sesuai berat badan (10-15 mg/kgBB per kali). Dapat diulang tiap 4-6 jam.
+        * **Ibuprofen:** Dosis sesuai berat badan (5-10 mg/kgBB per kali). Hanya untuk anak usia > 6 bulan. Dapat diulang tiap 6-8 jam.
+        
+        > **PENTING:** Selalu gunakan sendok takar bawaan obat. Jangan gunakan sendok makan. Dosis harus berdasarkan BERAT BADAN, bukan usia.
+        
+        ## 🚩 RED FLAGS: Kapan Harus Segera ke Dokter/UGD?
+        
+        Segera bawa anak ke dokter atau UGD jika demam disertai:
+        
+        * Usia anak **< 3 bulan** (demam pada bayi baru lahir selalu dianggap serius).
+        * **Kejang** (Step).
+        * **Sesak napas** atau napas sangat cepat.
+        * **Penurunan kesadaran** (lemas, tidur terus, sulit dibangunkan).
+        * Muntah-muntah hebat atau tidak mau minum sama sekali.
+        * Demam sangat tinggi (> 40°C).
+        * Demam tidak kunjung turun setelah 3 hari.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Kapan Anak Demam Perlu ke Dokter?*
+        2.  American Academy of Pediatrics (AAP). *Fever and Your Baby.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+]
+
+# Buat list judul untuk dropdown UI
+JUDUL_ARTIKEL_LOKAL = sorted([artikel["title"] for artikel in ARTIKEL_LOKAL_DATABASE])
+
+def tampilkan_artikel_lokal(judul_artikel_pilihan: str) -> str:
+    """
+    Mencari artikel di database ARTIKEL_LOKAL_DATABASE dan mengembalikan 
+    konten lengkapnya dalam format Markdown (HTML).
+    """
+    if not judul_artikel_pilihan:
+        return "<div style='padding: 20px; text-align: center; color: #888;'>Silakan pilih judul artikel dari daftar di atas.</div>"
+
+    for artikel in ARTIKEL_LOKAL_DATABASE:
+        if artikel["title"] == judul_artikel_pilihan:
+            # Menggabungkan header dan konten
+            header = f"""
+            <div style='background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 5px solid #667eea; margin-bottom: 20px;'>
+                <h2 style='color: #667eea; margin-top: 0;'>{artikel['title']}</h2>
+                <p style='color: #555; font-size: 14px; margin-bottom: 0;'>
+                    <strong>Sumber:</strong> {artikel['source']} | <strong>Kategori:</strong> {artikel['kategori']}
+                </p>
+            </div>
+            """
+            # Kita return sebagai HTML string, Gradio akan merendernya
+            return header + artikel["full_content"]
+            
+    return f"<div style='padding: 20px; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 8px;'><h3 style='color: #721c24; margin-top: 0;'>❌ Error</h3><p>Artikel '{judul_artikel_pilihan}' tidak ditemukan.</p></div>"
+
+# --- FITUR 3: KALKULATOR TARGET KEJAR TUMBUH (Dipertahankan dari v3.2) ---
+
+def calculate_growth_velocity(measurements: List[Dict]) -> Dict:
+    """
+    Menghitung velocity pertumbuhan anak
+    """
+    if len(measurements) < 2:
+        return {
+            'status': 'insufficient_data',
+            'message': 'Minimal 2 data pengukuran diperlukan untuk analisis velocity'
+        }
+    
+    measurements = sorted(measurements, key=lambda x: x['date'])
+    weight_velocity = []
+    height_velocity = []
+    
+    for i in range(1, len(measurements)):
+        prev = measurements[i-1]
+        curr = measurements[i]
+        time_diff = curr['age_months'] - prev['age_months']
+        
+        if time_diff > 0:
+            wt_vel = (curr['weight'] - prev['weight']) / time_diff
+            weight_velocity.append({
+                'period': f"{prev['age_months']}-{curr['age_months']} bulan",
+                'velocity': wt_vel, 'start_weight': prev['weight'], 'end_weight': curr['weight'], 'time_months': time_diff
+            })
+            ht_vel = (curr['height'] - prev['height']) / time_diff
+            height_velocity.append({
+                'period': f"{prev['age_months']}-{curr['age_months']} bulan",
+                'velocity': ht_vel, 'start_height': prev['height'], 'end_height': curr['height'], 'time_months': time_diff
+            })
+    
+    return {
+        'status': 'success', 'measurements': measurements, 'weight_velocity': weight_velocity,
+        'height_velocity': height_velocity, 'total_measurements': len(measurements),
+        'monitoring_period': f"{measurements[0]['age_months']}-{measurements[-1]['age_months']} bulan"
+    }
+
+
+def interpret_growth_velocity(velocity_data: Dict, gender: str) -> Dict:
+    """
+    Interpretasi velocity pertumbuhan berdasarkan standar WHO
+    """
+    if velocity_data['status'] != 'success':
+        return velocity_data
+    
+    interpretations = []
+    recommendations = []
+    concern_level = "normal"
+    
+    for wv in velocity_data['weight_velocity']:
+        period_start = int(wv['period'].split('-')[0])
+        vel = wv['velocity']
+        
+        if period_start < 3: expected, optimal = (0.6, 1.0), 0.8
+        elif period_start < 6: expected, optimal = (0.4, 0.7), 0.55
+        elif period_start < 12: expected, optimal = (0.25, 0.5), 0.35
+        elif period_start < 24: expected, optimal = (0.15, 0.3), 0.22
+        else: expected, optimal = (0.12, 0.25), 0.18
+        
+        if vel < expected[0]:
+            status = "🔴 Pertumbuhan Lambat"
+            concern_level = "critical" if vel < expected[0] * 0.5 else "warning"
+            interpretations.append({
+                'period': wv['period'], 'type': 'weight', 'status': status, 'velocity': vel, 'expected': optimal,
+                'message': f"Velocity BB ({vel:.2f} kg/bulan) di bawah normal ({expected[0]:.2f}-{expected[1]:.2f} kg/bulan)"
+            })
+            recommendations.append(f"Tingkatkan asupan kalori dan protein untuk periode {wv['period']}")
+        elif vel > expected[1]:
+            status = "🟡 Pertumbuhan Cepat"
+            if vel > expected[1] * 1.5: concern_level = "warning"
+            interpretations.append({
+                'period': wv['period'], 'type': 'weight', 'status': status, 'velocity': vel, 'expected': optimal,
+                'message': f"Velocity BB ({vel:.2f} kg/bulan) di atas normal ({expected[0]:.2f}-{expected[1]:.2f} kg/bulan)"
+            })
+            recommendations.append(f"Monitor kenaikan BB berlebih pada periode {wv['period']}, konsultasi ahli gizi")
+        else:
+            status = "🟢 Pertumbuhan Normal"
+            interpretations.append({
+                'period': wv['period'], 'type': 'weight', 'status': status, 'velocity': vel, 'expected': optimal,
+                'message': f"Velocity BB ({vel:.2f} kg/bulan) dalam rentang normal"
+            })
+    
+    for hv in velocity_data['height_velocity']:
+        period_start = int(hv['period'].split('-')[0])
+        vel = hv['velocity']
+        
+        if period_start < 3: expected, optimal = (3.0, 4.0), 3.5
+        elif period_start < 6: expected, optimal = (1.5, 2.5), 2.0
+        elif period_start < 12: expected, optimal = (1.0, 1.5), 1.2
+        elif period_start < 24: expected, optimal = (0.8, 1.2), 1.0
+        else: expected, optimal = (0.5, 0.8), 0.6
+        
+        if vel < expected[0]:
+            status = "🔴 Pertumbuhan Lambat"
+            concern_level = "critical" if vel < expected[0] * 0.5 else "warning"
+            interpretations.append({
+                'period': hv['period'], 'type': 'height', 'status': status, 'velocity': vel, 'expected': optimal,
+                'message': f"Velocity TB ({vel:.2f} cm/bulan) di bawah normal ({expected[0]:.2f}-{expected[1]:.2f} cm/bulan)"
+            })
+            recommendations.append(f"Fokus pada nutrisi untuk pertumbuhan linear periode {hv['period']}")
+        elif vel > expected[1]:
+            status = "🟢 Pertumbuhan Baik"
+            interpretations.append({
+                'period': hv['period'], 'type': 'height', 'status': status, 'velocity': vel, 'expected': optimal,
+                'message': f"Velocity TB ({vel:.2f} cm/bulan) baik, bahkan di atas rata-rata"
+            })
+        else:
+            status = "🟢 Pertumbuhan Normal"
+            interpretations.append({
+                'period': hv['period'], 'type': 'height', 'status': status, 'velocity': vel, 'expected': optimal,
+                'message': f"Velocity TB ({vel:.2f} cm/bulan) dalam rentang normal"
+            })
+    
+    if concern_level == "critical":
+        recommendations.insert(0, "⚠️ PENTING: Segera konsultasi ke dokter anak atau ahli gizi untuk evaluasi lengkap")
+    elif concern_level == "warning":
+        recommendations.insert(0, "⚠️ Perhatian: Pertimbangkan konsultasi dengan tenaga kesehatan")
+    else:
+        recommendations.append("✅ Pertumbuhan anak dalam jalur yang baik, teruskan pola asuh dan nutrisi saat ini")
+    
+    return {
+        'status': 'analyzed', 'concern_level': concern_level, 'interpretations': interpretations,
+        'recommendations': recommendations, 'velocity_data': velocity_data
+    }
+
+
+def plot_growth_trajectory(measurements: List[Dict], gender: str) -> Optional[str]:
+    """
+    Plot grafik trajectory pertumbuhan dengan kurva WHO
+    """
+    try:
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+        theme = UI_THEMES.get("pink_pastel")
+        plt.rcParams.update({
+            "axes.facecolor": theme["card"], "figure.facecolor": theme["bg"], "savefig.facecolor": theme["bg"],
+            "text.color": theme["text"], "axes.labelcolor": theme["text"], "axes.edgecolor": theme["border"],
+            "xtick.color": theme["text"], "ytick.color": theme["text"], "grid.color": theme["border"],
+        })
+        
+        ages = [m['age_months'] for m in measurements]
+        weights = [m['weight'] for m in measurements]
+        heights = [m['height'] for m in measurements]
+        gender_code = 'M' if gender == "Laki-laki" else 'F'
+        
+        ax1.plot(ages, weights, 'o-', color=theme['primary'], linewidth=2.5, markersize=10, 
+                 markerfacecolor=theme['accent'], markeredgecolor='white', label='Data Anak', zorder=10)
+        
+        age_ref = np.arange(math.floor(min(ages)), math.ceil(max(ages)) + 1, 1)
+        age_ref_valid = [a for a in age_ref if a in AGE_GRID]
+        
+        if age_ref_valid:
+            wfa_curves = {
+                z: [generate_wfa_curve(gender_code, z)[1][np.where(AGE_GRID == a)[0][0]] for a in age_ref_valid]
+                for z in [-2, 0, 2]
+            }
+            ax1.plot(age_ref_valid, wfa_curves[0], 'k--', label='Median WHO', zorder=5)
+            ax1.plot(age_ref_valid, wfa_curves[2], 'g--', label='+2 SD', zorder=5)
+            ax1.plot(age_ref_valid, wfa_curves[-2], 'r--', label='-2 SD', zorder=5)
+            ax1.fill_between(age_ref_valid, wfa_curves[-2], wfa_curves[2], color='green', alpha=0.1, label='Rentang Normal')
+
+        ax1.set_xlabel('Usia (bulan)', fontsize=12, fontweight='bold')
+        ax1.set_ylabel('Berat Badan (kg)', fontsize=12, fontweight='bold')
+        ax1.set_title('Trajectory Berat Badan', fontsize=14, fontweight='bold', pad=15)
+        ax1.grid(True, alpha=0.3, linestyle='--')
+        ax1.legend(loc='upper left', fontsize=10)
+        
+        ax2.plot(ages, heights, 'o-', color=theme['secondary'], linewidth=2.5, markersize=10, 
+                 markerfacecolor=theme['accent'], markeredgecolor='white', label='Data Anak', zorder=10)
+        
+        if age_ref_valid:
+            hfa_curves = {
+                z: [generate_hfa_curve(gender_code, z)[1][np.where(AGE_GRID == a)[0][0]] for a in age_ref_valid]
+                for z in [-2, 0, 2]
+            }
+            ax2.plot(age_ref_valid, hfa_curves[0], 'k--', label='Median WHO', zorder=5)
+            ax2.plot(age_ref_valid, hfa_curves[2], 'g--', label='+2 SD', zorder=5)
+            ax2.plot(age_ref_valid, hfa_curves[-2], 'r--', label='-2 SD', zorder=5)
+            ax2.fill_between(age_ref_valid, hfa_curves[-2], hfa_curves[2], color='green', alpha=0.1, label='Rentang Normal')
+
+        ax2.set_xlabel('Usia (bulan)', fontsize=12, fontweight='bold')
+        ax2.set_ylabel('Panjang/Tinggi Badan (cm)', fontsize=12, fontweight='bold')
+        ax2.set_title('Trajectory Panjang/Tinggi Badan', fontsize=14, fontweight='bold', pad=15)
+        ax2.grid(True, alpha=0.3, linestyle='--')
+        ax2.legend(loc='upper left', fontsize=10)
+        
+        for i in range(1, len(measurements)):
+            prev = measurements[i-1]
+            curr = measurements[i]
+            time_diff = curr['age_months'] - prev['age_months']
+            if time_diff == 0: continue
+            
+            wt_vel = (curr['weight'] - prev['weight']) / time_diff
+            mid_age = (prev['age_months'] + curr['age_months']) / 2
+            mid_wt = (prev['weight'] + curr['weight']) / 2
+            ax1.annotate(f'+{wt_vel:.2f} kg/bln', 
+                        xy=(mid_age, mid_wt), xytext=(0, 10), textcoords='offset points',
+                        fontsize=9, ha='center', bbox=dict(boxstyle='round,pad=0.5', fc=theme['accent'], alpha=0.7))
+            
+            ht_vel = (curr['height'] - prev['height']) / time_diff
+            mid_ht = (prev['height'] + curr['height']) / 2
+            ax2.annotate(f'+{ht_vel:.2f} cm/bln',
+                        xy=(mid_age, mid_ht), xytext=(0, 10), textcoords='offset points',
+                        fontsize=9, ha='center', bbox=dict(boxstyle='round,pad=0.5', fc=theme['accent'], alpha=0.7))
+        
+        plt.tight_layout()
+        
+        output_dir = "outputs"
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, f"growth_trajectory_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        plt.close(fig)
+        
+        return output_path
+        
+    except Exception as e:
+        print(f"Error generating growth trajectory plot: {e}")
+        traceback.print_exc()
+        return None
+
+
+def kalkulator_kejar_tumbuh_handler(
+    measurement_data: str,
+    gender: str
+) -> Tuple[str, Optional[str]]:
+    """
+    Handler untuk Kalkulator Target Kejar Tumbuh
+    """
+    try:
+        measurements = []
+        lines = [l.strip() for l in measurement_data.strip().split('\n') if l.strip()]
+        
+        for line in lines:
+            parts = line.split(',')
+            if len(parts) >= 4:
+                date_str, age_months, weight, height = parts[0].strip(), float(parts[1].strip()), float(parts[2].strip()), float(parts[3].strip())
+                try: date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                except: date_obj = datetime.strptime(date_str, '%d-%m-%Y')
+                measurements.append({'date': date_obj, 'age_months': age_months, 'weight': weight, 'height': height})
+        
+        if len(measurements) < 2:
+            return "<div style='padding: 20px; background: #fff3cd; border-left: 5px solid #ffc107; border-radius: 8px;'><h3 style='color: #856404; margin-top: 0;'>⚠️ Data Tidak Cukup</h3><p>Minimal <strong>2 pengukuran</strong> diperlukan untuk analisis velocity pertumbuhan.</p></div>", None
+        
+        velocity_data = calculate_growth_velocity(measurements)
+        analysis = interpret_growth_velocity(velocity_data, gender)
+        plot_path = plot_growth_trajectory(measurements, gender)
+        html_report = generate_kejar_tumbuh_report(analysis, gender)
+        
+        return html_report, plot_path
+        
+    except Exception as e:
+        return f"<div style='padding: 20px; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 8px;'><h3 style='color: #721c24; margin-top: 0;'>❌ Error</h3><p>Terjadi kesalahan saat memproses data: {str(e)}</p><p>Pastikan format data benar: <code>tanggal,usia_bulan,bb,tb</code></p></div>", None
+
+
+def generate_kejar_tumbuh_report(analysis: Dict, gender: str) -> str:
+    """
+    Generate HTML report untuk analisis kejar tumbuh
+    """
+    if analysis.get('status') != 'analyzed':
+        return f"<div style='padding: 20px; background: #f8d7da; border-left: 5px solid #dc3545; border-radius: 8px;'><h3 style='color: #721c24; margin-top: 0;'>❌ Error</h3><p>{analysis.get('message', 'Gagal menganalisis data.')}</p></div>"
+    
+    concern_colors = {'normal': '#28a745', 'warning': '#ffc107', 'critical': '#dc3545'}
+    concern_bg = {'normal': '#d4edda', 'warning': '#fff3cd', 'critical': '#f8d7da'}
+    concern_text = {'normal': 'Normal - Pertumbuhan Baik', 'warning': 'Perhatian - Monitoring Diperlukan', 'critical': 'Kritis - Perlu Intervensi Segera'}
+    level = analysis['concern_level']
+    
+    html = f"""
+    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 30px; border-radius: 20px; color: white; margin-bottom: 20px;
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);'>
+        <h2 style='margin: 0 0 10px 0; font-size: 28px;'>🎯 Hasil Analisis Kalkulator Target Kejar Tumbuh</h2>
+        <p style='margin: 0; opacity: 0.9; font-size: 14px;'>Berdasarkan WHO Growth Velocity Standards</p>
+    </div>
+    <div style='background: {concern_bg[level]}; padding: 20px; border-radius: 15px; 
+                margin-bottom: 25px; border-left: 6px solid {concern_colors[level]};'>
+        <h3 style='margin: 0 0 10px 0; color: {concern_colors[level]};'>Status Keseluruhan: {concern_text[level]}</h3>
+        <p style='margin: 0; color: #555;'>
+            Jumlah pengukuran: <strong>{analysis['velocity_data']['total_measurements']}</strong> | 
+            Periode monitoring: <strong>{analysis['velocity_data']['monitoring_period']}</strong>
+        </p>
+    </div>
+    <div style='background: white; padding: 25px; border-radius: 15px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px;'>
+        <h3 style='color: #667eea; margin-top: 0;'>📊 Analisis Velocity Pertumbuhan</h3>
+    """
+    
+    for interp in analysis['interpretations']:
+        icon = "⚖️" if interp['type'] == 'weight' else "📏"
+        type_text = "Berat Badan" if interp['type'] == 'weight' else "Panjang/Tinggi Badan"
+        status_key = interp['status'].split(" ")[0].lower().replace("🔴","critical").replace("🟡","warning").replace("🟢","normal")
+        html += f"""
+        <div style='margin-bottom: 20px; padding: 15px; background: #f8f9fa; 
+                    border-radius: 10px; border-left: 4px solid {concern_colors.get(status_key, "#667eea")};'>
+            <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;'>
+                <h4 style='margin: 0; color: #2c3e50;'>{icon} {type_text} - {interp['period']}</h4>
+                <span style='font-weight: bold; color: {concern_colors.get(status_key, "#667eea")};'>{interp['status']}</span>
+            </div>
+            <p style='margin: 5px 0; color: #666;'>{interp['message']}</p>
+            <div style='margin-top: 10px; font-size: 13px; color: #888;'>
+                Velocity: <strong>{interp['velocity']:.2f}</strong> | Expected: <strong>~{interp['expected']:.2f}</strong>
+            </div>
+        </div>
+        """
+    
+    html += "</div><div style='background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 25px;'>"
+    html += "<h3 style='color: #667eea; margin-top: 0;'>💡 Rekomendasi & Langkah Selanjutnya</h3>"
+    html += "<ul style='color: #555; line-height: 2; margin: 10px 0; padding-left: 20px;'>"
+    for rec in analysis['recommendations']:
+        html += f"<li>{rec}</li>"
+    html += "</ul></div>"
+    html += """
+    <div style='background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 5px solid #2196f3;'>
+        <h4 style='color: #1976d2; margin-top: 0;'>📚 Referensi & Standar</h4>
+        <ul style='color: #555; line-height: 1.8; margin: 10px 0; font-size: 14px; padding-left: 20px;'>
+            <li>Analisis berdasarkan <strong>WHO Growth Velocity Standards</strong></li>
+            <li>Velocity normal bervariasi berdasarkan usia anak</li>
+            <li>Monitoring rutin setiap bulan direkomendasikan untuk akurasi</li>
+            <li>Konsultasi profesional kesehatan untuk interpretasi lengkap</li>
+        </ul>
+    </div>
+    """
+    return html
+
+# --- FITUR 4: BUG FIX HTML RENDERING (Dipertahankan dari v3.2) ---
+
+def render_video_card_fixed(video_data: Dict) -> str:
+    """
+    Render video card dengan HTML yang proper (tidak raw)
+    """
+    video_html = f"""
+    <div class='video-card' style='background: linear-gradient(135deg, #ffe8f0 0%, #fff5f8 100%); 
+                                   padding: 20px; border-radius: 15px; margin: 15px 0;
+                                   box-shadow: 0 4px 12px rgba(255, 107, 157, 0.15);
+                                   border: 2px solid #ffd4e0;'>
+        <div class='video-title' style='display: flex; align-items: center; margin-bottom: 12px;'>
+            <span style='font-size: 24px; margin-right: 12px;'>{video_data.get('icon', '🍎')}</span>
+            <h4 style='margin: 0; color: #ff6b9d; font-size: 18px;'>{video_data['title']}</h4>
+        </div>
+        <div class='video-description' style='color: #666; font-size: 14px; margin-bottom: 10px; line-height: 1.6;'>
+            {video_data.get('description', '')}
+        </div>
+        <div class='video-duration' style='color: #999; font-size: 13px; margin-bottom: 15px;'>
+            ⏱️ Durasi: {video_data.get('duration', 'N/A')}
+        </div>
+        <div style='margin-top: 10px;'>
+            <a href='{video_data['url']}' target='_blank'
+               style='display: inline-block; padding: 12px 24px; 
+                      background: linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%);
+                      color: white; text-decoration: none; border-radius: 25px;
+                      font-size: 14px; font-weight: 600;
+                      box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+                      transition: all 0.3s ease;'
+               onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(255, 107, 157, 0.4)';"
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(255, 107, 157, 0.3)';">
+                ▶️ Tonton Video
+            </a>
+        </div>
+    </div>
+    """
+    return video_html
+
+# --- Helper Utilities (Dipertahankan dari v3.2) ---
+
+def format_date_indonesian(date_obj: datetime) -> str:
+    """Format tanggal ke Bahasa Indonesia"""
+    months_id = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+    return f"{date_obj.day} {months_id[date_obj.month-1]} {date_obj.year}"
+
+
+print("✅ Section 10 & 10B (v3.2) loaded: Mode Mudah, Kalkulator Kejar Tumbuh, dan Perpustakaan Lokal (Internal).")
 
 
 
