@@ -1,6 +1,6 @@
 # File: requirements.txt
 # ⭐ PENTING: WHO Calculator dari GitHub
-https://github.com/natelandau/pygrowup/archive/refs/heads/master.zip
+pygrowup2==0.8.3  # Fork official dari WHO
 
 
 # Web Framework (versi STABIL untuk cloud)
