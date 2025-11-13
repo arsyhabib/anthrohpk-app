@@ -2748,3 +2748,21 @@ def run_comprehensive_analysis(
 
 Terjadi kesalahan saat memproses data:
 {str(e)}
+Silakan:
+1. Periksa kembali semua input Anda
+2. Pastikan format tanggal benar (YYYY-MM-DD)
+3. Pastikan angka menggunakan titik (.) bukan koma (,)
+4. Refresh halaman dan coba lagi
+
+Jika masalah berlanjut, hubungi: +{CONTACT_WA}
+"""
+        
+        return (
+            error_msg,
+            None, None, None, None, None,
+            gr.update(visible=False), gr.update(visible=False),
+            {}
+        )
+
+
+print("✅ Section 9 loaded: Analysis handler & interpretation engine")
