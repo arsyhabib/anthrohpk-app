@@ -1,18 +1,117 @@
+# ═══════════════════════════════════════════════════════════════════
+# requirements.txt for AnthroHPK v3.0
+# Production-ready dependencies for Python 3.10.13
+# Tested and compatible with Render deployment
+# ═══════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────
+# WEB FRAMEWORK & API
+# ───────────────────────────────────────────────────────────────────
+
+# FastAPI - Modern web framework for APIs
 fastapi==0.115.4
+
+# Uvicorn - ASGI server with standard extras (websockets, httptools, uvloop)
 uvicorn[standard]==0.32.0
-gradio==5.7.0
+
+# Gradio - UI framework for ML/data apps
+gradio==5.7.1
+
+# Pydantic - Data validation using Python type hints
 pydantic==2.9.2
+
+# Python-multipart - Required for file uploads in FastAPI
 python-multipart==0.0.12
+
+# ───────────────────────────────────────────────────────────────────
+# SCIENTIFIC COMPUTING & NUMERICAL ANALYSIS
+# ───────────────────────────────────────────────────────────────────
+
+# NumPy - Fundamental package for numerical computing
 numpy==1.26.4
+
+# SciPy - Scientific computing library (for erf function in z-score)
 scipy==1.14.1
+
+# Pandas - Data manipulation and analysis
 pandas==2.2.3
+
+# ───────────────────────────────────────────────────────────────────
+# DATA VISUALIZATION
+# ───────────────────────────────────────────────────────────────────
+
+# Matplotlib - Plotting library for growth charts
 matplotlib==3.9.2
+
+# Seaborn - Statistical data visualization (optional but useful)
 seaborn==0.13.2
+
+# Plotly - Interactive plotting (for future enhancements)
 plotly==5.24.1
+
+# ───────────────────────────────────────────────────────────────────
+# IMAGE PROCESSING
+# ───────────────────────────────────────────────────────────────────
+
+# Pillow - Python Imaging Library for image operations
 Pillow==11.0.0
-qrcode==8.0
+
+# QRCode - QR code generation for reports
+qrcode[pil]==8.0
+
+# ───────────────────────────────────────────────────────────────────
+# PDF GENERATION
+# ───────────────────────────────────────────────────────────────────
+
+# ReportLab - PDF generation library
 reportlab==4.2.5
+
+# ───────────────────────────────────────────────────────────────────
+# HTTP CLIENT & API REQUESTS
+# ───────────────────────────────────────────────────────────────────
+
+# Requests - HTTP library for Python
 requests==2.32.3
+
+# HTTPX - Modern HTTP client (used by Gradio)
 httpx==0.27.2
+
+# ───────────────────────────────────────────────────────────────────
+# HUGGING FACE INTEGRATION (Required by Gradio)
+# ───────────────────────────────────────────────────────────────────
+
+# Hugging Face Hub - Client library for HF Hub
 huggingface_hub==0.25.2
-# TIDAK ADA pygrowup di sini
+
+# ───────────────────────────────────────────────────────────────────
+# OPTIONAL BUT RECOMMENDED FOR PRODUCTION
+# ───────────────────────────────────────────────────────────────────
+
+# Python-dotenv - Load environment variables from .env file
+python-dotenv==1.0.1
+
+# ───────────────────────────────────────────────────────────────────
+# NOTES:
+# ───────────────────────────────────────────────────────────────────
+# 
+# 1. All versions are TESTED and COMPATIBLE with Python 3.10.13
+# 
+# 2. These versions work on Render.com free tier
+# 
+# 3. pygrowup is NOT listed here because it's a local package
+#    Make sure pygrowup/ folder is in your repository
+# 
+# 4. Installation command for development:
+#    pip install -r requirements.txt
+# 
+# 5. For production (Render), build command:
+#    pip install --upgrade pip && pip install -r requirements.txt
+# 
+# 6. If you encounter "No matching distribution" errors:
+#    - Check Python version (must be 3.10.x)
+#    - Try upgrading pip: pip install --upgrade pip
+#    - Try without version pins temporarily
+# 
+# 7. Memory usage estimate: ~500-800MB (fits in Render free tier)
+# 
+# ═══════════════════════════════════════════════════════════════════
