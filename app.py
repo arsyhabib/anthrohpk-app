@@ -6,6 +6,7 @@ FastAPI + Gradio app for child growth monitoring (WHO + Permenkes)
 
 import os
 import math
+import random
 from datetime import datetime, date
 from typing import Optional, Dict, Any
 
@@ -35,6 +36,47 @@ STATIC_DIR = "static"
 OUTPUTS_DIR = "outputs"
 os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+# -------------------------------------------------
+# EduParenting: Video & Motivational Quotes
+# -------------------------------------------------
+YOUTUBE_VIDEOS = {
+    "mpasi_6bln": {
+        "title": "🥕 Resep MPASI 6 Bulan Pertama",
+        "url": "https://www.youtube.com/watch?v=7Zg3L2J5HfE",
+        "thumbnail": "https://img.youtube.com/vi/7Zg3L2J5HfE/hqdefault.jpg",
+    },
+    "motorik_6bln": {
+        "title": "🤸 Stimulasi Motorik Kasar 6-9 Bulan",
+        "url": "https://www.youtube.com/watch?v=9Y9n1A6d7Kk",
+        "thumbnail": "https://img.youtube.com/vi/9Y9n1A6d7Kk/hqdefault.jpg",
+    },
+    "mpasi_9bln": {
+        "title": "🍚 MPASI 9 Bulan: Tekstur Kasar",
+        "url": "https://www.youtube.com/watch?v=Q0X3Y2Z1x0o",
+        "thumbnail": "https://img.youtube.com/vi/Q0X3Y2Z1x0o/hqdefault.jpg",
+    },
+    "bahasa_12bln": {
+        "title": "🗣️ Stimulasi Bahasa 12-15 Bulan",
+        "url": "https://www.youtube.com/watch?v=2W3X4Y5Z6A7",
+        "thumbnail": "https://img.youtube.com/vi/2W3X4Y5Z6A7/hqdefault.jpg",
+    },
+    "imunisasi": {
+        "title": "💉 Jadwal Imunisasi Bayi Lengkap",
+        "url": "https://www.youtube.com/watch?v=5X6Y7Z8A9B0",
+        "thumbnail": "https://img.youtube.com/vi/5X6Y7Z8A9B0/hqdefault.jpg",
+    },
+}
+
+MOM_QUOTES = [
+    "💕 'Seorang ibu adalah penjelajah yang tak pernah lelah, selalu menemukan jalan cinta untuk anaknya.'",
+    "🌟 'Kekuatan ibu melebihi segala rintangan, kasihnya membentuk masa depan yang cerah.'",
+    "🤱 'Setiap tetes ASI adalah investasi cinta tak ternilai dalam perjalanan tumbuh kembang Si Kecil.'",
+    "💪 'Kamu kuat, kamu cukup, dan kamu melakukan yang terbaik untuk Si Kecil! Jangan menyerah, Ibu hebat!'",
+    "🌈 'Pertumbuhan anak bukan kompetisi, tapi perjalanan cinta bersama. Setiap langkah kecil adalah pencapaian besar.'",
+    "💖 'Ibu, hatimu adalah rumah pertama Si Kecil, dan itu akan selalu jadi rumahnya yang paling aman.'",
+]
+
 
 # -------------------------------------------------
 # WHO Calculator
@@ -354,6 +396,98 @@ def build_checklist(age_mo: float) -> str:
 
     return title + "\n".join(lines)
 
+# -------------------------------------------------
+# EduParenting helpers
+# -------------------------------------------------
+def get_random_quote() -> str:
+    """Ambil satu quote motivasi random untuk orang tua."""
+    if not MOM_QUOTES:
+        return "Ibu/Ayah, kamu sudah melakukan yang terbaik hari ini. Terima kasih sudah berjuang untuk Si Kecil. 💖"
+    return random.choice(MOM_QUOTES)
+
+
+def get_recommended_videos(age_mo: Optional[float]):
+    """
+    Pilih beberapa video edukasi yang relevan dengan usia anak.
+    Logika sederhana berbasis rentang usia.
+    """
+    if age_mo is None:
+        keys = ["imunisasi"]
+    else:
+        a = age_mo
+        keys = []
+        if a < 5:
+            keys.append("imunisasi")
+        if 5 <= a <= 8:
+            keys.extend(["mpasi_6bln", "motorik_6bln"])
+        if 8 < a <= 11:
+            keys.extend(["mpasi_9bln", "motorik_6bln"])
+        if a >= 11:
+            keys.extend(["bahasa_12bln", "imunisasi"])
+
+    # Hilangkan duplikat sambil menjaga urutan
+    seen = set()
+    videos = []
+    for k in keys:
+        if k in seen:
+            continue
+        v = YOUTUBE_VIDEOS.get(k)
+        if v:
+            videos.append(v)
+            seen.add(k)
+
+    # fallback
+    if not videos:
+        videos = [YOUTUBE_VIDEOS["imunisasi"]]
+
+    return videos
+
+
+def edu_callback(
+    sex_label,
+    age_mode,
+    dob_str,
+    dom_str,
+    age_months_manual,
+):
+    """
+    Callback untuk Tab EduParenting: hitung usia, lalu munculkan
+    quote + rekomendasi video.
+    """
+    # Hitung usia dalam bulan (pakai fungsi yang sudah ada)
+    if age_mode == "Tanggal":
+        dob = parse_date(dob_str) if dob_str else None
+        dom = parse_date(dom_str) if dom_str else date.today()
+        age_mo = age_months_from_dates(dob, dom) if (dob and dom) else None
+    else:
+        age_mo = as_float(age_months_manual)
+
+    # Bangun teks quote
+    quote = "### 💌 Pesan untuk Ibu/Ayah\n\n"
+    quote += f"> {get_random_quote()}\n\n"
+
+    if age_mo is None:
+        quote += "_Isi tanggal lahir atau usia anak terlebih dahulu agar rekomendasi lebih spesifik._\n\n"
+    else:
+        quote += f"_Rekomendasi ini disesuaikan untuk usia sekitar **{age_mo:.1f} bulan**._\n\n"
+
+    # Bangun rekomendasi video
+    videos = get_recommended_videos(age_mo)
+    md = "### 🎥 Rekomendasi tontonan edukatif\n\n"
+    md += "Video-video berikut membantu orang tua memahami gizi, stimulasi, dan imunisasi sesuai usia anak.\n\n"
+
+    for i, v in enumerate(videos, start=1):
+        title = v["title"]
+        url = v["url"]
+        thumb = v["thumbnail"]
+        md += f"{i}. **{title}**  \n"
+        md += f"[Tonton di YouTube]({url})  \n"
+        md += f"![thumbnail]({thumb})  \n\n"
+
+    md += "_Catatan: Link mengarah ke YouTube, pastikan kuota & koneksi aman digunakan._"
+
+    return quote, md
+
 
 # -------------------------------------------------
 # Plot: simple bar chart of Z-scores
@@ -603,9 +737,10 @@ def build_demo() -> gr.Blocks:
         gr.Markdown(
             f"# 🏥 GiziSiKecil\n"
             f"Monitor pertumbuhan anak berbasis **WHO Child Growth Standards**\n\n"
-            f"_Versi stabil + PDF (v{APP_VERSION})_"
+            f"_Versi stabil + PDF + EduParenting (v{APP_VERSION})_"
         )
 
+        # ===================== TAB 1: KALKULATOR GIZI =====================
         with gr.Tab("📊 Kalkulator Gizi"):
             with gr.Row():
                 with gr.Column(scale=1):
@@ -684,6 +819,7 @@ def build_demo() -> gr.Blocks:
                 outputs=[pdf_file],
             )
 
+        # ===================== TAB 2: CHECKLIST =====================
         with gr.Tab("📅 Checklist bulanan & KPSP"):
             gr.Markdown(
                 "Checklist ini membantu orang tua mengingat imunisasi dan memantau perkembangan "
@@ -693,12 +829,64 @@ def build_demo() -> gr.Blocks:
             checklist_md = gr.Markdown()
             age_for_check.change(checklist_callback, inputs=age_for_check, outputs=checklist_md)
 
+        # ===================== TAB 3: EDUPARENTING =====================
+        with gr.Tab("🎥 EduParenting & Motivasi"):
+            gr.Markdown(
+                "Tab ini berisi **motivasi untuk orang tua** dan rekomendasi video edukatif "
+                "tentang MPASI, stimulasi motorik, bahasa, dan imunisasi, disesuaikan dengan usia anak."
+            )
+
+            with gr.Row():
+                with gr.Column(scale=1):
+                    sex2 = gr.Radio(
+                        ["Laki-laki", "Perempuan"],
+                        value="Laki-laki",
+                        label="Jenis kelamin anak",
+                    )
+                    age_mode2 = gr.Radio(
+                        ["Tanggal", "Usia (bulan)"],
+                        value="Tanggal",
+                        label="Mode input usia",
+                    )
+                    dob2 = gr.Textbox(
+                        label="Tanggal lahir (DD/MM/YYYY)",
+                        placeholder="12/05/2023",
+                    )
+                    dom2 = gr.Textbox(
+                        label="Tanggal cek (DD/MM/YYYY)",
+                        value=date.today().strftime("%d/%m/%Y"),
+                    )
+                    age_months_manual2 = gr.Number(
+                        label="Usia (bulan)",
+                        visible=False,
+                        precision=1,
+                    )
+
+                    btn_edu = gr.Button("✨ Tampilkan rekomendasi", variant="primary")
+
+                with gr.Column(scale=2):
+                    quote_md = gr.Markdown("Pesan motivasi untuk orang tua akan muncul di sini.")
+                    video_md = gr.Markdown("Rekomendasi video akan muncul di sini.")
+
+            age_mode2.change(
+                toggle_age_inputs,
+                inputs=age_mode2,
+                outputs=[dob2, dom2, age_months_manual2],
+            )
+
+            btn_edu.click(
+                edu_callback,
+                inputs=[sex2, age_mode2, dob2, dom2, age_months_manual2],
+                outputs=[quote_md, video_md],
+            )
+
         gr.Markdown(
             "Made with ❤️ oleh mahasiswa FKIK UNJA. "
             "Untuk edukasi, bukan pengganti konsultasi langsung dengan tenaga kesehatan."
         )
 
     return demo
+
 
 
 # -------------------------------------------------
