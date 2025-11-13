@@ -30,12 +30,17 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # Import pygrowup dari folder lokal
+# GANTI SEMUA KEMUNCULAN 'pygrowup' jadi 'pygrowup2'
+
+# Di bagian import (sekitar line 50)
 try:
-    from pygrowup2 import Calculator  # GANTI dari pygrowup
+    from pygrowup2 import Calculator  # GANTI SINI
     print("✅ WHO Calculator (pygrowup2) loaded successfully")
 except ImportError as e:
-    print(f"❌ CRITICAL: pygrowup2 not installed! Run: pip install pygrowup2")
+    print(f"❌ CRITICAL: pygrowup2 not found! Install: pip install pygrowup2==0.8.2")
     sys.exit(1)
+
+# Hapus duplikat import yang ada (cari 'pygrowup' lainnya)
     
 # Numeric & Scientific
 import numpy as np
