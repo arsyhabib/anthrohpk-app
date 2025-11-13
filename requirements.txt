@@ -1,18 +1,39 @@
-fastapi==0.115.5
-starlette==0.40.0
-pydantic==2.9.2
-pydantic_core==2.23.4
+# ============================================
+# GiziSiKecil - Production Requirements
+# Fixed version without Git dependencies
+# ============================================
+
+# Core Web Framework
+fastapi==0.115.4
 uvicorn[standard]==0.32.0
-gradio==4.44.0
-huggingface-hub==0.20.3
-numpy==1.24.3
-scipy==1.11.4
-matplotlib==3.8.4
-pillow==10.4.0
-reportlab==4.2.2
-qrcode==7.4.2
-requests==2.31.0
-python-dateutil==2.8.2
-python-multipart==0.0.9
-gunicorn==21.2.0
-pygrowup @ git+https://github.com/natelandau/pygrowup.git@main
+gradio==5.6.0
+
+# Scientific Computing
+numpy==1.26.4
+scipy==1.14.1
+
+# Data Visualization
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# Image Processing
+Pillow==11.0.0
+qrcode==8.0
+
+# PDF Generation
+reportlab==4.2.5
+
+# HTTP Client
+requests==2.32.3
+
+# Geolocation
+geopy==2.4.1
+
+# Data Processing
+python-multipart==0.0.17
+
+# ============================================
+# CATATAN PENTING:
+# pygrowup sudah ada di folder lokal /pygrowup
+# Tidak perlu install dari Git!
+# ============================================
