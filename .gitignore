@@ -1,21 +1,219 @@
-# File: .gitignore (versi FIX)
-# Byte-compiled
+# ═══════════════════════════════════════════════════════════════════
+# .gitignore for AnthroHPK v3.0
+# Production-ready configuration for Python/Gradio/FastAPI deployment
+# ═══════════════════════════════════════════════════════════════════
+
+# ───────────────────────────────────────────────────────────────────
+# Python Bytecode & Cache
+# ───────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
 
-# Virtual environment
+# Python C extensions
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# ───────────────────────────────────────────────────────────────────
+# Virtual Environments (DON'T commit these!)
+# ───────────────────────────────────────────────────────────────────
+venv/
+env/
+ENV/
 .venv/
-.env
+.ENV/
+pip-log.txt
+pip-delete-this-directory.txt
 
-# OS files
+# ───────────────────────────────────────────────────────────────────
+# IDE & Editor Files
+# ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
+*.sublime-project
+*.sublime-workspace
 
-# Tapi JANGAN ignore static dan outputs sepenuhnya
-# Hanya ignore isi dinamisnya, TAPI buat folder-nya tetap
+# ───────────────────────────────────────────────────────────────────
+# Operating System Files
+# ───────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ───────────────────────────────────────────────────────────────────
+# Logs & Temporary Files
+# ───────────────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.temp
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# ───────────────────────────────────────────────────────────────────
+# Environment Variables (SECURITY: Never commit credentials!)
+# ───────────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+
+# ───────────────────────────────────────────────────────────────────
+# Testing & Coverage
+# ───────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# ───────────────────────────────────────────────────────────────────
+# Jupyter Notebook
+# ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints
+*.ipynb
+
+# ───────────────────────────────────────────────────────────────────
+# MyPy Type Checker
+# ───────────────────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ───────────────────────────────────────────────────────────────────
+# Pytype Static Analyzer
+# ───────────────────────────────────────────────────────────────────
+.pytype/
+
+# ───────────────────────────────────────────────────────────────────
+# ⚠️ OUTPUTS - Dynamic Generated Files (Don't commit user data!)
+# ───────────────────────────────────────────────────────────────────
 outputs/*.pdf
 outputs/*.csv
-static/sticker_*.png  # Hanya ignore file PNG, bukan folder
+outputs/*.xlsx
+outputs/*.zip
 
-# Keep WHO tables!
+# But KEEP the outputs folder structure itself
+!outputs/.gitkeep
+
+# ───────────────────────────────────────────────────────────────────
+# ⚠️ STATIC - Generated Stickers (Downloaded at runtime)
+# ───────────────────────────────────────────────────────────────────
+static/sticker_*.png
+static/*.tmp
+
+# But KEEP the static folder structure
+!static/.gitkeep
+
+# ───────────────────────────────────────────────────────────────────
+# ✅ EXCEPTIONS - Files That MUST Be Committed
+# ───────────────────────────────────────────────────────────────────
+
+# CRITICAL: Keep WHO reference tables (required for calculator)
 !pygrowup/tables/*.csv
+!pygrowup/tables/*.txt
+!pygrowup/*.py
+
+# CRITICAL: Keep essential config files
+!requirements.txt
+!python-version.txt
+!app.py
+!README.md
+!LICENSE
+
+# ───────────────────────────────────────────────────────────────────
+# Matplotlib Temp Files
+# ───────────────────────────────────────────────────────────────────
+matplotlib-*
+*.png.tmp
+
+# ───────────────────────────────────────────────────────────────────
+# Gradio Cache & Temp
+# ───────────────────────────────────────────────────────────────────
+gradio_cached_examples/
+flagged/
+*.gradio
+
+# ───────────────────────────────────────────────────────────────────
+# FastAPI / Uvicorn
+# ───────────────────────────────────────────────────────────────────
+*.sock
+
+# ───────────────────────────────────────────────────────────────────
+# Database Files (if you add DB later)
+# ───────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# ───────────────────────────────────────────────────────────────────
+# Backup Files
+# ───────────────────────────────────────────────────────────────────
+*.bak
+*.backup
+*_backup
+*.old
+
+# ───────────────────────────────────────────────────────────────────
+# Compressed Files (unless intentional)
+# ───────────────────────────────────────────────────────────────────
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# EXCEPTION: Keep the pygrowup package if distributed as .tar.gz
+!pygrowup*.tar.gz
+
+# ───────────────────────────────────────────────────────────────────
+# Security & Credentials (CRITICAL!)
+# ───────────────────────────────────────────────────────────────────
+secrets.json
+credentials.json
+*.pem
+*.key
+*.crt
+.ssh/
+
+# ───────────────────────────────────────────────────────────────────
+# Documentation Build
+# ───────────────────────────────────────────────────────────────────
+docs/_build/
+site/
+
+# ───────────────────────────────────────────────────────────────────
+# Package Manager Locks (optional - include if you want reproducibility)
+# ───────────────────────────────────────────────────────────────────
+# Uncomment if you want to ignore lock files:
+# poetry.lock
+# Pipfile.lock
+# yarn.lock
+# package-lock.json
+
+# ═══════════════════════════════════════════════════════════════════
+# END OF .gitignore
+# ═══════════════════════════════════════════════════════════════════
