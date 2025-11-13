@@ -45,6 +45,8 @@ from scipy.special import erf
 import matplotlib
 matplotlib.use('Agg')  # Backend non-GUI untuk server
 import matplotlib.pyplot as plt
+plt.ioff()  # Disable interactive mode
+plt.rcParams.update({'figure.max_open_warning': 0})  # Avoid memory leak
 from matplotlib.figure import Figure
 
 # Image Processing
@@ -2604,6 +2606,7 @@ blockquote {
 """
 
 # Build Gradio Interface
+gr.set_static_paths(paths=["static/"])
 with gr.Blocks(
     title=APP_TITLE,
     theme=gr.themes.Soft(
@@ -2616,6 +2619,10 @@ with gr.Blocks(
 ) as demo:
     
     # Header
+    gr.Markdown("""
+⚠️ **Server free tier akan sleep setelah 15 menit idle**. 
+Data checklist akan hilang. SELALU gunakan tombol Export PDF untuk menyimpan!
+""")
     gr.Markdown(f"""
     # 🏥 **GiziSiKecil** - Monitor Pertumbuhan Anak Profesional
     ### 💕 WHO Child Growth Standards + Checklist Sehat Bulanan (0-60 Bulan)
@@ -2923,6 +2930,7 @@ blockquote {
 """
 
 # Build Gradio Interface
+gr.set_static_paths(paths=["static/"])
 with gr.Blocks(
     title=APP_TITLE,
     theme=gr.themes.Soft(
