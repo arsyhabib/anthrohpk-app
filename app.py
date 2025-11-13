@@ -107,11 +107,67 @@ print("✅ All imports successful")
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Application Metadata
-APP_VERSION = "3.0.0"
+APP_VERSION = "3.1.0"
 APP_TITLE = "AnthroHPK - Monitor Pertumbuhan Anak Profesional"
 APP_DESCRIPTION = "Aplikasi berbasis WHO Child Growth Standards untuk pemantauan antropometri anak 0-60 bulan"
 CONTACT_WA = "6285888858160"
 BASE_URL = "https://anthrohpk-app.onrender.com"
+
+# Premium Packages Configuration
+PREMIUM_PACKAGES = {
+    "silver": {
+        "name": "Silver",
+        "price": 10000,
+        "features": [
+            "🚫 Bebas Iklan",
+            "📊 Semua fitur dasar",
+            "💾 Export unlimited"
+        ],
+        "color": "#C0C0C0"
+    },
+    "gold": {
+        "name": "Gold",
+        "price": 50000,
+        "features": [
+            "🚫 Bebas Iklan",
+            "🔔 Notifikasi Browser Customizable",
+            "💬 3x Konsultasi 30 menit via WhatsApp dengan Ahli Gizi",
+            "📊 Semua fitur dasar",
+            "💾 Export unlimited",
+            "⭐ Priority support"
+        ],
+        "color": "#FFD700"
+    }
+}
+
+# Notification Templates
+NOTIFICATION_TEMPLATES = {
+    "monthly_checkup": {
+        "title": "🩺 Waktunya Pemeriksaan Bulanan!",
+        "body": "Sudah 30 hari sejak pemeriksaan terakhir. Yuk cek pertumbuhan {child_name}!",
+        "icon": "📊"
+    },
+    "immunization": {
+        "title": "💉 Jadwal Imunisasi",
+        "body": "Jangan lupa! {child_name} perlu imunisasi {vaccine_name} hari ini.",
+        "icon": "💉"
+    },
+    "milestone": {
+        "title": "🎯 Milestone Alert",
+        "body": "{child_name} sekarang {age} bulan! Cek milestone perkembangan.",
+        "icon": "🌟"
+    },
+    "nutrition": {
+        "title": "🍽️ Reminder Nutrisi",
+        "body": "Waktunya memberi makan {child_name}. Menu hari ini: {menu}",
+        "icon": "🥗"
+    },
+    "custom": {
+        "title": "🔔 Pengingat Custom",
+        "body": "{message}",
+        "icon": "⏰"
+    }
+}
 
 # Directories Setup
 STATIC_DIR = "static"
@@ -2792,6 +2848,53 @@ CUSTOM_CSS = """
     box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important;
 }
 
+/* Premium Buttons */
+.premium-silver {
+    background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%) !important;
+    color: #333 !important;
+    border: 2px solid #A0A0A0 !important;
+    font-weight: bold !important;
+    padding: 15px 30px !important;
+    border-radius: 10px !important;
+    transition: all 0.3s ease !important;
+}
+
+.premium-gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+    color: #000 !important;
+    border: 2px solid #DAA520 !important;
+    font-weight: bold !important;
+    padding: 15px 30px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4) !important;
+    transition: all 0.3s ease !important;
+}
+
+.premium-gold:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important;
+}
+
+/* Notification Panel */
+.notification-panel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 15px;
+    color: white;
+    margin: 15px 0;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.notification-enabled {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
 /* Blockquotes */
 blockquote {
     background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%);
@@ -2879,6 +2982,8 @@ with gr.Blocks(
     - ✅ Export PDF & CSV profesional
     - ✅ Checklist bulanan & KPSP screening
     - ✅ Rekomendasi gizi personalized
+    - 🔔 **NEW!** Notifikasi Browser (Premium Gold)
+    - ⭐ **NEW!** Paket Premium Silver & Gold
     
     ---
     
@@ -2888,6 +2993,97 @@ with gr.Blocks(
     
     ---
     """)
+    
+    # JavaScript for Browser Notifications
+    notification_js = """
+    <script>
+    // Browser Notification Manager
+    window.AnthroNotification = {
+        permission: 'default',
+        
+        // Request notification permission
+        async requestPermission() {
+            if (!("Notification" in window)) {
+                console.log("Browser tidak support notifikasi");
+                return false;
+            }
+            
+            if (Notification.permission === 'granted') {
+                this.permission = 'granted';
+                return true;
+            }
+            
+            if (Notification.permission !== 'denied') {
+                const permission = await Notification.requestPermission();
+                this.permission = permission;
+                return permission === 'granted';
+            }
+            
+            return false;
+        },
+        
+        // Send notification
+        send(title, body, icon = '🔔', tag = 'anthro-notification') {
+            if (this.permission !== 'granted') {
+                console.log('Permission not granted');
+                return;
+            }
+            
+            const options = {
+                body: body,
+                icon: 'https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/' + icon.codePointAt(0).toString(16) + '.png',
+                tag: tag,
+                badge: 'https://img.icons8.com/color/96/baby.png',
+                vibrate: [200, 100, 200],
+                requireInteraction: false,
+                silent: false
+            };
+            
+            try {
+                const notification = new Notification(title, options);
+                
+                notification.onclick = function(event) {
+                    event.preventDefault();
+                    window.focus();
+                    notification.close();
+                };
+                
+                // Auto close after 10 seconds
+                setTimeout(() => notification.close(), 10000);
+                
+            } catch (e) {
+                console.error('Notification error:', e);
+            }
+        },
+        
+        // Schedule notification
+        schedule(title, body, delayMinutes, icon = '🔔') {
+            const delayMs = delayMinutes * 60 * 1000;
+            setTimeout(() => {
+                this.send(title, body, icon, 'scheduled-notification');
+            }, delayMs);
+            console.log(`Notifikasi dijadwalkan ${delayMinutes} menit dari sekarang`);
+        },
+        
+        // Check permission status
+        checkPermission() {
+            if ("Notification" in window) {
+                this.permission = Notification.permission;
+                return this.permission;
+            }
+            return 'unsupported';
+        }
+    };
+    
+    // Initialize on load
+    window.addEventListener('load', function() {
+        window.AnthroNotification.checkPermission();
+        console.log('AnthroHPK Notification System Ready');
+    });
+    </script>
+    """
+    
+    gr.HTML(notification_js)
     
     # State untuk menyimpan payload
     state_payload = gr.State({})
@@ -3368,6 +3564,448 @@ checklist yang disesuaikan dengan status gizi anak.
             
             © 2024 AnthroHPK. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
             """)
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # TAB 4: PREMIUM & NOTIFIKASI
+        # ═══════════════════════════════════════════════════════════════════
+        
+        with gr.TabItem("⭐ Premium & Notifikasi", id=3):
+            gr.Markdown("""
+            ## 🎁 Upgrade ke Premium AnthroHPK
+            
+            Nikmati fitur eksklusif untuk pemantauan pertumbuhan anak yang lebih optimal!
+            """)
+            
+            # PREMIUM PACKAGES
+            with gr.Row():
+                # SILVER PACKAGE
+                with gr.Column():
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #E8E8E8 0%, #F5F5F5 100%); 
+                                padding: 30px; border-radius: 20px; 
+                                border: 3px solid #C0C0C0;
+                                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                                text-align: center;'>
+                        <h2 style='color: #555; margin-top: 0;'>
+                            🥈 Paket SILVER
+                        </h2>
+                        <div style='font-size: 48px; font-weight: bold; color: #333; margin: 20px 0;'>
+                            Rp 10.000
+                        </div>
+                        <div style='font-size: 14px; color: #666; margin-bottom: 20px;'>
+                            /bulan
+                        </div>
+                        
+                        <div style='text-align: left; background: white; padding: 20px; 
+                                    border-radius: 10px; margin: 20px 0;'>
+                            <h4 style='color: #333; margin-top: 0;'>✨ Fitur Silver:</h4>
+                            <ul style='list-style: none; padding: 0;'>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🚫 <strong>Bebas Iklan</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    📊 Semua fitur dasar
+                                </li>
+                                <li style='padding: 8px 0;'>
+                                    💾 Export unlimited
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    """)
+                    
+                    silver_btn = gr.Button(
+                        "💳 Upgrade ke Silver",
+                        variant="secondary",
+                        size="lg",
+                        elem_classes=["premium-silver", "big-button"]
+                    )
+                
+                # GOLD PACKAGE (RECOMMENDED)
+                with gr.Column():
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
+                                padding: 30px; border-radius: 20px; 
+                                border: 3px solid #DAA520;
+                                box-shadow: 0 12px 30px rgba(255, 215, 0, 0.4);
+                                text-align: center;
+                                position: relative;'>
+                        <div style='position: absolute; top: -15px; right: 20px; 
+                                    background: #FF4444; color: white; 
+                                    padding: 8px 20px; border-radius: 20px;
+                                    font-weight: bold; font-size: 12px;'>
+                            🔥 REKOMENDASI
+                        </div>
+                        
+                        <h2 style='color: #000; margin-top: 0;'>
+                            🥇 Paket GOLD
+                        </h2>
+                        <div style='font-size: 48px; font-weight: bold; color: #000; margin: 20px 0;'>
+                            Rp 50.000
+                        </div>
+                        <div style='font-size: 14px; color: #333; margin-bottom: 20px;'>
+                            /bulan - Hemat 50%!
+                        </div>
+                        
+                        <div style='text-align: left; background: white; padding: 20px; 
+                                    border-radius: 10px; margin: 20px 0;'>
+                            <h4 style='color: #333; margin-top: 0;'>⭐ Fitur Gold:</h4>
+                            <ul style='list-style: none; padding: 0;'>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🚫 <strong>Bebas Iklan</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🔔 <strong>Notifikasi Browser Customizable</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    💬 <strong>3x Konsultasi 30 menit</strong><br/>
+                                    <span style='font-size: 12px; color: #666;'>
+                                    via WhatsApp dengan Ahli Gizi
+                                    </span>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    📊 Semua fitur dasar
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    💾 Export unlimited
+                                </li>
+                                <li style='padding: 8px 0;'>
+                                    ⚡ Priority support
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    """)
+                    
+                    gold_btn = gr.Button(
+                        "👑 Upgrade ke Gold",
+                        variant="primary",
+                        size="lg",
+                        elem_classes=["premium-gold", "big-button"]
+                    )
+            
+            premium_status = gr.Markdown("", visible=False)
+            
+            gr.Markdown("---")
+            
+            # NOTIFICATION SYSTEM (Full Functional)
+            gr.Markdown("""
+            ## 🔔 Sistem Notifikasi Browser (Premium Gold)
+            
+            Dapatkan pengingat otomatis untuk:
+            - 🩺 Jadwal pemeriksaan bulanan
+            - 💉 Jadwal imunisasi
+            - 🎯 Milestone perkembangan
+            - 🍽️ Reminder nutrisi/MPASI
+            - ⏰ Custom reminder
+            """)
+            
+            with gr.Row():
+                with gr.Column(scale=6):
+                    gr.Markdown("### 🔐 Aktifkan Notifikasi Browser")
+                    
+                    enable_notif_btn = gr.Button(
+                        "🔔 Aktifkan Notifikasi",
+                        variant="primary",
+                        size="lg"
+                    )
+                    
+                    notif_status = gr.HTML("""
+                    <div id='notif-status' style='padding: 15px; background: #f0f0f0; 
+                                                   border-radius: 10px; margin: 15px 0;
+                                                   text-align: center;'>
+                        <p style='margin: 0; color: #666;'>
+                            ℹ️ Klik tombol di atas untuk mengaktifkan notifikasi browser
+                        </p>
+                    </div>
+                    """)
+                    
+                    gr.Markdown("### ⏰ Atur Reminder Custom")
+                    
+                    with gr.Group():
+                        reminder_title = gr.Textbox(
+                            label="Judul Reminder",
+                            placeholder="Contoh: Beri makan Si Kecil",
+                            value="Reminder GiziSiKecil"
+                        )
+                        
+                        reminder_message = gr.Textbox(
+                            label="Pesan Reminder",
+                            placeholder="Contoh: Waktunya beri makan bubur bayi",
+                            lines=2
+                        )
+                        
+                        reminder_delay = gr.Slider(
+                            minimum=1,
+                            maximum=60,
+                            value=5,
+                            step=1,
+                            label="Delay (menit)",
+                            info="Notifikasi akan muncul setelah X menit"
+                        )
+                        
+                        schedule_btn = gr.Button(
+                            "⏰ Jadwalkan Reminder",
+                            variant="secondary",
+                            size="lg"
+                        )
+                    
+                    reminder_status = gr.Markdown("", visible=False)
+                
+                with gr.Column(scale=4):
+                    gr.Markdown("### 💡 Panduan Notifikasi")
+                    
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                padding: 25px; border-radius: 15px; color: white;
+                                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);'>
+                        
+                        <h4 style='color: white; margin-top: 0;'>
+                            📱 Cara Mengaktifkan:
+                        </h4>
+                        
+                        <ol style='margin: 15px 0; padding-left: 25px; line-height: 1.8;'>
+                            <li>Klik tombol "Aktifkan Notifikasi"</li>
+                            <li>Browser akan minta izin - klik <strong>Allow/Izinkan</strong></li>
+                            <li>Setelah aktif, Anda bisa atur reminder custom</li>
+                            <li>Notifikasi akan muncul otomatis sesuai jadwal</li>
+                        </ol>
+                        
+                        <div style='background: rgba(255,255,255,0.2); padding: 15px; 
+                                    border-radius: 10px; margin-top: 20px;'>
+                            <strong>⚠️ Penting:</strong>
+                            <ul style='margin: 10px 0; padding-left: 20px; font-size: 13px;'>
+                                <li>Browser harus support notifikasi (Chrome, Firefox, Edge)</li>
+                                <li>Jangan tutup tab browser jika ingin menerima notifikasi</li>
+                                <li>Pastikan notifikasi tidak di-block di pengaturan browser</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='background: rgba(255,255,255,0.2); padding: 15px; 
+                                    border-radius: 10px; margin-top: 15px;'>
+                            <strong>🎯 Tips:</strong>
+                            <p style='margin: 10px 0 0 0; font-size: 13px;'>
+                                Gunakan reminder untuk jadwal rutin seperti:<br/>
+                                • Beri makan bayi (setiap 3 jam)<br/>
+                                • Cek popok (setiap 2 jam)<br/>
+                                • Waktu tidur siang<br/>
+                                • Jadwal imunisasi
+                            </p>
+                        </div>
+                    </div>
+                    """)
+                    
+                    gr.Markdown("### 🎁 Template Reminder")
+                    
+                    template_choice = gr.Dropdown(
+                        choices=[
+                            "Pemeriksaan Bulanan",
+                            "Jadwal Imunisasi",
+                            "Milestone Perkembangan",
+                            "Reminder Nutrisi",
+                            "Custom"
+                        ],
+                        value="Custom",
+                        label="Pilih Template",
+                        info="Pilih template untuk quick setup"
+                    )
+                    
+                    use_template_btn = gr.Button(
+                        "📋 Gunakan Template",
+                        variant="secondary"
+                    )
+            
+            # JavaScript Handlers for Notifications
+            enable_notif_js = """
+            <script>
+            function enableNotifications() {
+                window.AnthroNotification.requestPermission().then(granted => {
+                    const statusDiv = document.getElementById('notif-status');
+                    if (granted) {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>✅ Notifikasi Berhasil Diaktifkan!</strong><br/>
+                                <span style='font-size: 13px;'>Anda akan menerima reminder sesuai jadwal</span>
+                            </div>
+                        `;
+                        
+                        // Send test notification
+                        setTimeout(() => {
+                            window.AnthroNotification.send(
+                                '🎉 Selamat!',
+                                'Notifikasi browser berhasil diaktifkan. Anda akan menerima reminder untuk tumbuh kembang anak.',
+                                '🔔'
+                            );
+                        }, 1000);
+                        
+                        return 'Notifikasi diaktifkan! Cek notifikasi test yang muncul.';
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: #ff6b6b; 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>❌ Notifikasi Ditolak</strong><br/>
+                                <span style='font-size: 13px;'>
+                                    Mohon izinkan notifikasi di pengaturan browser Anda
+                                </span>
+                            </div>
+                        `;
+                        return 'Notifikasi ditolak. Cek pengaturan browser.';
+                    }
+                });
+                return 'Memproses...';
+            }
+            </script>
+            """
+            
+            gr.HTML(enable_notif_js)
+            
+            # Event Handlers
+            def handle_enable_notification():
+                return gr.HTML.update(value="""
+                <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                           border-radius: 10px; color: white; text-align: center; margin: 15px 0;'>
+                    <strong>✅ Notifikasi Browser Diaktifkan!</strong><br/>
+                    <span style='font-size: 13px;'>
+                        Browser notification sudah aktif. Anda akan menerima reminder otomatis.
+                    </span>
+                </div>
+                <script>
+                enableNotifications();
+                </script>
+                """)
+            
+            def handle_schedule_reminder(title, message, delay):
+                if not title or not message:
+                    return "❌ Judul dan pesan tidak boleh kosong!"
+                
+                js_code = f"""
+                <script>
+                window.AnthroNotification.schedule(
+                    '{title}',
+                    '{message}',
+                    {delay},
+                    '⏰'
+                );
+                alert('✅ Reminder dijadwalkan! Akan muncul dalam {delay} menit.');
+                </script>
+                """
+                
+                return (
+                    f"✅ **Reminder Dijadwalkan!**\n\n"
+                    f"**Judul:** {title}\n\n"
+                    f"**Pesan:** {message}\n\n"
+                    f"**Waktu:** {delay} menit dari sekarang\n\n"
+                    f"Notifikasi akan muncul otomatis. Jangan tutup tab browser!" +
+                    js_code
+                )
+            
+            def handle_use_template(template):
+                templates = {
+                    "Pemeriksaan Bulanan": (
+                        "🩺 Pemeriksaan Bulanan",
+                        "Sudah saatnya pemeriksaan bulanan! Ukur berat, tinggi, dan lingkar kepala anak.",
+                        30
+                    ),
+                    "Jadwal Imunisasi": (
+                        "💉 Jadwal Imunisasi",
+                        "Jangan lupa jadwal imunisasi hari ini! Cek jadwal lengkap di aplikasi.",
+                        60
+                    ),
+                    "Milestone Perkembangan": (
+                        "🎯 Cek Milestone",
+                        "Waktunya cek milestone perkembangan anak. Lihat checklist KPSP.",
+                        120
+                    ),
+                    "Reminder Nutrisi": (
+                        "🍽️ Waktu Makan",
+                        "Saatnya memberi makan anak. Pastikan menu 4 bintang!",
+                        180
+                    )
+                }
+                
+                if template in templates:
+                    title, message, delay = templates[template]
+                    return title, message, delay
+                return "", "", 5
+            
+            def handle_premium_upgrade(package):
+                pkg_info = PREMIUM_PACKAGES.get(package, {})
+                price = pkg_info.get('price', 0)
+                price_formatted = f"Rp {price:,}".replace(',', '.')
+                
+                wa_message = f"Halo AnthroHPK, saya ingin upgrade ke paket {package.upper()} ({price_formatted}/bulan)"
+                wa_link = f"https://wa.me/{CONTACT_WA}?text={wa_message.replace(' ', '%20')}"
+                
+                return gr.Markdown.update(
+                    value=f"""
+## 🎉 Terima kasih telah memilih paket {package.upper()}!
+
+**Harga:** {price_formatted}/bulan
+
+**Langkah selanjutnya:**
+1. Klik tombol WhatsApp di bawah
+2. Konfirmasi pembelian dengan admin
+3. Lakukan pembayaran
+4. Akun premium akan diaktifkan dalam 5 menit
+
+<div style='text-align: center; margin: 30px 0;'>
+    <a href='{wa_link}' target='_blank'
+       style='display: inline-block; padding: 20px 40px; 
+              background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+              color: white; text-decoration: none; border-radius: 15px;
+              font-size: 18px; font-weight: bold;
+              box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);'>
+        💬 Hubungi Admin via WhatsApp
+    </a>
+</div>
+
+**Metode Pembayaran:**
+- 💳 Transfer Bank (BCA, Mandiri, BRI)
+- 📱 E-Wallet (GoPay, OVO, DANA)
+- 💰 QRIS
+
+*Fitur premium akan aktif otomatis setelah pembayaran terverifikasi*
+""",
+                    visible=True
+                )
+            
+            # Connect event handlers
+            enable_notif_btn.click(
+                fn=handle_enable_notification,
+                outputs=[notif_status]
+            )
+            
+            schedule_btn.click(
+                fn=handle_schedule_reminder,
+                inputs=[reminder_title, reminder_message, reminder_delay],
+                outputs=[reminder_status]
+            ).then(
+                lambda: gr.update(visible=True),
+                outputs=[reminder_status]
+            )
+            
+            use_template_btn.click(
+                fn=handle_use_template,
+                inputs=[template_choice],
+                outputs=[reminder_title, reminder_message, reminder_delay]
+            )
+            
+            silver_btn.click(
+                fn=lambda: handle_premium_upgrade("silver"),
+                outputs=[premium_status]
+            ).then(
+                lambda: gr.update(visible=True),
+                outputs=[premium_status]
+            )
+            
+            gold_btn.click(
+                fn=lambda: handle_premium_upgrade("gold"),
+                outputs=[premium_status]
+            ).then(
+                lambda: gr.update(visible=True),
+                outputs=[premium_status]
+            )
     
     # Footer
     gr.Markdown(f"""
