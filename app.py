@@ -7499,6 +7499,14 @@ window.AnthroHPK_Library = {
     // Fungsi untuk menginisialisasi
     init: function() {
         console.log('AnthroHPK Library Init v3.2.2');
+        try {
+            if (typeof ARTIKEL_LOKAL_DATABASE !== 'undefined') {
+                window.ARTIKEL_DB = ARTIKEL_LOKAL_DATABASE;
+                console.log('Article database cached:', window.ARTIKEL_DB.length, 'articles');
+            }
+        } catch(e) {
+            console.warn('Could not cache article database:', e);
+        }
         
         // Setup listeners untuk filter
         const searchInput = document.getElementById('library-search');
@@ -7555,60 +7563,139 @@ window.AnthroHPK_Library = {
     },
 
     // Fungsi untuk menampilkan modal dan memicu pemuatan konten
+// Fungsi untuk menampilkan modal dan memicu pemuatan konten
     showArticleContent: function(index) {
+        console.log('showArticleContent called with index:', index);
+        
+        // Cek apakah komponen sudah siap
+        if (!this.indexLoader) {
+            console.error('indexLoader not found');
+            // Coba inisialisasi ulang
+            this.init();
+        }
+        
+        if (!this.contentHolder) {
+            console.error('contentHolder not found');
+            this.init();
+        }
+        
+        if (!this.contentModalBody) {
+            console.error('contentModalBody not found');
+            const modalBody = document.getElementById('article-modal-body-dynamic');
+            if (modalBody) {
+                this.contentModalBody = modalBody;
+            }
+        }
+        
+        // Jika masih tidak ada, tampilkan error
         if (!this.indexLoader || !this.contentHolder || !this.contentModalBody) {
-            console.error('Library components not initialized. Cannot show article.');
-            alert('Terjadi kesalahan, silakan refresh halaman.');
+            console.error('Library components still not initialized');
+            alert('Terjadi kesalahan. Silakan refresh halaman.');
             return;
         }
 
         const modal = document.getElementById('article-modal-dynamic');
+        if (!modal) {
+            console.error('Modal not found');
+            return;
+        }
         
         // Tampilkan modal dengan status loading
-        this.contentModalBody.innerHTML = 
-            '<div class="loading-spinner">Sedang memuat artikel...</div>';
+        this.contentModalBody.innerHTML = `
+            <div style="text-align: center; padding: 50px;">
+                <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+                <p style="font-size: 18px; color: #666;">Sedang memuat artikel...</p>
+            </div>
+        `;
         modal.classList.add('visible');
-        document.body.style.overflow = 'hidden'; // Mencegah scroll di background
+        document.body.style.overflow = 'hidden';
 
-        // Panggil Python untuk memuat konten
-        // 1. Set nilai index ke komponen Gradio
-        this.indexLoader.value = index;
-        
-        // 2. Trigger perubahan dengan cara yang lebih reliable
-        this.indexLoader.dispatchEvent(new Event('input', { bubbles: true }));
-        this.indexLoader.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        // 3. Amati perubahan pada komponen output dengan timeout
-        const checkContent = () => {
-            const observer = new MutationObserver((mutations) => {
-                // Berhenti mengamati
-                observer.disconnect(); 
-                
-                // Ambil HTML yang sudah di-render oleh Gradio
-                const renderedHTML = this.contentHolder.innerHTML;
-                
-                // Masukkan ke modal
-                this.contentModalBody.innerHTML = renderedHTML;
-            });
+        // Method 1: Langsung load dari database (fallback jika Gradio tidak bekerja)
+        const loadDirectly = () => {
+            // Ambil data artikel langsung dari ARTIKEL_LOKAL_DATABASE yang sudah dimuat
+            if (typeof window.ARTIKEL_DB !== 'undefined' && window.ARTIKEL_DB[index]) {
+                const article = window.ARTIKEL_DB[index];
+                const content = `
+                    <h1>${article.title}</h1>
+                    <div style='padding: 10px 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;'>
+                        <p style='margin: 0; font-size: 14px; color: #555;'>
+                            <strong>Kategori:</strong> ${article.kategori}<br>
+                            <strong>Sumber:</strong> ${article.source}
+                        </p>
+                    </div>
+                    <div style="line-height: 1.8;">${article.full_content.replace(/\n/g, '<br>')}</div>
+                `;
+                this.contentModalBody.innerHTML = content;
+                return true;
+            }
+            return false;
+        };
 
-            observer.observe(this.contentHolder, {
-                childList: true,
-                subtree: true,
-                characterData: true
+        // Coba method langsung dulu
+        if (loadDirectly()) {
+            console.log('Article loaded directly from window.ARTIKEL_DB');
+            return;
+        }
+
+        // Method 2: Via Gradio (lebih lambat tapi lebih aman)
+        console.log('Loading via Gradio...');
+        
+        // Cari input element yang sebenarnya
+        let inputElement = this.indexLoader;
+        if (inputElement.tagName !== 'INPUT') {
+            // Jika bukan input, cari input di dalam element
+            inputElement = this.indexLoader.querySelector('input[type="number"]');
+        }
+        
+        if (inputElement) {
+            // Set value
+            inputElement.value = index;
+            
+            // Trigger berbagai event
+            ['input', 'change', 'blur'].forEach(eventType => {
+                const event = new Event(eventType, { bubbles: true, cancelable: true });
+                inputElement.dispatchEvent(event);
             });
             
-            // Timeout fallback jika tidak ada perubahan terdeteksi
-            setTimeout(() => {
-                observer.disconnect();
-                const content = this.contentHolder.innerHTML;
-                if (content && content.trim()) {
-                    this.contentModalBody.innerHTML = content;
-                }
-            }, 2000);
-        };
+            console.log('Gradio input triggered with value:', index);
+        }
         
-        // Delay sedikit untuk memastikan Gradio sudah memproses
-        setTimeout(checkContent, 100);
+        // Tunggu response dengan timeout
+        let attempts = 0;
+        const maxAttempts = 20; // 20 x 200ms = 4 detik
+        
+        const checkForContent = setInterval(() => {
+            attempts++;
+            
+            // Cek apakah ada konten baru di contentHolder
+            if (this.contentHolder && this.contentHolder.textContent.trim().length > 0) {
+                clearInterval(checkForContent);
+                
+                // Copy konten ke modal
+                this.contentModalBody.innerHTML = this.contentHolder.innerHTML;
+                console.log('Content loaded via Gradio');
+            }
+            
+            // Timeout setelah maxAttempts
+            if (attempts >= maxAttempts) {
+                clearInterval(checkForContent);
+                
+                // Jika masih gagal, tampilkan error
+                this.contentModalBody.innerHTML = `
+                    <div style="text-align: center; padding: 50px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                        <h3>Gagal Memuat Artikel</h3>
+                        <p>Silakan refresh halaman dan coba lagi.</p>
+                        <button onclick="location.reload()" 
+                                style="padding: 10px 20px; background: #667eea; color: white; 
+                                       border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
+                            Refresh Halaman
+                        </button>
+                    </div>
+                `;
+                console.error('Timeout loading article');
+            }
+        }, 200);
     },
 
     // Fungsi untuk menutup modal
