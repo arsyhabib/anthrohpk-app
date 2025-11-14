@@ -7167,28 +7167,22 @@ def render_perpustakaan_updated() -> str:
 
 def get_interactive_library_js_css() -> str:
     """
-    (REVISI v3.2.2 - COMPLETE FIX - NO UNICODE)
+    (REVISI v3.2.2 - LOGIC ERROR FIXED)
     Mengembalikan blok <style> dan <script> untuk perpustakaan interaktif.
     
-    CRITICAL FIXES:
-    1. Export database ke JavaScript (window.ARTIKEL_DB)
-    2. JavaScript init dengan delay
-    3. NO Unicode characters (semua diganti ASCII)
-    4. String penutup dipastikan ada
+    PERBAIKAN:
+    1. Menghapus ekspor 'window.ARTIKEL_DB' yang membingungkan dan tidak perlu.
+       Filter/Search bekerja dengan membaca atribut HTML, bukan variabel JS.
+    2. Menulis ulang 'showArticleContent' agar memicu backend Gradio (Python)
+       dengan mengubah nilai input angka tersembunyi ('.article-index-loader').
+    3. Menulis ulang 'init' untuk menambahkan 'MutationObserver' yang
+       memantau respons dari backend Python.
+    4. Observer menyalin HTML yang sudah di-render oleh Gradio (dari .article-content-holder)
+       ke dalam modal popup (.article-modal-body-dynamic).
+    5. Menambah delay inisialisasi agar Gradio selesai memuat DOM.
     """
     
-    # PART 1: EXPORT DATABASE KE JAVASCRIPT
-    import json
-    artikel_db_json = json.dumps(ARTIKEL_LOKAL_DATABASE, ensure_ascii=False)
-    
-    js_database_export = f"""
-<script>
-window.ARTIKEL_DB = {artikel_db_json};
-console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
-</script>
-    """
-    
-    # PART 2: CSS STYLES
+    # PART 1: CSS STYLES (Tidak berubah, tapi disertakan)
     css = """
 <style>
 /* Filter Bar */
@@ -7243,6 +7237,7 @@ console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
     box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
     overflow: hidden; transition: all 0.3s ease;
 }
+.article-card-v3[style*="display: none"] { display: none !important; }
 .article-card-v3:hover {
     transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: #ff9a9e;
 }
@@ -7344,7 +7339,7 @@ console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
 </style>
     """
     
-    # PART 3: JAVASCRIPT
+    # PART 2: JAVASCRIPT (REVISI TOTAL)
     js = """
 <script>
 window.AnthroHPK_Library = {
@@ -7359,8 +7354,9 @@ window.AnthroHPK_Library = {
             return;
         }
         
-        console.log('AnthroHPK Library Init v3.2.2');
+        console.log('AnthroHPK Library Init v3.2.2 (FIXED)');
         
+        // Delay untuk memastikan elemen Gradio sudah di-render
         setTimeout(() => {
             const searchInput = document.getElementById('library-search');
             const categoryFilter = document.getElementById('library-filter-category');
@@ -7379,23 +7375,55 @@ window.AnthroHPK_Library = {
                 console.log('Source listener attached');
             }
             
+            // Temukan komponen penghubung Gradio
             this.indexLoader = document.querySelector('.article-index-loader input[type="number"]');
             this.contentHolder = document.querySelector('.article-content-holder');
             this.contentModalBody = document.getElementById('article-modal-body-dynamic');
+
+            if (!this.indexLoader || !this.contentHolder || !this.contentModalBody) {
+                console.error('CRITICAL: Gradio bridge elements not found! (.article-index-loader, .article-content-holder, #article-modal-body-dynamic)');
+                return;
+            }
             
-            this.filterLibrary();
+            // Buat 'Observer' untuk memantau respons dari Python
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    // Cek apakah isi dari 'contentHolder' berubah
+                    if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                        // Gradio telah mengupdate konten markdown.
+                        // Konten baru ada di dalam div.markdown-body
+                        const gradioMarkdownContent = this.contentHolder.querySelector('.markdown-body');
+                        if (gradioMarkdownContent) {
+                            // Salin HTML yang sudah di-parsing dari komponen tersembunyi Gradio
+                            // ke modal popup kita
+                            this.contentModalBody.innerHTML = gradioMarkdownContent.innerHTML;
+                            console.log('Observer updated modal content from Gradio');
+                        } else {
+                            // Fallback jika tidak ada .markdown-body
+                            this.contentModalBody.innerHTML = this.contentHolder.innerHTML;
+                        }
+                    }
+                });
+            });
+            
+            // Mulai memantau komponen tersembunyi Gradio
+            observer.observe(this.contentHolder, { childList: true, subtree: true });
+            console.log('MutationObserver attached to .article-content-holder');
+            
+            this.filterLibrary(); // Jalankan filter saat pertama kali dimuat
             this.initialized = true;
             console.log('Library initialized successfully');
-        }, 500);
+        }, 1500); // Delay 1.5 detik
     },
     
     filterLibrary: function() {
+        // Fungsi ini sudah benar, memfilter berdasarkan atribut HTML
         const searchInput = document.getElementById('library-search');
         const categoryFilter = document.getElementById('library-filter-category');
         const sourceFilter = document.getElementById('library-filter-source');
         
         if (!searchInput || !categoryFilter || !sourceFilter) {
-            console.error('Filter elements not found');
+            console.warn('Filter elements not ready yet...');
             return;
         }
         
@@ -7428,49 +7456,49 @@ window.AnthroHPK_Library = {
         if (counterSpan) {
             counterSpan.innerHTML = 'Menampilkan <span class="count">' + visibleCount + '</span> dari <span class="count">' + cards.length + '</span> artikel';
         }
-        
-        console.log('Filtered:', visibleCount + '/' + cards.length + ' visible');
     },
     
     showArticleContent: function(index) {
-        console.log('showArticleContent called with index:', index);
+        console.log('showArticleContent (FIXED) called with index:', index);
         
-        if (!this.contentModalBody) {
+        if (!this.indexLoader || !this.contentModalBody) {
+            console.error('Library not initialized. Retrying init...');
+            // Coba inisialisasi ulang jika komponen tidak ditemukan
+            this.indexLoader = document.querySelector('.article-index-loader input[type="number"]');
             this.contentModalBody = document.getElementById('article-modal-body-dynamic');
-            if (!this.contentModalBody) {
-                alert('Terjadi kesalahan. Silakan refresh halaman.');
+            if (!this.indexLoader) {
+                alert('Error: Komponen loader tidak ditemukan. Silakan refresh halaman.');
                 return;
             }
         }
 
         const modal = document.getElementById('article-modal-dynamic');
         if (!modal) {
-            console.error('Modal not found');
+            console.error('Modal popup not found');
             return;
         }
         
+        // 1. Tampilkan modal dengan status loading
         this.contentModalBody.innerHTML = '<div style="text-align: center; padding: 50px;"><div style="font-size: 48px; margin-bottom: 20px;">Loading...</div><p style="font-size: 18px; color: #666;">Sedang memuat artikel...</p></div>';
         modal.classList.add('visible');
         document.body.style.overflow = 'hidden';
 
-        if (typeof window.ARTIKEL_DB !== 'undefined' && window.ARTIKEL_DB[index]) {
-            const article = window.ARTIKEL_DB[index];
-            const content = '<h1>' + article.title + '</h1>' +
-                '<div style="padding: 10px 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">' +
-                '<p style="margin: 0; font-size: 14px; color: #555;">' +
-                '<strong>Kategori:</strong> ' + article.kategori + '<br>' +
-                '<strong>Sumber:</strong> ' + article.source +
-                '</p></div>' +
-                '<div style="line-height: 1.8;">' + article.full_content.replace(/\n/g, '<br>') + '</div>';
-            this.contentModalBody.innerHTML = content;
-            console.log('Article loaded from ARTIKEL_DB');
-        } else {
-            this.contentModalBody.innerHTML = '<div style="text-align: center; padding: 50px;"><div style="font-size: 48px; margin-bottom: 20px;">Error</div><h3>Artikel Tidak Ditemukan</h3><p>Silakan refresh halaman.</p></div>';
-            console.error('Article not found:', index);
-        }
+        // 2. Picu backend Gradio (Python)
+        // Set nilai input angka yang tersembunyi
+        this.indexLoader.value = index;
+        
+        // Buat dan kirim event 'change' untuk memicu Gradio
+        const event = new Event('change', { bubbles: true });
+        this.indexLoader.dispatchEvent(event);
+        
+        console.log('Dispatched change event for index:', index);
+        
+        // 3. MutationObserver (dari 'init') akan otomatis
+        //    menangkap respons dari Python dan mengupdate isi modal.
     },
 
     closeArticleContent: function(event) {
+        // Fungsi ini sudah benar
         if (event && (event.target.classList.contains('article-modal-backdrop') || 
             event.target.classList.contains('article-modal-close'))) {
             
@@ -7481,7 +7509,7 @@ window.AnthroHPK_Library = {
                 
                 setTimeout(() => {
                     if (this.contentModalBody) {
-                        this.contentModalBody.innerHTML = '';
+                        this.contentModalBody.innerHTML = ''; // Hapus konten
                     }
                 }, 300);
             }
@@ -7489,7 +7517,9 @@ window.AnthroHPK_Library = {
     }
 };
 
+// Fungsi untuk setup JS setelah DOM siap
 function setupLibraryWhenReady() {
+    // Cek jika Gradio sudah memuat config
     if (window.gradio_config) {
         window.addEventListener('gradio:mounted', () => {
             console.log('Gradio mounted, initializing...');
@@ -7497,30 +7527,35 @@ function setupLibraryWhenReady() {
         });
     }
     
+    // Fallback jika event Gradio tidak tertangkap
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => AnthroHPK_Library.init(), 1000);
+            setTimeout(() => AnthroHPK_Library.init(), 1500); // Tambah delay
         });
     } else {
-        setTimeout(() => AnthroHPK_Library.init(), 1000);
+        setTimeout(() => AnthroHPK_Library.init(), 1500); // Tambah delay
     }
     
+    // Fallback akhir jika semua event terlewat
     window.addEventListener('load', () => {
         setTimeout(() => {
             if (!AnthroHPK_Library.initialized) {
+                console.log('Window.load backup init...');
                 AnthroHPK_Library.init();
             }
-        }, 1500);
+        }, 2000); // Tambah delay
     });
 }
 
+// Jalankan setup
 setupLibraryWhenReady();
 
 </script>
     """
     
-    # CRITICAL: Gabungkan semua dan RETURN
-    return js_database_export + css + js
+    # PART 3: Gabungkan semua
+    # Kita tidak lagi butuh js_database_export, karena logic errornya ada di sana.
+    return css + js
     
     
 
