@@ -7555,7 +7555,7 @@ window.AnthroHPK_Library = {
     },
 
     // Fungsi untuk menampilkan modal dan memicu pemuatan konten
-    showArticleContent: function(button, index) {
+    showArticleContent: function(index) {
         if (!this.indexLoader || !this.contentHolder || !this.contentModalBody) {
             console.error('Library components not initialized. Cannot show article.');
             alert('Terjadi kesalahan, silakan refresh halaman.');
@@ -7574,28 +7574,41 @@ window.AnthroHPK_Library = {
         // 1. Set nilai index ke komponen Gradio
         this.indexLoader.value = index;
         
-        // 2. Buat event 'change' palsu untuk memicu handler Gradio
-        const event = new Event('change');
-        this.indexLoader.dispatchEvent(event);
+        // 2. Trigger perubahan dengan cara yang lebih reliable
+        this.indexLoader.dispatchEvent(new Event('input', { bubbles: true }));
+        this.indexLoader.dispatchEvent(new Event('change', { bubbles: true }));
         
-        // 3. Amati perubahan pada komponen output
-        // Ini adalah trik Gradio: kita amati 'contentHolder'
-        // Saat Python selesai, 'contentHolder' akan update, dan kita deteksi
-        const observer = new MutationObserver((mutations) => {
-            // Berhenti mengamati
-            observer.disconnect(); 
-            
-            // Ambil HTML yang sudah di-render oleh Gradio
-            const renderedHTML = this.contentHolder.innerHTML;
-            
-            // Masukkan ke modal
-            this.contentModalBody.innerHTML = renderedHTML;
-        });
+        // 3. Amati perubahan pada komponen output dengan timeout
+        const checkContent = () => {
+            const observer = new MutationObserver((mutations) => {
+                // Berhenti mengamati
+                observer.disconnect(); 
+                
+                // Ambil HTML yang sudah di-render oleh Gradio
+                const renderedHTML = this.contentHolder.innerHTML;
+                
+                // Masukkan ke modal
+                this.contentModalBody.innerHTML = renderedHTML;
+            });
 
-        observer.observe(this.contentHolder, {
-            childList: true,
-            subtree: true 
-        });
+            observer.observe(this.contentHolder, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+            
+            // Timeout fallback jika tidak ada perubahan terdeteksi
+            setTimeout(() => {
+                observer.disconnect();
+                const content = this.contentHolder.innerHTML;
+                if (content && content.trim()) {
+                    this.contentModalBody.innerHTML = content;
+                }
+            }, 2000);
+        };
+        
+        // Delay sedikit untuk memastikan Gradio sudah memproses
+        setTimeout(checkContent, 100);
     },
 
     // Fungsi untuk menutup modal
