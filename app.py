@@ -118,7 +118,7 @@ print("✅ All imports successful")
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Application Metadata
-APP_VERSION = "3.2.0" # MODIFIED from v3.1
+APP_VERSION = "3.2.2" # MODIFIED (Interactive Library)
 APP_TITLE = "PeduliGiziBalita - Monitor Pertumbuhan Anak Profesional" # MODIFIED
 APP_DESCRIPTION = "Aplikasi berbasis WHO Child Growth Standards untuk pemantauan antropometri anak 0-60 bulan" # MODIFIED
 CONTACT_WA = "6285888858160"
@@ -7080,8 +7080,6 @@ def render_perpustakaan_updated() -> str:
         </div>
         """
 
-[...lanjutan dari Section 10B...]
-
 def generate_article_card_html(article: Dict, index: int) -> str:
     """
     (MODIFIKASI v3.2.2 - REVISI PENTING)
@@ -7746,7 +7744,6 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
     return html_head + html_filter_bar + html_article_grid + html_modal
     
 
-[...lanjutan dari Section 10B...]
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ═══════════════════════════════════════════════════════════════════════════════
