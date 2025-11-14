@@ -8257,6 +8257,52 @@ def reset_kejar_tumbuh():
     """Reset semua data dan input Kalkulator Kejar Tumbuh"""
     return [], "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data. Silakan tambahkan data pengukuran.</p>", None, None, None, None, ""
 
+
+def hapus_data_terakhir(data_state):
+    """
+    Menghapus data pengukuran terakhir dari Kalkulator Kejar Tumbuh
+    
+    Args:
+        data_state: List data pengukuran
+    
+    Returns:
+        Tuple: (updated_data_state, updated_display_html)
+    """
+    if not data_state or len(data_state) == 0:
+        return [], "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data untuk dihapus.</p>"
+    
+    # Hapus data terakhir
+    data_state.pop()
+    
+    # Generate updated display
+    if len(data_state) == 0:
+        display_html = "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data. Silakan tambahkan data pengukuran.</p>"
+    else:
+        display_html = "<div style='padding: 15px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 10px;'>"
+        display_html += f"<h4 style='margin-top: 0; color: #2c3e50;'>📊 Data Terinput: {len(data_state)} pengukuran</h4>"
+        display_html += "<table style='width: 100%; border-collapse: collapse;'>"
+        display_html += "<tr style='background: #3498db; color: white;'>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>No</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>Usia (bulan)</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>BB (kg)</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>TB (cm)</th>"
+        display_html += "</tr>"
+        
+        for i, data in enumerate(data_state):
+            bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+            display_html += f"<tr style='background: {bg_color};'>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{i+1}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['usia_bulan']}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['bb']}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['tb']}</td>"
+            display_html += "</tr>"
+        
+        display_html += "</table>"
+        display_html += "<p style='margin-top: 10px; color: #e67e22; font-weight: bold;'>🗑️ Data terakhir berhasil dihapus!</p>"
+        display_html += "</div>"
+    
+    return data_state, display_html
+
 print("✅ Section 10B-Extra loaded: Kejar Tumbuh functions defined")
 
 # Build Gradio Interface
