@@ -6849,7 +6849,7 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     }
-]
+
 # --- AKHIR DARI DATABASE ARTIKEL LOKAL ---
 
 print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
