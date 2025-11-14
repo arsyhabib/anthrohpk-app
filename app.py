@@ -6872,95 +6872,61 @@ def get_local_library_filters() -> Tuple[List[str], List[str]]:
     return sorted(list(categories)), sorted(list(sources))
 
 
-def generate_article_card_html(article: Dict, index: int) -> str:
+def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
     """
-    (BARU v3.2.2)
-    Menghasilkan satu kartu artikel HTML dengan gaya profesional,
-    termasuk label data untuk filtering.
+    (REVISI v3.2.2 - FIXED)
+    Generate HTML untuk satu kartu artikel dengan data-attributes yang benar
     """
+    # Format kategori untuk class CSS
+    kategori_class = article['kategori'].lower().replace(' ', '-').replace('&', '').replace(',', '')
     
-    # Buat tag kategori
-    category_class = article["kategori"].lower().replace(" & ", "-").replace(" ", "-")
-    category_tag = f"""
-    <span class='article-card-tag category-badge category-{category_class}'
-          data-value='{article["kategori"]}'>
-        {article["kategori"]}
-    </span>
-    """
+    # Format sources untuk data-attribute (ganti spasi dengan strip agar match dengan filter)
+    sources_formatted = article['source'].replace(' ', '-')
     
-    # Buat tag sumber
-    source_tags = ""
-    source_list = [s.strip() for s in article["source"].split('|')]
-    source_data_tags = " ".join(source_list) # Untuk data-filter
+    # Pastikan summary tidak terlalu panjang
+    summary = article['summary']
+    if len(summary) > 150:
+        summary = summary[:147] + '...'
     
-    color_map = {
-        "WHO": "#0088cc", "Kemenkes RI": "#ff4444", "IDAI": "#ff6b6b",
-        "UNICEF": "#00a9e0", "CDC": "#005eaa", "AAP": "#00a6d6",
-        "ASHA": "#6a0dad", "AAPD": "#00a6d6", "AAO": "#005eaa",
-        "Red Cross": "#e62020", "The Humane Society": "#8d5b4c"
+    # Source color mapping
+    source_colors = {
+        'IDAI': '#e91e63',
+        'Kemenkes': '#2196f3', 
+        'WHO': '#4caf50',
+        'UNICEF': '#00bcd4',
+        'Alodokter': '#ff9800',
+        'Halodoc': '#3f51b5',
+        'KlikDokter': '#9c27b0'
     }
+    source_color = source_colors.get(article['source'], '#757575')
     
-    for source in source_list:
-        color = "#6c757d" # Default
-        for key, c in color_map.items():
-            if key in source:
-                color = c
-                break
+    html = f"""
+    <div class='article-card-v3' 
+         data-category='{article['kategori']}' 
+         data-sources='{sources_formatted}'>
         
-        source_tags += f"""
-        <span class='article-card-tag source-badge' 
-              style='background-color: {color}; color: white;'
-              data-value='{source}'>
-            {source}
-        </span>
-        """
-    
-    # Atribut data untuk live search/filter
-    data_attributes = f"""
-        data-index='{index}'
-        data-title='{article["title"].lower()}'
-        data-summary='{article["summary"].lower()}'
-        data-category='{article["kategori"]}'
-        data-sources='{source_data_tags}'
-    """
-    
-    return f"""
-    <div class='article-card-v3' {data_attributes}>
-        <div class='article-card-header'>
-            <h3 class='article-card-title'>{article["title"]}</h3>
-        </div>
-        <p class='article-card-summary'>{article["summary"]}</p>
+        <h3 class='article-card-title'>{article['title']}</h3>
+        
+        <p class='article-card-summary'>{summary}</p>
+        
         <div class='article-card-tags'>
-            {category_tag}
-            {source_tags}
+            <span class='article-card-tag category-badge category-{kategori_class}'>
+                {article['kategori']}
+            </span>
+            <span class='article-card-tag source-badge' style='background-color: {source_color};'>
+                {article['source']}
+            </span>
         </div>
+        
         <div class='article-card-footer'>
             <button class='article-card-button' 
                     onclick='AnthroHPK_Library.showArticleContent({index})'>
-                Baca Selengkapnya →
+                📖 Baca Selengkapnya
             </button>
         </div>
     </div>
-    
-    <div class='article-modal-backdrop' id='article-modal-{index}' 
-         onclick='closeArticleContent(event, {index})'>
-        <div class='article-modal-content'>
-            <div class='article-modal-header'>
-                <div class='article-modal-tags'>
-                    {category_tag}
-                    {source_tags}
-                </div>
-                <button class='article-modal-close' 
-                        onclick='closeArticleContent(event, {index})'>
-                    &times;
-                </button>
-            </div>
-            <div class='article-modal-body'>
-                {article["full_content"]}
-            </div>
-        </div>
-    </div>
     """
+    return html
     
 
 
@@ -7082,19 +7048,30 @@ def render_perpustakaan_updated() -> str:
 
 def get_interactive_library_js_css() -> str:
     """
-    (BARU v3.2.2)
-    Menyediakan semua kode CSS dan JavaScript yang diperlukan untuk
-    fitur perpustakaan interaktif yang baru.
+    (REVISI v3.2.2 - FIXED)
+    Mengembalikan blok <style> dan <script> untuk perpustakaan interaktif.
+    PENTING: Export database ke window.ARTIKEL_DB untuk akses langsung
     """
     
-    # ------------------------------------------------------------------
-    # CSS (Cascading Style Sheets)
-    # ------------------------------------------------------------------
+    # EXPORT DATABASE KE JAVASCRIPT (CRITICAL FIX)
+    # Convert database Python ke JavaScript object
+    import json
+    artikel_db_json = json.dumps(ARTIKEL_LOKAL_DATABASE, ensure_ascii=False)
+    
+    js_database_export = f"""
+<script>
+// Export database artikel ke window untuk akses langsung
+window.ARTIKEL_DB = {artikel_db_json};
+console.log('✅ ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
+</script>
+    """
+    
+    # CSS STYLES (UNCHANGED - keep your existing CSS)
     css = """
 <style>
-/* ═════════════════════════════════════════════
-   PERPUSTAKAAN INTERAKTIF (v3.2.2)
-   ═════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   PERPUSTAKAAN INTERAKTIF v3.2.2 - STYLES
+   ═══════════════════════════════════════════════════════════════════ */
 
 /* --- Filter Bar --- */
 .library-filter-bar {
@@ -7106,6 +7083,11 @@ def get_interactive_library_js_css() -> str:
     border-radius: 12px;
     margin-bottom: 25px;
     border: 1px solid #e9ecef;
+}
+@media (max-width: 768px) {
+    .library-filter-bar {
+        grid-template-columns: 1fr;
+    }
 }
 .library-filter-bar .filter-group {
     display: flex;
@@ -7125,6 +7107,17 @@ def get_interactive_library_js_css() -> str:
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.3s ease;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: white;
+}
+.library-filter-bar select {
+    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23555" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+    padding-right: 40px;
 }
 .library-filter-bar input[type='text']:focus,
 .library-filter-bar select:focus {
@@ -7142,6 +7135,8 @@ def get_interactive_library_js_css() -> str:
     font-size: 14px;
     color: #667eea;
     font-weight: 500;
+    grid-column: 1 / -1;
+    text-align: center;
 }
 #library-counter .count {
     font-weight: 700;
@@ -7188,7 +7183,7 @@ def get_interactive_library_js_css() -> str:
     line-height: 1.6;
     margin: 0;
     padding: 0 20px 15px;
-    flex-grow: 1; /* Makes summary take up space */
+    flex-grow: 1;
 }
 .article-card-tags {
     padding: 0 20px 15px;
@@ -7210,12 +7205,13 @@ def get_interactive_library_js_css() -> str:
     border: 1px solid #ddd;
 }
 .source-badge {
-    color: white; /* Color set inline */
+    color: white;
 }
 .article-card-footer {
     padding: 15px 20px;
     background-color: #fcfdff;
     border-top: 1px solid #f0f0f0;
+    margin-top: auto;
 }
 .article-card-button {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -7233,7 +7229,7 @@ def get_interactive_library_js_css() -> str:
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-/* --- Article Modal (Popup) --- */
+/* --- Article Modal --- */
 .article-modal-backdrop {
     position: fixed;
     top: 0;
@@ -7241,12 +7237,14 @@ def get_interactive_library_js_css() -> str:
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.6);
-    display: none; /* Hidden by default */
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 1000;
     opacity: 0;
     transition: opacity 0.3s ease;
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
 }
 .article-modal-backdrop.visible {
     display: flex;
@@ -7257,12 +7255,13 @@ def get_interactive_library_js_css() -> str:
     border-radius: 15px;
     width: 90%;
     max-width: 800px;
-    max-height: 90vh;
+    height: 90vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     transform: scale(0.95);
     transition: transform 0.3s ease;
+    overflow: hidden;
 }
 .article-modal-backdrop.visible .article-modal-content {
     transform: scale(1);
@@ -7273,11 +7272,7 @@ def get_interactive_library_js_css() -> str:
     align-items: center;
     padding: 15px 25px;
     border-bottom: 1px solid #eee;
-}
-.article-modal-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-shrink: 0;
 }
 .article-modal-close {
     background: #f0f0f0;
@@ -7292,6 +7287,7 @@ def get_interactive_library_js_css() -> str:
     line-height: 30px;
     text-align: center;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 .article-modal-close:hover {
     background: #ff6b9d;
@@ -7302,6 +7298,7 @@ def get_interactive_library_js_css() -> str:
     overflow-y: auto;
     line-height: 1.7;
     color: #333;
+    flex-grow: 1;
 }
 .article-modal-body h1, .article-modal-body h2, .article-modal-body h3 {
     color: #667eea;
@@ -7313,16 +7310,12 @@ def get_interactive_library_js_css() -> str:
 .article-modal-body h1 { font-size: 26px; }
 .article-modal-body h2 { font-size: 22px; }
 .article-modal-body h3 { font-size: 18px; }
-.article-modal-body p {
-    margin-bottom: 15px;
-}
+.article-modal-body p { margin-bottom: 15px; }
 .article-modal-body ul, .article-modal-body ol {
     padding-left: 25px;
     margin-bottom: 15px;
 }
-.article-modal-body li {
-    margin-bottom: 8px;
-}
+.article-modal-body li { margin-bottom: 8px; }
 .article-modal-body blockquote {
     background: #f8f9fa;
     border-left: 5px solid #667eea;
@@ -7332,18 +7325,10 @@ def get_interactive_library_js_css() -> str:
     font-style: italic;
 }
 .article-modal-body strong {
-    color: #d94680; /* Pink pastel */
-}
-.article-modal-body .loading-spinner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-    font-size: 18px;
-    color: #888;
+    color: #d94680;
 }
 
-/* Dark Mode Tweaks for Library */
+/* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     .library-filter-bar {
         background-color: #2d2d2d;
@@ -7380,8 +7365,6 @@ def get_interactive_library_js_css() -> str:
         color: #e0e0e0;
         border-color: #505050;
     }
-    
-    /* Modal Dark */
     .article-modal-content {
         background: #2d2d2d;
         color: #e0e0e0;
@@ -7414,10 +7397,18 @@ def get_interactive_library_js_css() -> str:
 </style>
     """
     
-    # ------------------------------------------------------------------
-    # JAVASCRIPT
-    # ------------------------------------------------------------------
+    # JAVASCRIPT (USE THE FIXED VERSION FROM library_fix.js)
+    # [Paste the entire JavaScript code from library_fix.js here]
     js = """
+[PASTE KODE DARI library_fix.js DI SINI - LIHAT FILE YANG SUDAH SAYA BUAT]
+    """
+    
+    # Gabungkan semua
+    return js_database_export + css + js
+    
+// ═══════════════════════════════════════════════════════════════════
+// JAVASCRIPT PERPUSTAKAAN INTERAKTIF (REVISI v3.2.2 - FIXED)
+// ═══════════════════════════════════════════════════════════════════
 <script>
 // Namespace untuk menghindari konflik
 window.AnthroHPK_Library = {
@@ -7425,113 +7416,141 @@ window.AnthroHPK_Library = {
     indexLoader: null,
     contentHolder: null,
     contentModalBody: null,
+    initialized: false,
     
     // Fungsi untuk menginisialisasi
-init: function() {
-    console.log('AnthroHPK Library Init v3.2.2');
-    
-    // Setup listeners untuk filter
-    const searchInput = document.getElementById('library-search');
-    const categoryFilter = document.getElementById('library-filter-category');
-    const sourceFilter = document.getElementById('library-filter-source');
-
-    if (searchInput) {
-        searchInput.addEventListener('input', () => this.filterLibrary());
-    }
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', () => this.filterLibrary());
-    }
-    if (sourceFilter) {
-        sourceFilter.addEventListener('change', () => this.filterLibrary());
-    }
-    
-    // Cari komponen Gradio
-    this.indexLoader = document.querySelector('.article-index-loader input[type="number"]');
-    this.contentHolder = document.querySelector('.article-content-holder');
-    this.contentModalBody = document.getElementById('article-modal-body-dynamic');
-    
-    console.log('Components found:', {
-        indexLoader: !!this.indexLoader,
-        contentHolder: !!this.contentHolder,
-        contentModalBody: !!this.contentModalBody
-    });
-    
-    // Filter sekali saat load
-    this.filterLibrary();
-},
-    // Fungsi untuk filter dan search
-filterLibrary: function() {
-    const searchInput = document.getElementById('library-search');
-    const categoryFilter = document.getElementById('library-filter-category');
-    const sourceFilter = document.getElementById('library-filter-source');
-    
-    if (!searchInput || !categoryFilter || !sourceFilter) {
-        console.error('Filter elements not found');
-        return;
-    }
-    
-    const searchTerm = searchInput.value.toLowerCase();
-    const selectedCategory = categoryFilter.value;
-    const selectedSource = sourceFilter.value;
-    
-    const cards = document.querySelectorAll('.article-card-v3');
-    let visibleCount = 0;
-    
-    cards.forEach(card => {
-        const title = card.querySelector('.article-card-title')?.textContent.toLowerCase() || '';
-        const summary = card.querySelector('.article-card-summary')?.textContent.toLowerCase() || '';
-        const category = card.getAttribute('data-category') || '';
-        const sources = card.getAttribute('data-sources') || '';
-        
-        const matchSearch = searchTerm === '' || title.includes(searchTerm) || summary.includes(searchTerm);
-        const matchCategory = selectedCategory === 'all' || category === selectedCategory;
-        const matchSource = selectedSource === 'all' || sources.includes(selectedSource);
-        
-        if (matchSearch && matchCategory && matchSource) {
-            card.style.display = 'block';
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
+    init: function() {
+        // Cegah double initialization
+        if (this.initialized) {
+            console.log('Library already initialized');
+            return;
         }
-    });
-    
-    // Update counter
-    const counter = document.getElementById('library-counter-span');
-    if (counter) {
-        counter.textContent = `Menampilkan ${visibleCount} dari ${cards.length} artikel`;
-    }
-},
+        
+        console.log('AnthroHPK Library Init v3.2.2 - FIXED');
+        
+        // Setup listeners untuk filter dengan delay untuk memastikan DOM ready
+        setTimeout(() => {
+            const searchInput = document.getElementById('library-search');
+            const categoryFilter = document.getElementById('library-filter-category');
+            const sourceFilter = document.getElementById('library-filter-source');
 
-    // Fungsi untuk menampilkan modal dan memicu pemuatan konten
-// Fungsi untuk menampilkan modal dan memicu pemuatan konten
+            console.log('Filter elements:', {
+                search: !!searchInput,
+                category: !!categoryFilter,
+                source: !!sourceFilter
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => this.filterLibrary());
+                console.log('✅ Search listener attached');
+            } else {
+                console.error('❌ Search input not found');
+            }
+            
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', () => this.filterLibrary());
+                console.log('✅ Category listener attached');
+            } else {
+                console.error('❌ Category filter not found');
+            }
+            
+            if (sourceFilter) {
+                sourceFilter.addEventListener('change', () => this.filterLibrary());
+                console.log('✅ Source listener attached');
+            } else {
+                console.error('❌ Source filter not found');
+            }
+            
+            // Cari komponen Gradio (coba beberapa selector)
+            this.indexLoader = document.querySelector('.article-index-loader input[type="number"]') ||
+                              document.querySelector('[data-testid="number-input"]');
+            this.contentHolder = document.querySelector('.article-content-holder') ||
+                                document.querySelector('.article-content-holder .prose');
+            this.contentModalBody = document.getElementById('article-modal-body-dynamic');
+            
+            console.log('Gradio components found:', {
+                indexLoader: !!this.indexLoader,
+                contentHolder: !!this.contentHolder,
+                contentModalBody: !!this.contentModalBody
+            });
+            
+            // Filter sekali saat load untuk update counter
+            this.filterLibrary();
+            
+            this.initialized = true;
+            console.log('✅ Library initialized successfully');
+        }, 500); // Delay 500ms untuk memastikan DOM sudah ready
+    },
+    
+    // Fungsi untuk filter dan search (FIXED)
+    filterLibrary: function() {
+        const searchInput = document.getElementById('library-search');
+        const categoryFilter = document.getElementById('library-filter-category');
+        const sourceFilter = document.getElementById('library-filter-source');
+        
+        if (!searchInput || !categoryFilter || !sourceFilter) {
+            console.error('Filter elements not found');
+            return;
+        }
+        
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const selectedCategory = categoryFilter.value;
+        const selectedSource = sourceFilter.value;
+        
+        console.log('Filtering:', { searchTerm, selectedCategory, selectedSource });
+        
+        const cards = document.querySelectorAll('.article-card-v3');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const title = (card.querySelector('.article-card-title')?.textContent || '').toLowerCase();
+            const summary = (card.querySelector('.article-card-summary')?.textContent || '').toLowerCase();
+            const category = card.getAttribute('data-category') || '';
+            const sources = card.getAttribute('data-sources') || '';
+            
+            // Debug first card
+            if (visibleCount === 0) {
+                console.log('First card data:', { title: title.substring(0,30), category, sources: sources.substring(0,30) });
+            }
+            
+            // Matching logic
+            const matchSearch = searchTerm === '' || 
+                              title.includes(searchTerm) || 
+                              summary.includes(searchTerm);
+            const matchCategory = selectedCategory === 'all' || category === selectedCategory;
+            const matchSource = selectedSource === 'all' || sources.includes(selectedSource);
+            
+            if (matchSearch && matchCategory && matchSource) {
+                card.style.display = 'flex'; // Changed from 'block' to 'flex'
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Update counter
+        const counterSpan = document.getElementById('library-counter-span');
+        if (counterSpan) {
+            counterSpan.innerHTML = `Menampilkan <span class="count">${visibleCount}</span> dari <span class="count">${cards.length}</span> artikel`;
+        }
+        
+        console.log(`✅ Filtered: ${visibleCount}/${cards.length} visible`);
+    },
+    
+    // Fungsi untuk menampilkan modal dan memuat konten (FIXED)
     showArticleContent: function(index) {
         console.log('showArticleContent called with index:', index);
         
         // Cek apakah komponen sudah siap
-        if (!this.indexLoader) {
-            console.error('indexLoader not found');
-            // Coba inisialisasi ulang
-            this.init();
-        }
-        
-        if (!this.contentHolder) {
-            console.error('contentHolder not found');
-            this.init();
-        }
-        
         if (!this.contentModalBody) {
             console.error('contentModalBody not found');
             const modalBody = document.getElementById('article-modal-body-dynamic');
             if (modalBody) {
                 this.contentModalBody = modalBody;
+            } else {
+                alert('Terjadi kesalahan. Silakan refresh halaman.');
+                return;
             }
-        }
-        
-        // Jika masih tidak ada, tampilkan error
-        if (!this.indexLoader || !this.contentHolder || !this.contentModalBody) {
-            console.error('Library components still not initialized');
-            alert('Terjadi kesalahan. Silakan refresh halaman.');
-            return;
         }
 
         const modal = document.getElementById('article-modal-dynamic');
@@ -7552,7 +7571,7 @@ filterLibrary: function() {
 
         // Method 1: Langsung load dari database (fallback jika Gradio tidak bekerja)
         const loadDirectly = () => {
-            // Ambil data artikel langsung dari ARTIKEL_LOKAL_DATABASE yang sudah dimuat
+            // Ambil data artikel langsung dari ARTIKEL_DB yang sudah dimuat
             if (typeof window.ARTIKEL_DB !== 'undefined' && window.ARTIKEL_DB[index]) {
                 const article = window.ARTIKEL_DB[index];
                 const content = `
@@ -7573,213 +7592,137 @@ filterLibrary: function() {
 
         // Coba method langsung dulu
         if (loadDirectly()) {
-            console.log('Article loaded directly from window.ARTIKEL_DB');
+            console.log('✅ Article loaded directly from window.ARTIKEL_DB');
             return;
         }
 
         // Method 2: Via Gradio (lebih lambat tapi lebih aman)
         console.log('Loading via Gradio...');
         
-        // Cari input element yang sebenarnya
-        let inputElement = this.indexLoader;
-        if (inputElement.tagName !== 'INPUT') {
-            // Jika bukan input, cari input di dalam element
-            inputElement = this.indexLoader.querySelector('input[type="number"]');
+        // Cek apakah indexLoader sudah di-set
+        if (!this.indexLoader) {
+            this.indexLoader = document.querySelector('.article-index-loader input[type="number"]');
         }
         
-        if (inputElement) {
-            // Set value
-            inputElement.value = index;
+        if (this.indexLoader) {
+            // Set value dan trigger event
+            this.indexLoader.value = index;
             
             // Trigger berbagai event
             ['input', 'change', 'blur'].forEach(eventType => {
                 const event = new Event(eventType, { bubbles: true, cancelable: true });
-                inputElement.dispatchEvent(event);
+                this.indexLoader.dispatchEvent(event);
             });
             
             console.log('Gradio input triggered with value:', index);
+            
+            // Tunggu response dengan timeout
+            let attempts = 0;
+            const maxAttempts = 20; // 20 x 200ms = 4 detik
+            
+            const checkForContent = setInterval(() => {
+                attempts++;
+                
+                // Cek apakah ada konten baru di contentHolder
+                if (this.contentHolder && this.contentHolder.textContent.trim().length > 0) {
+                    clearInterval(checkForContent);
+                    
+                    // Copy konten ke modal
+                    this.contentModalBody.innerHTML = this.contentHolder.innerHTML;
+                    console.log('✅ Content loaded via Gradio');
+                }
+                
+                // Timeout setelah maxAttempts
+                if (attempts >= maxAttempts) {
+                    clearInterval(checkForContent);
+                    
+                    // Jika masih gagal, tampilkan error
+                    this.contentModalBody.innerHTML = `
+                        <div style="text-align: center; padding: 50px;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                            <h3>Gagal Memuat Artikel</h3>
+                            <p>Silakan refresh halaman dan coba lagi.</p>
+                            <button onclick="location.reload()" 
+                                    style="padding: 10px 20px; background: #667eea; color: white; 
+                                           border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
+                                Refresh Halaman
+                            </button>
+                        </div>
+                    `;
+                    console.error('❌ Timeout loading article');
+                }
+            }, 200);
+        } else {
+            console.error('❌ indexLoader not found');
+            this.contentModalBody.innerHTML = `
+                <div style="text-align: center; padding: 50px;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+                    <h3>Komponen Tidak Ditemukan</h3>
+                    <p>Silakan refresh halaman.</p>
+                </div>
+            `;
         }
-        
-        // Tunggu response dengan timeout
-        let attempts = 0;
-        const maxAttempts = 20; // 20 x 200ms = 4 detik
-        
-        const checkForContent = setInterval(() => {
-            attempts++;
-            
-            // Cek apakah ada konten baru di contentHolder
-            if (this.contentHolder && this.contentHolder.textContent.trim().length > 0) {
-                clearInterval(checkForContent);
-                
-                // Copy konten ke modal
-                this.contentModalBody.innerHTML = this.contentHolder.innerHTML;
-                console.log('Content loaded via Gradio');
-            }
-            
-            // Timeout setelah maxAttempts
-            if (attempts >= maxAttempts) {
-                clearInterval(checkForContent);
-                
-                // Jika masih gagal, tampilkan error
-                this.contentModalBody.innerHTML = `
-                    <div style="text-align: center; padding: 50px;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
-                        <h3>Gagal Memuat Artikel</h3>
-                        <p>Silakan refresh halaman dan coba lagi.</p>
-                        <button onclick="location.reload()" 
-                                style="padding: 10px 20px; background: #667eea; color: white; 
-                                       border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
-                            Refresh Halaman
-                        </button>
-                    </div>
-                `;
-                console.error('Timeout loading article');
-            }
-        }, 200);
     },
 
     // Fungsi untuk menutup modal
     closeArticleContent: function(event) {
         // Hanya tutup jika klik di backdrop, bukan di konten
-        if (event.target.classList.contains('article-modal-backdrop') || 
-            event.target.classList.contains('article-modal-close')) {
+        if (event && (event.target.classList.contains('article-modal-backdrop') || 
+            event.target.classList.contains('article-modal-close'))) {
             
             const modal = document.getElementById('article-modal-dynamic');
-            modal.classList.remove('visible');
-            document.body.style.overflow = 'auto'; // Kembalikan scroll background
-            
-            // Kosongkan konten modal
-            this.contentModalBody.innerHTML = '';
+            if (modal) {
+                modal.classList.remove('visible');
+                document.body.style.overflow = 'auto'; // Kembalikan scroll background
+                
+                // Kosongkan konten modal setelah animasi selesai
+                setTimeout(() => {
+                    if (this.contentModalBody) {
+                        this.contentModalBody.innerHTML = '';
+                    }
+                }, 300);
+            }
         }
     }
 };
 
-// Pastikan init dipanggil setelah Gradio memuat semua elemen
-// Kita gunakan event 'load' atau 'DOMContentLoaded'
-// Gradio 4+ memiliki event 'render'
+// Setup inisialisasi dengan multiple fallbacks
 function setupLibraryWhenReady() {
+    // Method 1: Gradio ready event (paling reliable)
     if (window.gradio_config) {
-        // Cara Gradio 3
-        AnthroHPK_Library.init();
-    } else {
-        // Fallback
-        window.addEventListener('load', () => AnthroHPK_Library.init());
+        window.addEventListener('gradio:mounted', () => {
+            console.log('Gradio mounted, initializing library...');
+            AnthroHPK_Library.init();
+        });
     }
+    
+    // Method 2: DOM Content Loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing library...');
+            setTimeout(() => AnthroHPK_Library.init(), 1000);
+        });
+    } else {
+        // DOM already loaded
+        console.log('DOM already loaded, initializing library...');
+        setTimeout(() => AnthroHPK_Library.init(), 1000);
+    }
+    
+    // Method 3: Fallback window load
+    window.addEventListener('load', () => {
+        console.log('Window loaded, ensuring library initialized...');
+        setTimeout(() => {
+            if (!AnthroHPK_Library.initialized) {
+                AnthroHPK_Library.init();
+            }
+        }, 1500);
+    });
 }
+
 // Panggil setup
 setupLibraryWhenReady();
 
 </script>
-    """
-    
-    return css + js
-
-
-def load_article_content_handler(index: int) -> str:
-    """
-    (BARU v3.2.2)
-    Handler Gradio yang dipanggil oleh JavaScript.
-    Hanya mengembalikan KONTEN LENGKAP dari 1 artikel yang diminta.
-    Outputnya adalah string Markdown (Gradio akan merendernya ke HTML).
-    """
-    try:
-        if index is None or not (0 <= index < len(ARTIKEL_LOKAL_DATABASE)):
-            return "## ❌ Error\n\nArtikel tidak ditemukan."
-        
-        article = ARTIKEL_LOKAL_DATABASE[index]
-        
-        # Buat header di dalam konten
-        header = f"""
-# {article['title']}
-
-<div style='padding: 10px 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;'>
-    <p style='margin: 0; font-size: 14px; color: #555;'>
-        <strong>Kategori:</strong> {article['kategori']}<br>
-        <strong>Sumber:</strong> {article['source']}
-    </p>
-</div>
-        """
-        
-        return header + article["full_content"]
-        
-    except Exception as e:
-        return f"## ❌ Error Memuat Konten\n\nTerjadi kesalahan: {str(e)}"
-        
-
-def tampilkan_perpustakaan_lokal_interaktif() -> str:
-    """
-    (REVISI v3.2.2)
-    Membangun seluruh UI untuk tab Perpustakaan Lokal yang baru.
-    Menggabungkan CSS, JS, Filter, dan Kartu Artikel.
-    """
-    
-    # 1. Dapatkan CSS + JS
-    html_head = get_interactive_library_js_css()
-    
-    # 2. Dapatkan data untuk filter
-    categories, sources = get_local_library_filters()
-    
-    # 3. Buat HTML untuk Filter Bar
-    html_filter_bar = """
-    <div class='library-filter-bar'>
-        <div class='filter-group'>
-            <label for='library-search'>🔍 Cari berdasarkan Judul atau Kata Kunci</label>
-            <input type='text' id='library-search' placeholder='Contoh: stunting, mpasi, demam...'>
-        </div>
-        <div class='filter-group'>
-            <label for='library-filter-category'>📚 Kategori</label>
-            <select id='library-filter-category'>
-                <option value='all'>Semua Kategori</option>
-    """
-    for cat in categories:
-        html_filter_bar += f"<option value='{cat}'>{cat}</option>"
-    html_filter_bar += """
-            </select>
-        </div>
-        <div class='filter-group'>
-            <label for='library-filter-source'>🏢 Sumber</label>
-            <select id='library-filter-source'>
-                <option value='all'>Semua Sumber</option>
-    """
-    for src in sources:
-        # Gunakan tag yang di-format (spasi diganti strip) untuk value
-        src_value = src.replace(' ', '-')
-        html_filter_bar += f"<option value='{src_value}'>{src}</option>"
-    html_filter_bar += """
-            </select>
-        </div>
-        <div id='library-counter' style='grid-column: 1 / -1;'>
-            <span id='library-counter-span'>Memuat artikel...</span>
-        </div>
-    </div>
-    """
-    
-    # 4. Buat HTML untuk Grid Artikel
-    html_article_grid = "<div class='article-grid-v3'>"
-    for i, article in enumerate(ARTIKEL_LOKAL_DATABASE):
-        html_article_grid += generate_article_card_html(article, i)
-    html_article_grid += "</div>"
-    
-    # 5. Buat HTML untuk Modal Dinamis (Satu modal untuk semua)
-    html_modal = """
-    <div class='article-modal-backdrop' id='article-modal-dynamic' 
-         onclick='AnthroHPK_Library.closeArticleContent(event)'>
-        <div class='article-modal-content' onclick='event.stopPropagation()'>
-            <div class='article-modal-header'>
-                <span style='font-size: 16px; font-weight: 600; color: #555;'>Baca Artikel</span>
-                <button class='article-modal-close' 
-                        onclick='AnthroHPK_Library.closeArticleContent(event)'>
-                    &times;
-                </button>
-            </div>
-            <div class='article-modal-body' id='article-modal-body-dynamic'>
-                </div>
-        </div>
-    </div>
-    """
-    
-    # 6. Gabungkan semua
-    return html_head + html_filter_bar + html_article_grid + html_modal
     
 
 
