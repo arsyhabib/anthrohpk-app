@@ -8077,11 +8077,76 @@ with gr.Blocks(
     # JavaScript for Browser Notifications (from v3.1)
     # DIGABUNG dengan JavaScript Perpustakaan Interaktif (v3.2.2)
     
+    # JavaScript for Browser Notifications (from v3.1)
+    # DIGABUNG dengan JavaScript Perpustakaan Interaktif (v3.2.2)
+    
+    # Define notification_js
+    notification_js = """
+<script>
+// Browser Notification System for AnthroHPK
+window.AnthroNotification = {
+    isSupported: function() {
+        return ('Notification' in window);
+    },
+    requestPermission: async function() {
+        if (!this.isSupported()) {
+            return Promise.resolve(false);
+        }
+        if (Notification.permission === 'granted') {
+            return Promise.resolve(true);
+        }
+        if (Notification.permission !== 'denied') {
+            const permission = await Notification.requestPermission();
+            return permission === 'granted';
+        }
+        return Promise.resolve(false);
+    },
+    send: function(title, options = {}) {
+        if (!this.isSupported() || Notification.permission !== 'granted') {
+            return null;
+        }
+        const defaultOptions = {
+            icon: '/static/icon.png',
+            badge: '/static/badge.png',
+            requireInteraction: false,
+            silent: false
+        };
+        const notificationOptions = { ...defaultOptions, ...options };
+        try {
+            return new Notification(title, notificationOptions);
+        } catch (error) {
+            console.error('Notification error:', error);
+            return null;
+        }
+    },
+    scheduleReminder: function(title, body, date) {
+        const now = new Date();
+        const scheduledTime = new Date(date);
+        const delay = scheduledTime - now;
+        if (delay > 0) {
+            setTimeout(() => {
+                this.send(title, { body: body });
+            }, delay);
+            return true;
+        }
+        return false;
+    },
+    getPermission: function() {
+        if (!this.isSupported()) {
+            return 'unsupported';
+        }
+        return Notification.permission;
+    }
+};
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('AnthroNotification initialized');
+});
+</script>
+"""
+    
     combined_js = notification_js + get_interactive_library_js_css()
     gr.HTML(combined_js)
     
-    # State untuk menyimpan payload
-    state_payload = gr.State({})
     
     # ═══════════════════════════════════════════════════════════════════════
     # MAIN TABS (MODIFIED FOR v3.2.2 - RE-ORDERED)
