@@ -6874,31 +6874,33 @@ def get_local_library_filters() -> Tuple[List[str], List[str]]:
 
 def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
     """
-    (REVISI v3.2.2 - FIXED)
-    Generate HTML untuk satu kartu artikel dengan data-attributes yang benar
+    (REVISI v3.2.2 - SYNTAX ERROR FIXED)
+    Generate HTML untuk satu kartu artikel
     """
-    # Format kategori untuk class CSS
+    # Format kategori untuk CSS class
     kategori_class = article['kategori'].lower().replace(' ', '-').replace('&', '').replace(',', '')
     
-    # Format sources untuk data-attribute (ganti spasi dengan strip agar match dengan filter)
+    # Format sources untuk data-attribute
     sources_formatted = article['source'].replace(' ', '-')
     
-    # Pastikan summary tidak terlalu panjang
+    # Batasi panjang summary
     summary = article['summary']
     if len(summary) > 150:
         summary = summary[:147] + '...'
     
-    # Source color mapping
+    # Source colors
     source_colors = {
         'IDAI': '#e91e63',
-        'Kemenkes': '#2196f3', 
+        'Kemenkes': '#2196f3',
+        'Kemenkes-RI': '#2196f3',
         'WHO': '#4caf50',
         'UNICEF': '#00bcd4',
         'Alodokter': '#ff9800',
         'Halodoc': '#3f51b5',
-        'KlikDokter': '#9c27b0'
+        'KlikDokter': '#9c27b0',
+        'Hellosehat': '#ff5722'
     }
-    source_color = source_colors.get(article['source'], '#757575')
+    source_color = source_colors.get(sources_formatted, '#757575')
     
     html = f"""
     <div class='article-card-v3' 
@@ -6921,12 +6923,13 @@ def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
         <div class='article-card-footer'>
             <button class='article-card-button' 
                     onclick='AnthroHPK_Library.showArticleContent({index})'>
-                📖 Baca Selengkapnya
+                Baca Selengkapnya
             </button>
         </div>
     </div>
     """
     return html
+
     
 
 
@@ -7048,13 +7051,19 @@ def render_perpustakaan_updated() -> str:
 
 def get_interactive_library_js_css() -> str:
     """
-    (REVISI v3.2.2 - FIXED)
+    (REVISI v3.2.2 - SYNTAX ERROR FIXED)
     Mengembalikan blok <style> dan <script> untuk perpustakaan interaktif.
-    PENTING: Export database ke window.ARTIKEL_DB untuk akses langsung
+    
+    PERUBAHAN:
+    1. Export database ke JavaScript (window.ARTIKEL_DB)
+    2. JavaScript init dengan delay & multiple fallbacks
+    3. Filter logic diperbaiki (display: flex)
+    4. SEMUA karakter Unicode dihapus untuk menghindari syntax error
     """
     
-    # EXPORT DATABASE KE JAVASCRIPT (CRITICAL FIX)
-    # Convert database Python ke JavaScript object
+    # ===========================================================================
+    # PART 1: EXPORT DATABASE KE JAVASCRIPT
+    # ===========================================================================
     import json
     artikel_db_json = json.dumps(ARTIKEL_LOKAL_DATABASE, ensure_ascii=False)
     
@@ -7062,18 +7071,20 @@ def get_interactive_library_js_css() -> str:
 <script>
 // Export database artikel ke window untuk akses langsung
 window.ARTIKEL_DB = {artikel_db_json};
-console.log('✅ ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
+console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
 </script>
     """
     
-    # CSS STYLES (UNCHANGED - keep your existing CSS)
+    # ===========================================================================
+    # PART 2: CSS STYLES
+    # ===========================================================================
     css = """
 <style>
-/* ═══════════════════════════════════════════════════════════════════
+/* ===================================================================
    PERPUSTAKAAN INTERAKTIF v3.2.2 - STYLES
-   ═══════════════════════════════════════════════════════════════════ */
+   =================================================================== */
 
-/* --- Filter Bar --- */
+/* Filter Bar */
 .library-filter-bar {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
@@ -7085,322 +7096,360 @@ console.log('✅ ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
     border: 1px solid #e9ecef;
 }
 @media (max-width: 768px) {
-    .library-filter-bar {
-        grid-template-columns: 1fr;
-    }
+    .library-filter-bar { grid-template-columns: 1fr; }
 }
-.library-filter-bar .filter-group {
-    display: flex;
-    flex-direction: column;
-}
-.library-filter-bar label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #555;
-    margin-bottom: 8px;
-}
+.library-filter-bar .filter-group { display: flex; flex-direction: column; }
+.library-filter-bar label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px; }
 .library-filter-bar input[type='text'],
 .library-filter-bar select {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: white;
+    width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: 8px;
+    font-size: 14px; transition: all 0.3s ease; -webkit-appearance: none;
+    -moz-appearance: none; appearance: none; background-color: white;
 }
 .library-filter-bar select {
     background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23555" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    background-size: 16px;
-    padding-right: 40px;
+    background-repeat: no-repeat; background-position: right 15px center;
+    background-size: 16px; padding-right: 40px;
 }
 .library-filter-bar input[type='text']:focus,
 .library-filter-bar select:focus {
-    border-color: #ff6b9d;
-    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15);
-    outline: none;
+    border-color: #ff6b9d; box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15); outline: none;
 }
 .library-filter-bar input[type='text'] {
     background: white url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23999" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat 97% 50%;
-    background-size: 16px;
-    padding-right: 40px;
+    background-size: 16px; padding-right: 40px;
 }
 #library-counter {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #667eea;
-    font-weight: 500;
-    grid-column: 1 / -1;
-    text-align: center;
+    margin-top: 15px; font-size: 14px; color: #667eea;
+    font-weight: 500; grid-column: 1 / -1; text-align: center;
 }
-#library-counter .count {
-    font-weight: 700;
-    font-size: 16px;
-}
+#library-counter .count { font-weight: 700; font-size: 16px; }
 
-/* --- Article Grid --- */
+/* Article Grid */
 .article-grid-v3 {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
 }
 
-/* --- Article Card v3 --- */
+/* Article Card */
 .article-card-v3 {
-    background: #ffffff;
-    border-radius: 15px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    background: #ffffff; border-radius: 15px; border: 1px solid #e9ecef;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+    overflow: hidden; transition: all 0.3s ease;
 }
 .article-card-v3:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    border-color: #ff9a9e;
-}
-.article-card-header {
-    padding: 15px 20px 10px;
+    transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: #ff9a9e;
 }
 .article-card-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0 0 10px 0;
-    padding: 0 20px;
-    line-height: 1.4;
+    font-size: 18px; font-weight: 700; color: #2c3e50; margin: 0 0 10px 0;
+    padding: 0 20px; line-height: 1.4;
 }
 .article-card-summary {
-    font-size: 14px;
-    color: #555;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0 20px 15px;
-    flex-grow: 1;
+    font-size: 14px; color: #555; line-height: 1.6; margin: 0;
+    padding: 0 20px 15px; flex-grow: 1;
 }
-.article-card-tags {
-    padding: 0 20px 15px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
+.article-card-tags { padding: 0 20px 15px; display: flex; flex-wrap: wrap; gap: 8px; }
 .article-card-tag {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
 }
-.category-badge {
-    background-color: #f0f0f0;
-    color: #555;
-    border: 1px solid #ddd;
-}
-.source-badge {
-    color: white;
-}
+.category-badge { background-color: #f0f0f0; color: #555; border: 1px solid #ddd; }
+.source-badge { color: white; }
 .article-card-footer {
-    padding: 15px 20px;
-    background-color: #fcfdff;
-    border-top: 1px solid #f0f0f0;
-    margin-top: auto;
+    padding: 15px 20px; background-color: #fcfdff;
+    border-top: 1px solid #f0f0f0; margin-top: auto;
 }
 .article-card-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    border: none; padding: 10px 18px; border-radius: 8px; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: all 0.3s ease;
 }
 .article-card-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transform: scale(1.05); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-/* --- Article Modal --- */
+/* Modal */
 .article-modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    -webkit-backdrop-filter: blur(5px);
-    backdrop-filter: blur(5px);
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); display: none; justify-content: center;
+    align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
+    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
 }
-.article-modal-backdrop.visible {
-    display: flex;
-    opacity: 1;
-}
+.article-modal-backdrop.visible { display: flex; opacity: 1; }
 .article-modal-content {
-    background: white;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 800px;
-    height: 90vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    transform: scale(0.95);
-    transition: transform 0.3s ease;
-    overflow: hidden;
+    background: white; border-radius: 15px; width: 90%; max-width: 800px;
+    height: 90vh; display: flex; flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: scale(0.95);
+    transition: transform 0.3s ease; overflow: hidden;
 }
-.article-modal-backdrop.visible .article-modal-content {
-    transform: scale(1);
-}
+.article-modal-backdrop.visible .article-modal-content { transform: scale(1); }
 .article-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 25px;
-    border-bottom: 1px solid #eee;
-    flex-shrink: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 25px; border-bottom: 1px solid #eee; flex-shrink: 0;
 }
 .article-modal-close {
-    background: #f0f0f0;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-size: 20px;
-    font-weight: bold;
-    color: #888;
-    cursor: pointer;
-    line-height: 30px;
-    text-align: center;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
+    background: #f0f0f0; border: none; border-radius: 50%; width: 30px;
+    height: 30px; font-size: 20px; font-weight: bold; color: #888;
+    cursor: pointer; line-height: 30px; text-align: center;
+    transition: all 0.2s ease; flex-shrink: 0;
 }
-.article-modal-close:hover {
-    background: #ff6b9d;
-    color: white;
-}
+.article-modal-close:hover { background: #ff6b9d; color: white; }
 .article-modal-body {
-    padding: 25px;
-    overflow-y: auto;
-    line-height: 1.7;
-    color: #333;
-    flex-grow: 1;
+    padding: 25px; overflow-y: auto; line-height: 1.7;
+    color: #333; flex-grow: 1;
 }
 .article-modal-body h1, .article-modal-body h2, .article-modal-body h3 {
-    color: #667eea;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 5px;
+    color: #667eea; margin-top: 20px; margin-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0; padding-bottom: 5px;
 }
 .article-modal-body h1 { font-size: 26px; }
 .article-modal-body h2 { font-size: 22px; }
 .article-modal-body h3 { font-size: 18px; }
 .article-modal-body p { margin-bottom: 15px; }
-.article-modal-body ul, .article-modal-body ol {
-    padding-left: 25px;
-    margin-bottom: 15px;
-}
+.article-modal-body ul, .article-modal-body ol { padding-left: 25px; margin-bottom: 15px; }
 .article-modal-body li { margin-bottom: 8px; }
 .article-modal-body blockquote {
-    background: #f8f9fa;
-    border-left: 5px solid #667eea;
-    padding: 15px;
-    margin: 20px 0;
-    border-radius: 8px;
-    font-style: italic;
+    background: #f8f9fa; border-left: 5px solid #667eea; padding: 15px;
+    margin: 20px 0; border-radius: 8px; font-style: italic;
 }
-.article-modal-body strong {
-    color: #d94680;
-}
+.article-modal-body strong { color: #d94680; }
 
-/* Dark Mode Support */
+/* Dark Mode */
 @media (prefers-color-scheme: dark) {
-    .library-filter-bar {
-        background-color: #2d2d2d;
-        border-color: #505050;
-    }
-    .library-filter-bar label {
-        color: #e0e0e0;
-    }
+    .library-filter-bar { background-color: #2d2d2d; border-color: #505050; }
+    .library-filter-bar label { color: #e0e0e0; }
     .library-filter-bar input[type='text'],
-    .library-filter-bar select {
-        background-color: #3a3a3a;
-        border-color: #505050;
-        color: #ffffff;
-    }
-    .article-card-v3 {
-        background: #2a2a2a;
-        border-color: #505050;
-    }
-    .article-card-v3:hover {
-        border-color: #ff9a9e;
-    }
-    .article-card-title {
-        color: #ffffff;
-    }
-    .article-card-summary {
-        color: #e0e0e0;
-    }
-    .article-card-footer {
-        background-color: #303030;
-        border-top-color: #505050;
-    }
-    .category-badge {
-        background-color: #3a3a3a;
-        color: #e0e0e0;
-        border-color: #505050;
-    }
-    .article-modal-content {
-        background: #2d2d2d;
-        color: #e0e0e0;
-    }
-    .article-modal-header {
-        border-bottom-color: #505050;
-    }
-    .article-modal-close {
-        background: #4a4a4a;
-        color: #e0e0e0;
-    }
-    .article-modal-close:hover {
-        background: #ff6b9d;
-    }
-    .article-modal-body {
-        color: #e0e0e0;
-    }
+    .library-filter-bar select { background-color: #3a3a3a; border-color: #505050; color: #ffffff; }
+    .article-card-v3 { background: #2a2a2a; border-color: #505050; }
+    .article-card-v3:hover { border-color: #ff9a9e; }
+    .article-card-title { color: #ffffff; }
+    .article-card-summary { color: #e0e0e0; }
+    .article-card-footer { background-color: #303030; border-top-color: #505050; }
+    .category-badge { background-color: #3a3a3a; color: #e0e0e0; border-color: #505050; }
+    .article-modal-content { background: #2d2d2d; color: #e0e0e0; }
+    .article-modal-header { border-bottom-color: #505050; }
+    .article-modal-close { background: #4a4a4a; color: #e0e0e0; }
+    .article-modal-close:hover { background: #ff6b9d; }
+    .article-modal-body { color: #e0e0e0; }
     .article-modal-body h1, .article-modal-body h2, .article-modal-body h3 {
-        color: #8a9cff;
-        border-bottom-color: #505050;
+        color: #8a9cff; border-bottom-color: #505050;
     }
-    .article-modal-body blockquote {
-        background: #3a3a3a;
-        border-left-color: #8a9cff;
-    }
-    .article-modal-body strong {
-        color: #ff9a9e;
-    }
+    .article-modal-body blockquote { background: #3a3a3a; border-left-color: #8a9cff; }
+    .article-modal-body strong { color: #ff9a9e; }
 }
 </style>
     """
     
-    # JAVASCRIPT (USE THE FIXED VERSION FROM library_fix.js)
-    # [Paste the entire JavaScript code from library_fix.js here]
+    # ===========================================================================
+    # PART 3: JAVASCRIPT (FIXED - NO UNICODE CHARACTERS)
+    # ===========================================================================
     js = """
-[PASTE KODE DARI library_fix.js DI SINI - LIHAT FILE YANG SUDAH SAYA BUAT]
+<script>
+// ===========================================================================
+// AnthroHPK Library v3.2.2 - Interactive Library JavaScript
+// ===========================================================================
+
+window.AnthroHPK_Library = {
+    indexLoader: null,
+    contentHolder: null,
+    contentModalBody: null,
+    initialized: false,
+    
+    init: function() {
+        if (this.initialized) {
+            console.log('Library already initialized');
+            return;
+        }
+        
+        console.log('AnthroHPK Library Init v3.2.2 - FIXED');
+        
+        // Delay untuk memastikan DOM ready
+        setTimeout(() => {
+            const searchInput = document.getElementById('library-search');
+            const categoryFilter = document.getElementById('library-filter-category');
+            const sourceFilter = document.getElementById('library-filter-source');
+
+            console.log('Filter elements:', {
+                search: !!searchInput,
+                category: !!categoryFilter,
+                source: !!sourceFilter
+            });
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => this.filterLibrary());
+                console.log('Search listener attached');
+            } else {
+                console.error('Search input not found');
+            }
+            
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', () => this.filterLibrary());
+                console.log('Category listener attached');
+            } else {
+                console.error('Category filter not found');
+            }
+            
+            if (sourceFilter) {
+                sourceFilter.addEventListener('change', () => this.filterLibrary());
+                console.log('Source listener attached');
+            } else {
+                console.error('Source filter not found');
+            }
+            
+            // Cari komponen Gradio
+            this.indexLoader = document.querySelector('.article-index-loader input[type="number"]');
+            this.contentHolder = document.querySelector('.article-content-holder');
+            this.contentModalBody = document.getElementById('article-modal-body-dynamic');
+            
+            console.log('Gradio components:', {
+                indexLoader: !!this.indexLoader,
+                contentHolder: !!this.contentHolder,
+                contentModalBody: !!this.contentModalBody
+            });
+            
+            // Filter sekali saat load
+            this.filterLibrary();
+            
+            this.initialized = true;
+            console.log('Library initialized successfully');
+        }, 500);
+    },
+    
+    filterLibrary: function() {
+        const searchInput = document.getElementById('library-search');
+        const categoryFilter = document.getElementById('library-filter-category');
+        const sourceFilter = document.getElementById('library-filter-source');
+        
+        if (!searchInput || !categoryFilter || !sourceFilter) {
+            console.error('Filter elements not found');
+            return;
+        }
+        
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const selectedCategory = categoryFilter.value;
+        const selectedSource = sourceFilter.value;
+        
+        console.log('Filtering:', { searchTerm, selectedCategory, selectedSource });
+        
+        const cards = document.querySelectorAll('.article-card-v3');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const title = (card.querySelector('.article-card-title')?.textContent || '').toLowerCase();
+            const summary = (card.querySelector('.article-card-summary')?.textContent || '').toLowerCase();
+            const category = card.getAttribute('data-category') || '';
+            const sources = card.getAttribute('data-sources') || '';
+            
+            const matchSearch = searchTerm === '' || title.includes(searchTerm) || summary.includes(searchTerm);
+            const matchCategory = selectedCategory === 'all' || category === selectedCategory;
+            const matchSource = selectedSource === 'all' || sources.includes(selectedSource);
+            
+            if (matchSearch && matchCategory && matchSource) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Update counter
+        const counterSpan = document.getElementById('library-counter-span');
+        if (counterSpan) {
+            counterSpan.innerHTML = 'Menampilkan <span class="count">' + visibleCount + '</span> dari <span class="count">' + cards.length + '</span> artikel';
+        }
+        
+        console.log('Filtered: ' + visibleCount + '/' + cards.length + ' visible');
+    },
+    
+    showArticleContent: function(index) {
+        console.log('showArticleContent called with index:', index);
+        
+        if (!this.contentModalBody) {
+            this.contentModalBody = document.getElementById('article-modal-body-dynamic');
+            if (!this.contentModalBody) {
+                alert('Terjadi kesalahan. Silakan refresh halaman.');
+                return;
+            }
+        }
+
+        const modal = document.getElementById('article-modal-dynamic');
+        if (!modal) {
+            console.error('Modal not found');
+            return;
+        }
+        
+        // Tampilkan loading
+        this.contentModalBody.innerHTML = '<div style="text-align: center; padding: 50px;"><div style="font-size: 48px; margin-bottom: 20px;">Loading...</div><p style="font-size: 18px; color: #666;">Sedang memuat artikel...</p></div>';
+        modal.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+
+        // Load dari window.ARTIKEL_DB
+        if (typeof window.ARTIKEL_DB !== 'undefined' && window.ARTIKEL_DB[index]) {
+            const article = window.ARTIKEL_DB[index];
+            const content = '<h1>' + article.title + '</h1>' +
+                '<div style="padding: 10px 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">' +
+                '<p style="margin: 0; font-size: 14px; color: #555;">' +
+                '<strong>Kategori:</strong> ' + article.kategori + '<br>' +
+                '<strong>Sumber:</strong> ' + article.source +
+                '</p></div>' +
+                '<div style="line-height: 1.8;">' + article.full_content.replace(/\n/g, '<br>') + '</div>';
+            this.contentModalBody.innerHTML = content;
+            console.log('Article loaded from ARTIKEL_DB');
+        } else {
+            this.contentModalBody.innerHTML = '<div style="text-align: center; padding: 50px;"><div style="font-size: 48px; margin-bottom: 20px;">Error</div><h3>Artikel Tidak Ditemukan</h3><p>Silakan refresh halaman.</p><button onclick="location.reload()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">Refresh Halaman</button></div>';
+            console.error('Article not found:', index);
+        }
+    },
+
+    closeArticleContent: function(event) {
+        if (event && (event.target.classList.contains('article-modal-backdrop') || 
+            event.target.classList.contains('article-modal-close'))) {
+            
+            const modal = document.getElementById('article-modal-dynamic');
+            if (modal) {
+                modal.classList.remove('visible');
+                document.body.style.overflow = 'auto';
+                
+                setTimeout(() => {
+                    if (this.contentModalBody) {
+                        this.contentModalBody.innerHTML = '';
+                    }
+                }, 300);
+            }
+        }
+    }
+};
+
+// Setup dengan multiple fallbacks
+function setupLibraryWhenReady() {
+    if (window.gradio_config) {
+        window.addEventListener('gradio:mounted', () => {
+            console.log('Gradio mounted, initializing...');
+            AnthroHPK_Library.init();
+        });
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => AnthroHPK_Library.init(), 1000);
+        });
+    } else {
+        setTimeout(() => AnthroHPK_Library.init(), 1000);
+    }
+    
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            if (!AnthroHPK_Library.initialized) {
+                AnthroHPK_Library.init();
+            }
+        }, 1500);
+    });
+}
+
+setupLibraryWhenReady();
+
+</script>
     """
     
     # Gabungkan semua
