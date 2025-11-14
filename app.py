@@ -9247,6 +9247,58 @@ checklist yang disesuaikan dengan status gizi anak.
             
             © 2024-2025 {APP_TITLE}. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
             """)
+
+# === REVISI: PERBAIKAN LOGIKA INISIALISASI TAB ===
+    # Handler ini akan berjalan SETIAP KALI tab diganti.
+    
+    def on_tab_select(tab_index: int):
+        """
+        Memicu inisialisasi JS HANYA saat tab perpustakaan (id=4) dipilih.
+        Ini untuk mengatasi masalah lazy loading Gradio.
+        """
+        if tab_index == 4:  # ID Tab Perpustakaan Interaktif adalah 4
+            print("🚀 Tab 4 (Library) selected. Triggering JS init.")
+            # Kirim sinyal JS untuk menginisialisasi library
+            # Kita gunakan timestamp untuk memastikan nilainya selalu unik & memicu update
+            js_call = f"""
+            <script>
+                console.log('Gradio on_tab_select fired for tab 4 at {datetime.now().isoformat()}');
+                // Beri delay 100ms untuk memastikan DOM tab-nya sudah di-render
+                setTimeout(() => {{
+                    if (window.AnthroHPK_Library && !window.AnthroHPK_Library.initialized) {{
+                        console.log('Running AnthroHPK_Library.init()...');
+                        window.AnthroHPK_Library.init();
+                    }} else if (window.AnthroHPK_Library && window.AnthroHPK_Library.initialized) {{
+                        console.log('Library JS already initialized.');
+                    }} else {{
+                        console.error('AnthroHPK_Library object not found on tab select!');
+                    }}
+                }}, 100);
+            </script>
+            """
+            return gr.update(value=js_call)
+        
+        # Jangan update apapun jika tab lain yang dipilih
+        return gr.update(value=None)
+
+    # Buat komponen HTML tersembunyi untuk Menerima sinyal JS
+    # Ini diperlukan agar output 'on_tab_select' punya tujuan
+    js_init_trigger = gr.HTML(visible=False, value="")
+
+    # Hubungkan event 'select' dari main_tabs ke handler 'on_tab_select'
+    main_tabs.select(
+        fn=on_tab_select,
+        inputs=[main_tabs],
+        outputs=[js_init_trigger]
+    )
+    # === AKHIR BLOK REVISI ===
+    
+    # Footer (MODIFIED)
+    gr.Markdown(f"""
+    ---
+    
+    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
+    ...
     
     # Footer (MODIFIED)
     gr.Markdown(f"""
@@ -9269,31 +9321,53 @@ checklist yang disesuaikan dengan status gizi anak.
     </div>
     """)
     
-    # === REVISI: TAMBAHKAN BLOK INI ===
-    # Ini akan menjalankan 'AnthroHPK_Library.init()' setelah
-    # semua elemen UI Gradio selesai dimuat di browser klien.
-    # Ini adalah perbaikan paling penting untuk masalah inisialisasi.
-    demo.load(
-        fn=None,
-        _js="""
-        () => {
-            console.log('Gradio demo.load event fired. Initializing library...');
-            // Beri sedikit delay ekstra untuk memastikan DOM benar-benar stabil
-            setTimeout(() => {
-                if (window.AnthroHPK_Library && !window.AnthroHPK_Library.initialized) {
-                    window.AnthroHPK_Library.init();
-                } else if (window.AnthroHPK_Library && window.AnthroHPK_Library.initialized) {
-                    console.log('Library already initialized by another event.');
-                } else {
-                    console.error('AnthroHPK_Library object not found!');
-                }
-            }, 500); // delay 500ms
-        }
+    # === REVISI: PERBAIKAN LOGIKA INISIALISASI TAB ===
+    # Handler ini akan berjalan SETIAP KALI tab diganti.
+    
+    def on_tab_select(tab_index: int):
         """
+        Memicu inisialisasi JS HANYA saat tab perpustakaan (id=4) dipilih.
+        Ini untuk mengatasi masalah lazy loading Gradio.
+        """
+        if tab_index == 4:  # ID Tab Perpustakaan Interaktif adalah 4
+            print("🚀 Tab 4 (Library) selected. Triggering JS init.")
+            # Kirim sinyal JS untuk menginisialisasi library
+            # Kita gunakan timestamp untuk memastikan nilainya selalu unik & memicu update
+            js_call = f"""
+            <script>
+                console.log('Gradio on_tab_select fired for tab 4 at {datetime.now().isoformat()}');
+                // Beri delay 100ms untuk memastikan DOM tab-nya sudah di-render
+                setTimeout(() => {{
+                    if (window.AnthroHPK_Library && !window.AnthroHPK_Library.initialized) {{
+                        console.log('Running AnthroHPK_Library.init()...');
+                        window.AnthroHPK_Library.init();
+                    }} else if (window.AnthroHPK_Library && window.AnthroHPK_Library.initialized) {{
+                        console.log('Library JS already initialized.');
+                    }} else {{
+                        console.error('AnthroHPK_Library object not found on tab select!');
+                    }}
+                }}, 100);
+            </script>
+            """
+            return gr.update(value=js_call)
+        
+        # Jangan update apapun jika tab lain yang dipilih
+        return gr.update(value=None)
+
+    # Buat komponen HTML tersembunyi untuk Menerima sinyal JS
+    # Ini diperlukan agar output 'on_tab_select' punya tujuan
+    js_init_trigger = gr.HTML(visible=False, value="")
+
+    # Hubungkan event 'select' dari main_tabs ke handler 'on_tab_select'
+    main_tabs.select(
+        fn=on_tab_select,
+        inputs=[main_tabs],
+        outputs=[js_init_trigger]
     )
-    # === AKHIR BLOK TAMBAHAN ===
+    # === AKHIR BLOK REVISI ===
 
 print("✅ Section 11 (Gradio UI) dimodifikasi: Perpustakaan Interaktif v3.2.2 terintegrasi.")
+
 
 
 # ===============================================================================
