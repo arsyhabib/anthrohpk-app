@@ -6936,7 +6936,7 @@ def generate_article_card_html(article: Dict, index: int) -> str:
         </div>
         <div class='article-card-footer'>
             <button class='article-card-button' 
-                    onclick='showArticleContent({index})'>
+                    onclick='AnthroHPK_Library.showArticleContent(this, {index})'>
                 Baca Selengkapnya →
             </button>
         </div>
@@ -7143,7 +7143,7 @@ def generate_article_card_html(article: Dict, index: int) -> str:
         </div>
         <div class='article-card-footer'>
             <button class='article-card-button' 
-                    onclick='showArticleContent(this, {index})'>
+                    onclick='AnthroHPK_Library.showArticleContent(this, {index})'>
                 Baca Selengkapnya →
             </button>
         </div>
