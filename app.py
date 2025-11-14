@@ -6149,11 +6149,7 @@ ARTIKEL_LOKAL_DATABASE = [
         
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
-    }
-]
-
-[...lanjutan dari ARTIKEL_LOKAL_DATABASE...]
-
+    },
     # ════════════════════════════════════════════════
     # Kategori: Kesehatan & Imunisasi (5 Artikel BARU)
     # ════════════════════════════════════════════════
@@ -6849,6 +6845,8 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     }
+
+]
 
 # --- AKHIR DARI DATABASE ARTIKEL LOKAL ---
 
