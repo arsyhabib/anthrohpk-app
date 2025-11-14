@@ -8147,6 +8147,8 @@ document.addEventListener('DOMContentLoaded', function() {
     combined_js = notification_js + get_interactive_library_js_css()
     gr.HTML(combined_js)
     
+    # State untuk menyimpan payload
+    state_payload = gr.State({})
     
     # ═══════════════════════════════════════════════════════════════════════
     # MAIN TABS (MODIFIED FOR v3.2.2 - RE-ORDERED)
