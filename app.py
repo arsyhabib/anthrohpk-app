@@ -6936,7 +6936,7 @@ def generate_article_card_html(article: Dict, index: int) -> str:
         </div>
         <div class='article-card-footer'>
             <button class='article-card-button' 
-                    onclick='AnthroHPK_Library.showArticleContent(this, {index})'>
+                    onclick='AnthroHPK_Library.showArticleContent({index})'>
                 Baca Selengkapnya →
             </button>
         </div>
@@ -7078,77 +7078,7 @@ def render_perpustakaan_updated() -> str:
         </div>
         """
 
-def generate_article_card_html(article: Dict, index: int) -> str:
-    """
-    (MODIFIKASI v3.2.2 - REVISI PENTING)
-    Menghasilkan satu kartu artikel HTML dengan gaya profesional.
-    Modal (konten popup) DIBUAT KOSONG. Konten akan dimuat secara dinamis
-    saat diklik untuk efisiensi page load.
-    """
-    
-    # --- Buat Tag Kategori ---
-    category_class = article["kategori"].lower().replace(" & ", "-").replace(" ", "-")
-    category_tag = f"""
-    <span class='article-card-tag category-badge category-{category_class}'
-          data-value='{article["kategori"]}'>
-        {article["kategori"]}
-    </span>
-    """
-    
-    # --- Buat Tag Sumber ---
-    source_tags = ""
-    source_list = [s.strip() for s in article["source"].split('|')]
-    source_data_tags = " ".join([s.replace(' ', '-') for s in source_list]) # Untuk data-filter
-    
-    color_map = {
-        "WHO": "#0088cc", "Kemenkes RI": "#ff4444", "IDAI": "#ff6b6b",
-        "UNICEF": "#00a9e0", "CDC": "#005eaa", "AAP": "#00a6d6",
-        "ASHA": "#6a0dad", "AAPD": "#00a6d6", "AAO": "#005eaa",
-        "Red Cross": "#e62020", "The Humane Society": "#8d5b4c"
-    }
-    
-    for source in source_list:
-        color = "#6c757d" # Default
-        for key, c in color_map.items():
-            if key in source:
-                color = c
-                break
-        
-        source_tags += f"""
-        <span class='article-card-tag source-badge' 
-              style='background-color: {color}; color: white;'
-              data-value='{source.replace(' ', '-')}'>
-            {source}
-        </span>
-        """
-    
-    # --- Atribut data untuk live search/filter ---
-    data_attributes = f"""
-        data-index='{index}'
-        data-title='{article["title"].lower()}'
-        data-summary='{article["summary"].lower()}'
-        data-category='{article["kategori"]}'
-        data-sources='{source_data_tags}'
-    """
-    
-    return f"""
-    <div class='article-card-v3' {data_attributes}>
-        <div class='article-card-header'>
-            {category_tag}
-        </div>
-        <h3 class='article-card-title'>{article["title"]}</h3>
-        <p class='article-card-summary'>{article["summary"]}</p>
-        <div class='article-card-tags'>
-            {source_tags}
-        </div>
-        <div class='article-card-footer'>
-            <button class='article-card-button' 
-                    onclick='AnthroHPK_Library.showArticleContent(this, {index})'>
-                Baca Selengkapnya →
-            </button>
-        </div>
-    </div>
-    """
+
 
 def get_interactive_library_js_css() -> str:
     """
@@ -7497,70 +7427,80 @@ window.AnthroHPK_Library = {
     contentModalBody: null,
     
     // Fungsi untuk menginisialisasi
-    init: function() {
-        console.log('AnthroHPK Library Init v3.2.2');
-        try {
-            if (typeof ARTIKEL_LOKAL_DATABASE !== 'undefined') {
-                window.ARTIKEL_DB = ARTIKEL_LOKAL_DATABASE;
-                console.log('Article database cached:', window.ARTIKEL_DB.length, 'articles');
-            }
-        } catch(e) {
-            console.warn('Could not cache article database:', e);
-        }
-        
-        // Setup listeners untuk filter
-        const searchInput = document.getElementById('library-search');
-        const categoryFilter = document.getElementById('library-filter-category');
-        const sourceFilter = document.getElementById('library-filter-source');
+init: function() {
+    console.log('AnthroHPK Library Init v3.2.2');
+    
+    // Setup listeners untuk filter
+    const searchInput = document.getElementById('library-search');
+    const categoryFilter = document.getElementById('library-filter-category');
+    const sourceFilter = document.getElementById('library-filter-source');
 
-        if (searchInput) searchInput.addEventListener('input', this.filterLibrary);
-        if (categoryFilter) categoryFilter.addEventListener('change', this.filterLibrary);
-        if (sourceFilter) sourceFilter.addEventListener('change', this.filterLibrary);
-        
-        // Cari komponen Gradio yang tersembunyi
-        // Kita akan menggunakan 'dummy' class untuk menemukannya
-        this.indexLoader = document.querySelector('.article-index-loader input[type="number"]');
-        this.contentHolder = document.querySelector('.article-content-holder');
-        this.contentModalBody = document.getElementById('article-modal-body-dynamic');
-
-        if (!this.indexLoader) console.error("Library JS Error: 'article-index-loader' not found.");
-        if (!this.contentHolder) console.error("Library JS Error: 'article-content-holder' not found.");
-        if (!this.contentModalBody) console.error("Library JS Error: 'article-modal-body-dynamic' not found.");
-
-        this.filterLibrary(); // Jalankan filter sekali saat load
-    },
-
+    if (searchInput) {
+        searchInput.addEventListener('input', () => this.filterLibrary());
+    }
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', () => this.filterLibrary());
+    }
+    if (sourceFilter) {
+        sourceFilter.addEventListener('change', () => this.filterLibrary());
+    }
+    
+    // Cari komponen Gradio
+    this.indexLoader = document.querySelector('.article-index-loader input[type="number"]');
+    this.contentHolder = document.querySelector('.article-content-holder');
+    this.contentModalBody = document.getElementById('article-modal-body-dynamic');
+    
+    console.log('Components found:', {
+        indexLoader: !!this.indexLoader,
+        contentHolder: !!this.contentHolder,
+        contentModalBody: !!this.contentModalBody
+    });
+    
+    // Filter sekali saat load
+    this.filterLibrary();
+},
     // Fungsi untuk filter dan search
-    filterLibrary: function() {
-        const searchTerm = document.getElementById('library-search').value.toLowerCase();
-        const category = document.getElementById('library-filter-category').value;
-        const source = document.getElementById('library-filter-source').value;
-        const cards = document.querySelectorAll('.article-card-v3');
-        let count = 0;
+filterLibrary: function() {
+    const searchInput = document.getElementById('library-search');
+    const categoryFilter = document.getElementById('library-filter-category');
+    const sourceFilter = document.getElementById('library-filter-source');
+    
+    if (!searchInput || !categoryFilter || !sourceFilter) {
+        console.error('Filter elements not found');
+        return;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const selectedSource = sourceFilter.value;
+    
+    const cards = document.querySelectorAll('.article-card-v3');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const title = card.querySelector('.article-card-title')?.textContent.toLowerCase() || '';
+        const summary = card.querySelector('.article-card-summary')?.textContent.toLowerCase() || '';
+        const category = card.getAttribute('data-category') || '';
+        const sources = card.getAttribute('data-sources') || '';
         
-        cards.forEach(card => {
-            const title = card.dataset.title;
-            const summary = card.dataset.summary;
-            const cardCategory = card.dataset.category;
-            const cardSources = card.dataset.sources;
-            
-            const matchesSearch = title.includes(searchTerm) || summary.includes(searchTerm);
-            const matchesCategory = (category === 'all') || (cardCategory === category);
-            const matchesSource = (source === 'all') || (cardSources.includes(source));
-            
-            if (matchesSearch && matchesCategory && matchesSource) {
-                card.style.display = 'flex';
-                count++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
+        const matchSearch = searchTerm === '' || title.includes(searchTerm) || summary.includes(searchTerm);
+        const matchCategory = selectedCategory === 'all' || category === selectedCategory;
+        const matchSource = selectedSource === 'all' || sources.includes(selectedSource);
         
-        const counterEl = document.getElementById('library-counter-span');
-        if (counterEl) {
-            counterEl.innerHTML = `<span class="count">${count}</span> artikel ditemukan`;
+        if (matchSearch && matchCategory && matchSource) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
         }
-    },
+    });
+    
+    // Update counter
+    const counter = document.getElementById('library-counter-span');
+    if (counter) {
+        counter.textContent = `Menampilkan ${visibleCount} dari ${cards.length} artikel`;
+    }
+},
 
     // Fungsi untuk menampilkan modal dan memicu pemuatan konten
 // Fungsi untuk menampilkan modal dan memicu pemuatan konten
