@@ -8036,6 +8036,229 @@ blockquote {
 
 print("✅ Custom CSS (v3.2.2) loaded: Dark mode, light mode, and new interactive library styles.")
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# SECTION 10B-EXTRA: MISSING FUNCTIONS FOR KEJAR TUMBUH
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def toggle_kejar_tumbuh_mode(mode: str):
+    """Toggle input mode untuk Kalkulator Kejar Tumbuh"""
+    if mode == "Tanggal Lahir":
+        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+    else:  # Usia Langsung
+        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)
+
+
+def tambah_data_kejar_tumbuh(data_state, mode, dob, dom, usia_manual, bb, tb):
+    """
+    Menambahkan data pengukuran ke state untuk Kalkulator Kejar Tumbuh
+    
+    Args:
+        data_state: List data pengukuran yang sudah ada
+        mode: Mode input ("Tanggal Lahir" atau "Usia Langsung")
+        dob: Tanggal lahir
+        dom: Tanggal pengukuran
+        usia_manual: Usia dalam bulan (jika mode usia langsung)
+        bb: Berat badan (kg)
+        tb: Tinggi badan (cm)
+    
+    Returns:
+        Tuple: (updated_data_state, display_html, cleared_inputs...)
+    """
+    if data_state is None:
+        data_state = []
+    
+    # Validasi input
+    if bb is None or bb <= 0:
+        return data_state, "⚠️ Masukkan berat badan yang valid", None, None, None, None
+    
+    if tb is None or tb <= 0:
+        return data_state, "⚠️ Masukkan tinggi badan yang valid", None, None, None, None
+    
+    # Hitung usia
+    if mode == "Tanggal Lahir":
+        if not dob or not dom:
+            return data_state, "⚠️ Masukkan tanggal lahir dan tanggal pengukuran", None, None, None, None
+        
+        try:
+            from datetime import datetime
+            dob_date = datetime.strptime(str(dob), "%Y-%m-%d")
+            dom_date = datetime.strptime(str(dom), "%Y-%m-%d")
+            
+            if dom_date < dob_date:
+                return data_state, "⚠️ Tanggal pengukuran tidak boleh sebelum tanggal lahir", None, None, None, None
+            
+            # Hitung usia dalam bulan
+            age_days = (dom_date - dob_date).days
+            age_months = age_days / 30.4375
+        except:
+            return data_state, "⚠️ Format tanggal tidak valid", None, None, None, None
+    else:
+        if usia_manual is None or usia_manual < 0:
+            return data_state, "⚠️ Masukkan usia yang valid", None, None, None, None
+        age_months = usia_manual
+    
+    # Tambahkan data baru
+    new_data = {
+        'usia_bulan': round(age_months, 1),
+        'bb': round(bb, 2),
+        'tb': round(tb, 1)
+    }
+    
+    data_state.append(new_data)
+    
+    # Sort berdasarkan usia
+    data_state = sorted(data_state, key=lambda x: x['usia_bulan'])
+    
+    # Generate display HTML
+    display_html = "<div style='padding: 15px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 10px;'>"
+    display_html += f"<h4 style='margin-top: 0; color: #2c3e50;'>📊 Data Terinput: {len(data_state)} pengukuran</h4>"
+    display_html += "<table style='width: 100%; border-collapse: collapse;'>"
+    display_html += "<tr style='background: #3498db; color: white;'>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>No</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>Usia (bulan)</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>BB (kg)</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>TB (cm)</th>"
+    display_html += "</tr>"
+    
+    for i, data in enumerate(data_state):
+        bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+        display_html += f"<tr style='background: {bg_color};'>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{i+1}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['usia_bulan']}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['bb']}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['tb']}</td>"
+        display_html += "</tr>"
+    
+    display_html += "</table>"
+    display_html += "<p style='margin-top: 10px; color: #27ae60; font-weight: bold;'>✅ Data berhasil ditambahkan!</p>"
+    display_html += "</div>"
+    
+    # Return updated state, display, and clear input fields
+    return data_state, display_html, None, None, None, None
+
+
+def hitung_kejar_tumbuh(data_state):
+    """
+    Menghitung laju pertumbuhan dari data yang sudah diinput
+    
+    Args:
+        data_state: List data pengukuran
+    
+    Returns:
+        HTML report dengan analisis laju pertumbuhan
+    """
+    if not data_state or len(data_state) < 2:
+        return "<p style='color: #e74c3c; padding: 20px;'>⚠️ Minimal 2 data pengukuran diperlukan untuk menghitung laju pertumbuhan.</p>"
+    
+    # Hitung velocity
+    results = []
+    for i in range(len(data_state) - 1):
+        data1 = data_state[i]
+        data2 = data_state[i + 1]
+        
+        delta_months = data2['usia_bulan'] - data1['usia_bulan']
+        delta_bb = data2['bb'] - data1['bb']
+        delta_tb = data2['tb'] - data1['tb']
+        
+        if delta_months > 0:
+            velocity_bb = delta_bb / delta_months  # kg/bulan
+            velocity_tb = delta_tb / delta_months  # cm/bulan
+            
+            results.append({
+                'periode': f"{data1['usia_bulan']:.1f} - {data2['usia_bulan']:.1f} bulan",
+                'delta_months': delta_months,
+                'velocity_bb': velocity_bb,
+                'velocity_tb': velocity_tb,
+                'delta_bb': delta_bb,
+                'delta_tb': delta_tb
+            })
+    
+    # Generate HTML report
+    html = "<div style='padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>"
+    html += "<h3 style='color: #2c3e50; margin-top: 0;'>📈 Analisis Laju Pertumbuhan (Growth Velocity)</h3>"
+    
+    html += "<table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>"
+    html += "<tr style='background: #3498db; color: white;'>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Periode</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Durasi</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Δ BB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Velocity BB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Δ TB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Velocity TB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Status</th>"
+    html += "</tr>"
+    
+    for i, result in enumerate(results):
+        bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+        
+        # Evaluasi velocity BB (rule of thumb: 0.5-1 kg/bulan untuk bayi)
+        if result['velocity_bb'] < 0:
+            bb_status = "⚠️ Penurunan"
+            bb_color = "#e74c3c"
+        elif result['velocity_bb'] < 0.3:
+            bb_status = "⚠️ Lambat"
+            bb_color = "#f39c12"
+        elif result['velocity_bb'] <= 1.5:
+            bb_status = "✅ Normal"
+            bb_color = "#27ae60"
+        else:
+            bb_status = "ℹ️ Cepat"
+            bb_color = "#3498db"
+        
+        # Evaluasi velocity TB (rule of thumb: 2-3 cm/bulan untuk bayi)
+        if result['velocity_tb'] < 0:
+            tb_status = "⚠️ Penurunan"
+            tb_color = "#e74c3c"
+        elif result['velocity_tb'] < 1:
+            tb_status = "⚠️ Lambat"
+            tb_color = "#f39c12"
+        elif result['velocity_tb'] <= 4:
+            tb_status = "✅ Normal"
+            tb_color = "#27ae60"
+        else:
+            tb_status = "ℹ️ Cepat"
+            tb_color = "#3498db"
+        
+        overall_status = "✅ Baik" if "✅" in bb_status and "✅" in tb_status else "⚠️ Perlu Perhatian"
+        overall_color = "#27ae60" if "✅" in overall_status else "#f39c12"
+        
+        html += f"<tr style='background: {bg_color};'>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd;'>{result['periode']}</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_months']:.1f} bln</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_bb']:+.2f} kg</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {bb_color}; font-weight: bold;'>{result['velocity_bb']:.2f} kg/bln<br><small>{bb_status}</small></td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_tb']:+.1f} cm</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {tb_color}; font-weight: bold;'>{result['velocity_tb']:.2f} cm/bln<br><small>{tb_status}</small></td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {overall_color}; font-weight: bold;'>{overall_status}</td>"
+        html += "</tr>"
+    
+    html += "</table>"
+    
+    # Summary statistics
+    avg_velocity_bb = sum(r['velocity_bb'] for r in results) / len(results)
+    avg_velocity_tb = sum(r['velocity_tb'] for r in results) / len(results)
+    
+    html += "<div style='background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;'>"
+    html += "<h4 style='color: #2c3e50; margin-top: 0;'>📊 Rata-rata Laju Pertumbuhan</h4>"
+    html += f"<p><strong>Berat Badan:</strong> {avg_velocity_bb:.2f} kg/bulan</p>"
+    html += f"<p><strong>Tinggi Badan:</strong> {avg_velocity_tb:.2f} cm/bulan</p>"
+    html += "</div>"
+    
+    html += "<div style='background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffc107;'>"
+    html += "<p style='margin: 0;'><strong>ℹ️ Catatan:</strong> Interpretasi ini bersifat umum. Konsultasikan dengan dokter anak untuk evaluasi yang lebih akurat.</p>"
+    html += "</div>"
+    
+    html += "</div>"
+    
+    return html
+
+
+def reset_kejar_tumbuh():
+    """Reset semua data dan input Kalkulator Kejar Tumbuh"""
+    return [], "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data. Silakan tambahkan data pengukuran.</p>", None, None, None, None, ""
+
+print("✅ Section 10B-Extra loaded: Kejar Tumbuh functions defined")
+
 # Build Gradio Interface
 with gr.Blocks(
     title=APP_TITLE,
