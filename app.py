@@ -7839,7 +7839,9 @@ function setupLibraryWhenReady() {
 setupLibraryWhenReady();
 
 </script>
-   """
+    """
+    
+    return js_database_export + css + js
     
 
 
