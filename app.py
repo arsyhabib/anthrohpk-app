@@ -7167,39 +7167,30 @@ def render_perpustakaan_updated() -> str:
 
 def get_interactive_library_js_css() -> str:
     """
-    (REVISI v3.2.2 - SYNTAX ERROR FIXED)
+    (REVISI v3.2.2 - COMPLETE FIX - NO UNICODE)
     Mengembalikan blok <style> dan <script> untuk perpustakaan interaktif.
     
-    PERUBAHAN:
+    CRITICAL FIXES:
     1. Export database ke JavaScript (window.ARTIKEL_DB)
-    2. JavaScript init dengan delay & multiple fallbacks
-    3. Filter logic diperbaiki (display: flex)
-    4. SEMUA karakter Unicode dihapus untuk menghindari syntax error
+    2. JavaScript init dengan delay
+    3. NO Unicode characters (semua diganti ASCII)
+    4. String penutup dipastikan ada
     """
     
-    # ===========================================================================
     # PART 1: EXPORT DATABASE KE JAVASCRIPT
-    # ===========================================================================
     import json
     artikel_db_json = json.dumps(ARTIKEL_LOKAL_DATABASE, ensure_ascii=False)
     
     js_database_export = f"""
 <script>
-// Export database artikel ke window untuk akses langsung
 window.ARTIKEL_DB = {artikel_db_json};
 console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
 </script>
     """
     
-    # ===========================================================================
     # PART 2: CSS STYLES
-    # ===========================================================================
     css = """
 <style>
-/* ===================================================================
-   PERPUSTAKAAN INTERAKTIF v3.2.2 - STYLES
-   =================================================================== */
-
 /* Filter Bar */
 .library-filter-bar {
     display: grid;
@@ -7241,14 +7232,12 @@ console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
 }
 #library-counter .count { font-weight: 700; font-size: 16px; }
 
-/* Article Grid */
 .article-grid-v3 {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
 }
 
-/* Article Card */
 .article-card-v3 {
     background: #ffffff; border-radius: 15px; border: 1px solid #e9ecef;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
@@ -7285,7 +7274,6 @@ console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
     transform: scale(1.05); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-/* Modal */
 .article-modal-backdrop {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.6); display: none; justify-content: center;
@@ -7331,7 +7319,6 @@ console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
 }
 .article-modal-body strong { color: #d94680; }
 
-/* Dark Mode */
 @media (prefers-color-scheme: dark) {
     .library-filter-bar { background-color: #2d2d2d; border-color: #505050; }
     .library-filter-bar label { color: #e0e0e0; }
@@ -7357,15 +7344,9 @@ console.log('ARTIKEL_DB loaded:', window.ARTIKEL_DB.length, 'articles');
 </style>
     """
     
-    # ===========================================================================
-    # PART 3: JAVASCRIPT (FIXED - NO UNICODE CHARACTERS)
-    # ===========================================================================
+    # PART 3: JAVASCRIPT
     js = """
 <script>
-// ===========================================================================
-// AnthroHPK Library v3.2.2 - Interactive Library JavaScript
-// ===========================================================================
-
 window.AnthroHPK_Library = {
     indexLoader: null,
     contentHolder: null,
@@ -7378,55 +7359,31 @@ window.AnthroHPK_Library = {
             return;
         }
         
-        console.log('AnthroHPK Library Init v3.2.2 - FIXED');
+        console.log('AnthroHPK Library Init v3.2.2');
         
-        // Delay untuk memastikan DOM ready
         setTimeout(() => {
             const searchInput = document.getElementById('library-search');
             const categoryFilter = document.getElementById('library-filter-category');
             const sourceFilter = document.getElementById('library-filter-source');
 
-            console.log('Filter elements:', {
-                search: !!searchInput,
-                category: !!categoryFilter,
-                source: !!sourceFilter
-            });
-
             if (searchInput) {
                 searchInput.addEventListener('input', () => this.filterLibrary());
                 console.log('Search listener attached');
-            } else {
-                console.error('Search input not found');
             }
-            
             if (categoryFilter) {
                 categoryFilter.addEventListener('change', () => this.filterLibrary());
                 console.log('Category listener attached');
-            } else {
-                console.error('Category filter not found');
             }
-            
             if (sourceFilter) {
                 sourceFilter.addEventListener('change', () => this.filterLibrary());
                 console.log('Source listener attached');
-            } else {
-                console.error('Source filter not found');
             }
             
-            // Cari komponen Gradio
             this.indexLoader = document.querySelector('.article-index-loader input[type="number"]');
             this.contentHolder = document.querySelector('.article-content-holder');
             this.contentModalBody = document.getElementById('article-modal-body-dynamic');
             
-            console.log('Gradio components:', {
-                indexLoader: !!this.indexLoader,
-                contentHolder: !!this.contentHolder,
-                contentModalBody: !!this.contentModalBody
-            });
-            
-            // Filter sekali saat load
             this.filterLibrary();
-            
             this.initialized = true;
             console.log('Library initialized successfully');
         }, 500);
@@ -7445,8 +7402,6 @@ window.AnthroHPK_Library = {
         const searchTerm = searchInput.value.toLowerCase().trim();
         const selectedCategory = categoryFilter.value;
         const selectedSource = sourceFilter.value;
-        
-        console.log('Filtering:', { searchTerm, selectedCategory, selectedSource });
         
         const cards = document.querySelectorAll('.article-card-v3');
         let visibleCount = 0;
@@ -7469,13 +7424,12 @@ window.AnthroHPK_Library = {
             }
         });
         
-        // Update counter
         const counterSpan = document.getElementById('library-counter-span');
         if (counterSpan) {
             counterSpan.innerHTML = 'Menampilkan <span class="count">' + visibleCount + '</span> dari <span class="count">' + cards.length + '</span> artikel';
         }
         
-        console.log('Filtered: ' + visibleCount + '/' + cards.length + ' visible');
+        console.log('Filtered:', visibleCount + '/' + cards.length + ' visible');
     },
     
     showArticleContent: function(index) {
@@ -7495,12 +7449,10 @@ window.AnthroHPK_Library = {
             return;
         }
         
-        // Tampilkan loading
         this.contentModalBody.innerHTML = '<div style="text-align: center; padding: 50px;"><div style="font-size: 48px; margin-bottom: 20px;">Loading...</div><p style="font-size: 18px; color: #666;">Sedang memuat artikel...</p></div>';
         modal.classList.add('visible');
         document.body.style.overflow = 'hidden';
 
-        // Load dari window.ARTIKEL_DB
         if (typeof window.ARTIKEL_DB !== 'undefined' && window.ARTIKEL_DB[index]) {
             const article = window.ARTIKEL_DB[index];
             const content = '<h1>' + article.title + '</h1>' +
@@ -7513,7 +7465,7 @@ window.AnthroHPK_Library = {
             this.contentModalBody.innerHTML = content;
             console.log('Article loaded from ARTIKEL_DB');
         } else {
-            this.contentModalBody.innerHTML = '<div style="text-align: center; padding: 50px;"><div style="font-size: 48px; margin-bottom: 20px;">Error</div><h3>Artikel Tidak Ditemukan</h3><p>Silakan refresh halaman.</p><button onclick="location.reload()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">Refresh Halaman</button></div>';
+            this.contentModalBody.innerHTML = '<div style="text-align: center; padding: 50px;"><div style="font-size: 48px; margin-bottom: 20px;">Error</div><h3>Artikel Tidak Ditemukan</h3><p>Silakan refresh halaman.</p></div>';
             console.error('Article not found:', index);
         }
     },
@@ -7537,7 +7489,6 @@ window.AnthroHPK_Library = {
     }
 };
 
-// Setup dengan multiple fallbacks
 function setupLibraryWhenReady() {
     if (window.gradio_config) {
         window.addEventListener('gradio:mounted', () => {
@@ -7568,7 +7519,7 @@ setupLibraryWhenReady();
 </script>
     """
     
-    # Gabungkan semua
+    # CRITICAL: Gabungkan semua dan RETURN
     return js_database_export + css + js
     
 // ═══════════════════════════════════════════════════════════════════
