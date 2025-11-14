@@ -7749,6 +7749,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
 [...lanjutan dari Section 10B...]
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 11: GRADIO UI (Fully Updated for v3.2.2 - Interactive Library)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -7769,89 +7770,100 @@ CUSTOM_CSS = """
    DARK MODE OPTIMIZATION - HIGH CONTRAST (v3.1)
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Dark mode detection and optimization */
 @media (prefers-color-scheme: dark) {
-    /* ... [Kode CSS Dark Mode dari v3.1 tetap di sini] ... */
+    .gradio-container { color: #f0f0f0 !important; }
+    h1, h2, h3, h4, h5, h6 { color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    p, span, div, label { color: #e8e8e8 !important; }
+    .gr-input, .gr-textbox, .gr-box, .gr-form { background-color: #2d2d2d !important; color: #ffffff !important; border-color: #505050 !important; }
+    .gr-input::placeholder { color: #999999 !important; }
+    .gr-button { background-color: #404040 !important; color: #ffffff !important; border-color: #606060 !important; }
+    .gr-button:hover { background-color: #505050 !important; border-color: #707070 !important; }
+    .gr-button-primary { background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
+    .gr-button-secondary { background: linear-gradient(135deg, #4ecdc4 0%, #6de0d9 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
+    .gr-panel, .gr-box, .gr-accordion { background-color: #2a2a2a !important; border-color: #505050 !important; color: #e8e8e8 !important; }
+    .gr-tab { background-color: #333333 !important; color: #ffffff !important; border-color: #505050 !important; }
+    .gr-tab.selected { background-color: #ff6b9d !important; color: #ffffff !important; font-weight: 600 !important; }
+    .markdown-body { color: #e8e8e8 !important; }
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #ffffff !important; border-bottom-color: #505050 !important; }
+    .markdown-body a { color: #6db4ff !important; }
+    .markdown-body code { background-color: #1e1e1e !important; color: #d4d4d4 !important; border-color: #404040 !important; }
+    .markdown-body pre { background-color: #1e1e1e !important; border-color: #404040 !important; }
+    .status-success { color: #5cff5c !important; }
+    .status-warning { color: #ffd45c !important; }
+    .status-error { color: #ff5c5c !important; }
+    .premium-gold { background: linear-gradient(135deg, #b8860b 0%, #daa520 100%) !important; color: #ffffff !important; border: 2px solid #b8860b !important; }
+    .premium-silver { background: linear-gradient(135deg, #787878 0%, #a0a0a0 100%) !important; color: #ffffff !important; border: 2px solid #787878 !important; }
+    .article-card { background-color: #2a2a2a !important; border: 1px solid #505050 !important; color: #e8e8e8 !important; }
+    .article-card:hover { background-color: #353535 !important; border-color: #606060 !important; box-shadow: 0 4px 12px rgba(255,255,255,0.1) !important; }
+    .article-title { color: #ffffff !important; }
+    .article-meta { color: #b0b0b0 !important; }
     
-    /* ... [Tambahkan CSS Dark Mode baru untuk Perpustakaan v3.2.2] ... */
-    .library-filter-bar {
-        background-color: #2d2d2d;
-        border-color: #505050;
-    }
-    .library-filter-bar label {
-        color: #e0e0e0;
-    }
+    /* Dark Mode Perpustakaan v3.2.2 */
+    .library-filter-bar { background-color: #2d2d2d; border-color: #505050; }
+    .library-filter-bar label { color: #e0e0e0; }
     .library-filter-bar input[type='text'],
-    .library-filter-bar select {
-        background-color: #3a3a3a;
-        border-color: #505050;
-        color: #ffffff;
-    }
-    .article-card-v3 {
-        background: #2a2a2a;
-        border-color: #505050;
-    }
-    .article-card-v3:hover {
-        border-color: #ff9a9e;
-    }
-    .article-card-title {
-        color: #ffffff;
-    }
-    .article-card-summary {
-        color: #e0e0e0;
-    }
-    .article-card-footer {
-        background-color: #303030;
-        border-top-color: #505050;
-    }
-    .category-badge {
-        background-color: #3a3a3a;
-        color: #e0e0e0;
-        border-color: #505050;
-    }
-    
-    /* Modal Dark */
-    .article-modal-content {
-        background: #2d2d2d;
-        color: #e0e0e0;
-    }
-    .article-modal-header {
-        border-bottom-color: #505050;
-    }
-    .article-modal-close {
-        background: #4a4a4a;
-        color: #e0e0e0;
-    }
-    .article-modal-close:hover {
-        background: #ff6b9d;
-    }
-    .article-modal-body {
-        color: #e0e0e0;
-    }
-    .article-modal-body h1, .article-modal-body h2, .article-modal-body h3 {
-        color: #8a9cff;
-        border-bottom-color: #505050;
-    }
-    .article-modal-body blockquote {
-        background: #3a3a3a;
-        border-left-color: #8a9cff;
-    }
-    .article-modal-body strong {
-        color: #ff9a9e;
-    }
+    .library-filter-bar select { background-color: #3a3a3a; border-color: #505050; color: #ffffff; }
+    .article-card-v3 { background: #2a2a2a; border-color: #505050; }
+    .article-card-v3:hover { border-color: #ff9a9e; }
+    .article-card-title { color: #ffffff; }
+    .article-card-summary { color: #e0e0e0; }
+    .article-card-footer { background-color: #303030; border-top-color: #505050; }
+    .category-badge { background-color: #3a3a3a; color: #e0e0e0; border-color: #505050; }
+    .article-modal-content { background: #2d2d2d; color: #e0e0e0; }
+    .article-modal-header { border-bottom-color: #505050; }
+    .article-modal-close { background: #4a4a4a; color: #e0e0e0; }
+    .article-modal-close:hover { background: #ff6b9d; }
+    .article-modal-body { color: #e0e0e0; }
+    .article-modal-body h1, .article-modal-body h2, .article-modal-body h3 { color: #8a9cff; border-bottom-color: #505050; }
+    .article-modal-body blockquote { background: #3a3a3a; border-left-color: #8a9cff; }
+    .article-modal-body strong { color: #ff9a9e; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
    LIGHT MODE (Default)
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ... [Kode CSS Light Mode v3.1 tetap di sini] ... */
+.status-success { color: #28a745 !important; font-weight: 600; }
+.status-warning { color: #ffc107 !important; font-weight: 600; }
+.status-error { color: #dc3545 !important; font-weight: 600; }
+
+.big-button {
+    font-size: 18px !important; padding: 20px 40px !important; margin: 15px 0 !important;
+    border-radius: 12px !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease !important;
+}
+.big-button:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important; }
+
+.premium-silver {
+    background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%) !important; color: #333 !important;
+    border: 2px solid #A0A0A0 !important; font-weight: bold !important; padding: 15px 30px !important;
+    border-radius: 10px !important; transition: all 0.3s ease !important;
+}
+.premium-gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important; color: #000 !important;
+    border: 2px solid #DAA520 !important; font-weight: bold !important; padding: 15px 30px !important;
+    border-radius: 10px !important; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4) !important;
+    transition: all 0.3s ease !important;
+}
+.premium-gold:hover { transform: scale(1.05) !important; box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   VIDEO CARDS (v3.1)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.video-card {
+    background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); border: 2px solid #ffd4e0;
+    border-radius: 12px; padding: 15px; margin: 10px 0; transition: all 0.3s ease;
+}
+.video-card:hover { transform: scale(1.02); box-shadow: 0 6px 15px rgba(255, 107, 157, 0.2); border-color: #ff6b9d; }
+.video-title { font-size: 16px; font-weight: 700; color: #ff6b9d; margin-bottom: 8px; }
+.video-description { font-size: 13px; color: #666; margin-bottom: 10px; }
+.video-duration { font-size: 12px; color: #999; font-style: italic; }
 
 /* ═══════════════════════════════════════════════════════════════════
    PERPUSTAKAAN INTERAKTIF (BARU v3.2.2)
    ═══════════════════════════════════════════════════════════════════ */
 
-/* --- Filter Bar --- */
 .library-filter-bar {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
@@ -7863,275 +7875,168 @@ CUSTOM_CSS = """
     border: 1px solid #e9ecef;
 }
 @media (max-width: 768px) {
-    .library-filter-bar {
-        grid-template-columns: 1fr; /* Stack di HP */
-    }
+    .library-filter-bar { grid-template-columns: 1fr; }
 }
-.library-filter-bar .filter-group {
-    display: flex;
-    flex-direction: column;
-}
-.library-filter-bar label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #555;
-    margin-bottom: 8px;
-}
+.library-filter-bar .filter-group { display: flex; flex-direction: column; }
+.library-filter-bar label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px; }
 .library-filter-bar input[type='text'],
 .library-filter-bar select {
-    width: 100%;
-    padding: 12px 15px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: all 0.3s ease;
-    -webkit-appearance: none; /* Hapus style default browser */
-    moz-appearance: none;
-    appearance: none;
-    background-color: white;
+    width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: 8px;
+    font-size: 14px; transition: all 0.3s ease; -webkit-appearance: none;
+    moz-appearance: none; appearance: none; background-color: white;
 }
 .library-filter-bar select {
     background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23555" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    background-size: 16px;
-    padding-right: 40px; /* Ruang untuk panah */
+    background-repeat: no-repeat; background-position: right 15px center;
+    background-size: 16px; padding-right: 40px;
 }
 .library-filter-bar input[type='text']:focus,
 .library-filter-bar select:focus {
-    border-color: #ff6b9d;
-    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15);
-    outline: none;
+    border-color: #ff6b9d; box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15); outline: none;
 }
 .library-filter-bar input[type='text'] {
     background: white url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23999" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat 97% 50%;
-    background-size: 16px;
-    padding-right: 40px;
+    background-size: 16px; padding-right: 40px;
 }
 #library-counter {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #667eea;
-    font-weight: 500;
-    grid-column: 1 / -1;
-    text-align: center;
+    margin-top: 15px; font-size: 14px; color: #667eea;
+    font-weight: 500; grid-column: 1 / -1; text-align: center;
 }
-#library-counter .count {
-    font-weight: 700;
-    font-size: 16px;
-}
+#library-counter .count { font-weight: 700; font-size: 16px; }
 
-/* --- Article Grid --- */
 .article-grid-v3 {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
 }
-
-/* --- Article Card v3 --- */
 .article-card-v3 {
-    background: #ffffff;
-    border-radius: 15px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    background: #ffffff; border-radius: 15px; border: 1px solid #e9ecef;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+    overflow: hidden; transition: all 0.3s ease;
 }
-.article-card-v3[style*="display: none"] {
-    display: none !important; /* Pastikan filter berfungsi */
-}
+.article-card-v3[style*="display: none"] { display: none !important; }
 .article-card-v3:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    border-color: #ff9a9e;
+    transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: #ff9a9e;
 }
-.article-card-header {
-    padding: 15px 20px 10px;
-}
+.article-card-header { padding: 15px 20px 10px; }
 .article-card-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0 0 10px 0;
-    padding: 0 20px;
-    line-height: 1.4;
+    font-size: 18px; font-weight: 700; color: #2c3e50; margin: 0 0 10px 0;
+    padding: 0 20px; line-height: 1.4;
 }
 .article-card-summary {
-    font-size: 14px;
-    color: #555;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0 20px 15px;
-    flex-grow: 1; /* Makes summary take up space */
+    font-size: 14px; color: #555; line-height: 1.6; margin: 0;
+    padding: 0 20px 15px; flex-grow: 1;
 }
-.article-card-tags {
-    padding: 0 20px 15px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
+.article-card-tags { padding: 0 20px 15px; display: flex; flex-wrap: wrap; gap: 8px; }
 .article-card-tag {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
 }
-.category-badge {
-    background-color: #f0f0f0;
-    color: #555;
-    border: 1px solid #ddd;
-}
-.source-badge {
-    color: white; /* Color set inline */
-}
+.category-badge { background-color: #f0f0f0; color: #555; border: 1px solid #ddd; }
+.source-badge { color: white; }
 .article-card-footer {
-    padding: 15px 20px;
-    background-color: #fcfdff;
-    border-top: 1px solid #f0f0f0;
-    margin-top: auto; /* Dorong footer ke bawah */
+    padding: 15px 20px; background-color: #fcfdff;
+    border-top: 1px solid #f0f0f0; margin-top: auto;
 }
 .article-card-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
+    border: none; padding: 10px 18px; border-radius: 8px; font-size: 13px;
+    font-weight: 600; cursor: pointer; transition: all 0.3s ease;
 }
 .article-card-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transform: scale(1.05); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
-
-/* --- Article Modal (Popup) --- */
 .article-modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: none; /* Hidden by default */
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    -webkit-backdrop-filter: blur(5px);
-    backdrop-filter: blur(5px);
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); display: none; justify-content: center;
+    align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
+    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
 }
-.article-modal-backdrop.visible {
-    display: flex;
-    opacity: 1;
-}
+.article-modal-backdrop.visible { display: flex; opacity: 1; }
 .article-modal-content {
-    background: white;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 800px;
-    height: 90vh; /* Gunakan height, bukan max-height */
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    transform: scale(0.95);
-    transition: transform 0.3s ease;
-    overflow: hidden; /* Pindahkan overflow ke body */
+    background: white; border-radius: 15px; width: 90%; max-width: 800px;
+    height: 90vh; display: flex; flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: scale(0.95);
+    transition: transform 0.3s ease; overflow: hidden;
 }
-.article-modal-backdrop.visible .article-modal-content {
-    transform: scale(1);
-}
+.article-modal-backdrop.visible .article-modal-content { transform: scale(1); }
 .article-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 25px;
-    border-bottom: 1px solid #eee;
-    flex-shrink: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 25px; border-bottom: 1px solid #eee; flex-shrink: 0;
 }
-.article-modal-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
+.article-modal-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .article-modal-close {
-    background: #f0f0f0;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-size: 20px;
-    font-weight: bold;
-    color: #888;
-    cursor: pointer;
-    line-height: 30px;
-    text-align: center;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
+    background: #f0f0f0; border: none; border-radius: 50%; width: 30px;
+    height: 30px; font-size: 20px; font-weight: bold; color: #888;
+    cursor: pointer; line-height: 30px; text-align: center;
+    transition: all 0.2s ease; flex-shrink: 0;
 }
-.article-modal-close:hover {
-    background: #ff6b9d;
-    color: white;
-}
+.article-modal-close:hover { background: #ff6b9d; color: white; }
 .article-modal-body {
-    padding: 25px;
-    overflow-y: auto;
-    line-height: 1.7;
-    color: #333;
-    flex-grow: 1; /* Body mengambil sisa ruang */
+    padding: 25px; overflow-y: auto; line-height: 1.7;
+    color: #333; flex-grow: 1;
 }
 .article-modal-body h1, .article-modal-body h2, .article-modal-body h3 {
-    color: #667eea;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 5px;
+    color: #667eea; margin-top: 20px; margin-bottom: 10px;
+    border-bottom: 2px solid #f0f0f0; padding-bottom: 5px;
 }
 .article-modal-body h1 { font-size: 26px; }
 .article-modal-body h2 { font-size: 22px; }
 .article-modal-body h3 { font-size: 18px; }
-.article-modal-body p {
-    margin-bottom: 15px;
-}
-.article-modal-body ul, .article-modal-body ol {
-    padding-left: 25px;
-    margin-bottom: 15px;
-}
-.article-modal-body li {
-    margin-bottom: 8px;
-}
+.article-modal-body p { margin-bottom: 15px; }
+.article-modal-body ul, .article-modal-body ol { padding-left: 25px; margin-bottom: 15px; }
+.article-modal-body li { margin-bottom: 8px; }
 .article-modal-body blockquote {
-    background: #f8f9fa;
-    border-left: 5px solid #667eea;
-    padding: 15px;
-    margin: 20px 0;
-    border-radius: 8px;
-    font-style: italic;
+    background: #f8f9fa; border-left: 5px solid #667eea; padding: 15px;
+    margin: 20px 0; border-radius: 8px; font-style: italic;
 }
-.article-modal-body strong {
-    color: #d94680; /* Pink pastel */
-}
+.article-modal-body strong { color: #d94680; }
 .article-modal-body .loading-spinner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 200px;
-    font-size: 18px;
-    color: #888;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 200px; font-size: 18px; color: #888;
 }
+.category-nutrisi-mpasi { background-color: #e3f2fd; color: #1565c0; border-color: #1565c0 !important; }
+.category-tumbuh-kembang { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32 !important; }
+.category-kesehatan-imunisasi { background-color: #fce4ec; color: #c2185b; border-color: #c2185b !important; }
+.category-pola-asuh-psikologi { background-color: #f3e5f5; color: #7b1fa2; border-color: #7b1fa2 !important; }
+.category-keamanan-pencegahan { background-color: #fff3e0; color: #e65100; border-color: #e65100 !important; }
 
-/* Kategori Spesifik */
-.category-nutrisi-mpasi { background-color: #e3f2fd; color: #1565c0; border-color: #1565c0; }
-.category-tumbuh-kembang { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
-.category-kesehatan-imunisasi { background-color: #fce4ec; color: #c2185b; border-color: #c2185b; }
-.category-pola-asuh-psikologi { background-color: #f3e5f5; color: #7b1fa2; border-color: #7b1fa2; }
-.category-keamanan-pencegahan { background-color: #fff3e0; color: #e65100; border-color: #e65100; }
+/* ═══════════════════════════════════════════════════════════════════
+   OTHER COMPONENTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.gr-input, .gr-textbox {
+    border-radius: 8px !important; border: 2px solid #e8e8e8 !important;
+    transition: border-color 0.3s ease !important;
+}
+.gr-input:focus, .gr-textbox:focus {
+    border-color: #ff6b9d !important;
+    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1) !important;
+}
+.gr-panel, .gr-box {
+    border-radius: 12px !important; border: 1px solid #e8e8e8 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
+}
+.gr-tab { border-radius: 8px 8px 0 0 !important; font-weight: 600 !important; }
+.gr-plot {
+    border-radius: 12px !important; overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+blockquote {
+    background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%);
+    border-left: 6px solid #ff6b9d; padding: 20px; margin: 20px 0;
+    border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.notification-panel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px; border-radius: 15px; color: white; margin: 15px 0;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+.notification-enabled {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    padding: 15px; border-radius: 10px; color: white;
+    text-align: center; font-weight: bold; margin: 10px 0;
+}
 """
 
 print("✅ Custom CSS (v3.2.2) loaded: Dark mode, light mode, and new interactive library styles.")
@@ -8151,11 +8056,11 @@ with gr.Blocks(
 ) as demo:
     
     # ═══════════════════════════════════════════════════════════════════════
-    # HEADER (MODIFIED FOR v3.2)
+    # HEADER (MODIFIED FOR v3.2.2)
     # ═══════════════════════════════════════════════════════════════════════
     
     gr.Markdown(f"""
-    # 🏥 **{APP_TITLE} v{APP_VERSION}**
+    # 🏥 **{APP_TITLE} v3.2.2**
     ### 💕 Monitor Pertumbuhan Anak Profesional Berbasis WHO Standards
     
     **Fitur Unggulan v3.2.2 (Revisi):**
@@ -8194,7 +8099,6 @@ with gr.Blocks(
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("📊 Kalkulator Gizi WHO", id=0):
-            # ... [Kode untuk Tab 1 (Kalkulator GIZI WHO) tetap sama] ...
             gr.Markdown("## 🧮 Analisis Status Gizi Komprehensif")
             
             with gr.Row():
@@ -8304,7 +8208,6 @@ with gr.Blocks(
                 
                 # RIGHT COLUMN: GUIDE
                 with gr.Column(scale=4):
-                    # ... [Kode untuk Panduan Pengukuran Akurat tetap sama] ...
                     gr.Markdown("### 💡 Panduan Pengukuran Akurat")
                     
                     gr.HTML("""
@@ -8369,7 +8272,7 @@ with gr.Blocks(
                     """)
                     
                     gr.Markdown("### 🎯 Interpretasi Z-Score")
-                    # ... [Kode untuk Tabel Interpretasi Z-Score tetap sama] ...
+                    
                     gr.HTML("""
                     <table style='width: 100%; border-collapse: collapse; 
                                   margin-top: 15px; background: white; 
@@ -8448,13 +8351,20 @@ with gr.Blocks(
                 pdf_file = gr.File(label="PDF Report", visible=False)
                 csv_file = gr.File(label="CSV Data", visible=False)
             
-            # ... [Kode handler untuk Tab 1 tetap sama] ...
+            # Toggle age input visibility
+            def toggle_age_input(mode):
+                return (
+                    gr.update(visible=(mode == "Tanggal")),
+                    gr.update(visible=(mode == "Usia (bulan)"))
+                )
+            
             age_mode.change(
                 toggle_age_input,
                 inputs=[age_mode],
                 outputs=[date_inputs, month_input]
             )
             
+            # Main analysis handler
             analyze_btn.click(
                 run_comprehensive_analysis,
                 inputs=[
@@ -8471,11 +8381,13 @@ with gr.Blocks(
                 ]
             )
             
+            # PDF download (just update visibility)
             pdf_btn.click(
                 lambda: gr.update(visible=True),
                 outputs=[pdf_file]
             )
             
+            # CSV download (just update visibility)
             csv_btn.click(
                 lambda: gr.update(visible=True),
                 outputs=[csv_file]
@@ -8486,7 +8398,6 @@ with gr.Blocks(
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("🎯 Mode Mudah", id=1):
-            # ... [Kode untuk Tab 2 (Mode Mudah) tetap sama] ...
             gr.Markdown("""
             ### Mode Mudah - Referensi Cepat untuk Ibu
             
@@ -8525,6 +8436,7 @@ with gr.Blocks(
                         value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil akan tampil di sini...</p>"
                     )
             
+            # Connect handler
             mode_mudah_btn.click(
                 fn=mode_mudah_handler,
                 inputs=[mode_mudah_age, mode_mudah_gender],
@@ -8536,7 +8448,6 @@ with gr.Blocks(
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("📋 Checklist Sehat Bulanan", id=2):
-            # ... [Kode untuk Tab 3 (Checklist) tetap sama] ...
             gr.Markdown("""
             ## 🗓️ Panduan Checklist Bulanan (0-24 Bulan)
             
@@ -8564,11 +8475,30 @@ with gr.Blocks(
                     size="lg"
                 )
             
+            # --- BUG FIX (v3.2) ---
+            # Mengganti gr.Markdown menjadi gr.HTML untuk merender video card dengan benar
             checklist_output = gr.HTML(
                 value="<p style='padding: 20px; text-align: center; color: #888;'>Pilih bulan dan klik tombol untuk melihat checklist...</p>"
             )
             
-            # (Handler-nya tetap sama)
+            def generate_checklist_handler(month, payload):
+                """Handler untuk generate checklist (UPDATED for v3.1)"""
+                if not payload:
+                    return """
+<h2> ⚠️ Data Belum Tersedia</h2>
+<p style='padding: 20px;'>
+Silakan lakukan analisis di tab <strong>Kalkulator Gizi</strong> terlebih dahulu untuk mendapatkan 
+checklist yang disesuaikan dengan status gizi anak.
+</p>
+"""
+                
+                try:
+                    # Use the NEW function that includes videos
+                    recommendations_html = generate_checklist_with_videos(int(month), payload)
+                    return recommendations_html
+                except Exception as e:
+                    return f"<h2> ❌ Error</h2><p>Terjadi kesalahan: {str(e)}</p>"
+            
             generate_checklist_btn.click(
                 generate_checklist_handler,
                 inputs=[month_slider, state_payload],
@@ -8580,7 +8510,6 @@ with gr.Blocks(
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("📈 Kalkulator Target Kejar Tumbuh", id=3):
-            # ... [Kode untuk Tab 4 (Kejar Tumbuh) tetap sama] ...
             gr.Markdown("""
             ### Kalkulator Target Kejar Tumbuh (Growth Velocity)
             
@@ -8604,6 +8533,7 @@ with gr.Blocks(
             7.  Setelah semua data terisi, klik **"Analisis Pertumbuhan"**.
             """)
             
+            # State untuk menyimpan list data
             kejar_tumbuh_data_state = gr.State([])
             
             with gr.Row():
@@ -8677,14 +8607,25 @@ with gr.Blocks(
                         type="filepath",
                         visible=False
                     )
+
+            # --- Handlers untuk UI Kejar Tumbuh ---
             
-            # (Handler-nya tetap sama)
+            # Toggle visibilitas input Tanggal vs Usia
+            def toggle_kejar_tumbuh_mode(mode):
+                is_tanggal_mode = (mode == "Tanggal")
+                return (
+                    gr.update(visible=is_tanggal_mode), # DOB
+                    gr.update(visible=is_tanggal_mode), # DOM
+                    gr.update(visible=not is_tanggal_mode) # Usia
+                )
+            
             kejar_tumbuh_mode.change(
                 fn=toggle_kejar_tumbuh_mode,
                 inputs=[kejar_tumbuh_mode],
                 outputs=[kejar_tumbuh_dob, kejar_tumbuh_dom, kejar_tumbuh_usia]
             )
             
+            # Handler Tombol "Tambah Data"
             tambah_data_btn.click(
                 fn=tambah_data_kejar_tumbuh,
                 inputs=[
@@ -8697,12 +8638,22 @@ with gr.Blocks(
                 ]
             )
             
+            # Handler Tombol "Hapus Data Terakhir"
             hapus_data_btn.click(
                 fn=hapus_data_terakhir,
                 inputs=[kejar_tumbuh_data_state],
                 outputs=[kejar_tumbuh_data_state, data_terinput_display]
             )
             
+            # Handler Tombol "Analisis Pertumbuhan"
+            def kejar_tumbuh_handler_wrapper(data_list, gender):
+                # Panggil handler baru yang dimodifikasi
+                html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender) 
+                if plot_path:
+                    return html, gr.update(value=plot_path, visible=True)
+                else:
+                    return html, gr.update(visible=False)
+
             kejar_btn.click(
                 fn=kejar_tumbuh_handler_wrapper,
                 inputs=[kejar_tumbuh_data_state, kejar_gender],
@@ -8758,14 +8709,15 @@ with gr.Blocks(
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("⭐ Premium & Notifikasi", id=5):
-            # ... [Kode untuk Tab 6 (Premium) tetap sama] ...
             gr.Markdown("""
             ## 🎁 Upgrade ke Premium
             
             Nikmati fitur eksklusif untuk pemantauan pertumbuhan anak yang lebih optimal!
             """)
             
+            # PREMIUM PACKAGES
             with gr.Row():
+                # SILVER PACKAGE
                 with gr.Column():
                     gr.HTML("""
                     <div style='background: linear-gradient(135deg, #E8E8E8 0%, #F5F5F5 100%); 
@@ -8807,6 +8759,7 @@ with gr.Blocks(
                         elem_classes=["premium-silver", "big-button"]
                     )
                 
+                # GOLD PACKAGE (RECOMMENDED)
                 with gr.Column():
                     gr.HTML("""
                     <div style='background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
@@ -8873,6 +8826,7 @@ with gr.Blocks(
             
             gr.Markdown("---")
             
+            # NOTIFICATION SYSTEM (MODIFIED for v3.1 - HOUR slider)
             gr.Markdown("""
             ## 🔔 Sistem Notifikasi Browser (Premium Gold)
             
@@ -8914,14 +8868,16 @@ with gr.Blocks(
                             lines=2
                         )
                         
+                        # --- MODIFIED SLIDER (v3.1) ---
                         reminder_delay = gr.Slider(
-                            minimum=0.5,
-                            maximum=24,
-                            value=3,
+                            minimum=0.5,  # 30 menit minimum
+                            maximum=24,   # 24 jam maximum
+                            value=3,      # default 3 jam
                             step=0.5,
                             label="Delay (jam) ⏰",
                             info="Notifikasi akan muncul setelah X jam"
                         )
+                        # --- END MODIFIED SLIDER ---
                         
                         schedule_btn = gr.Button(
                             "⏰ Jadwalkan Reminder",
@@ -8974,7 +8930,112 @@ with gr.Blocks(
                     
                     use_template_btn = gr.Button( "📋 Gunakan Template", variant="secondary")
             
-            # (Handler-nya tetap sama)
+            # JavaScript Handlers for Notifications
+            enable_notif_js = """
+            <script>
+            function enableNotifications() {
+                window.AnthroNotification.requestPermission().then(granted => {
+                    const statusDiv = document.getElementById('notif-status');
+                    if (granted) {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>✅ Notifikasi Berhasil Diaktifkan!</strong><br/>
+                                <span style='font-size: 13px;'>Anda akan menerima reminder sesuai jadwal</span>
+                            </div>
+                        `;
+                        setTimeout(() => {
+                            window.AnthroNotification.send(
+                                '🎉 Selamat!',
+                                'Notifikasi browser berhasil diaktifkan. Anda akan menerima reminder untuk tumbuh kembang anak.',
+                                '🔔'
+                            );
+                        }, 1000);
+                        return 'Notifikasi diaktifkan!';
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: #ff6b6b; 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>❌ Notifikasi Ditolak</strong><br/>
+                                <span style='font-size: 13px;'>
+                                    Mohon izinkan notifikasi di pengaturan browser Anda
+                                </span>
+                            </div>
+                        `;
+                        return 'Notifikasi ditolak.';
+                    }
+                });
+                return 'Memproses...';
+            }
+            </script>
+            """
+            gr.HTML(enable_notif_js)
+            
+            # Event Handlers
+            def handle_enable_notification():
+                return gr.HTML.update(value="""
+                <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                           border-radius: 10px; color: white; text-align: center; margin: 15px 0;'>
+                    <strong>✅ Notifikasi Browser Diaktifkan!</strong><br/>
+                    <span style='font-size: 13px;'>Browser notification sudah aktif.</span>
+                </div>
+                <script>enableNotifications();</script>
+                """)
+            
+            def handle_schedule_reminder_hours(title, message, delay_hours):
+                if not title or not message:
+                    return "❌ Judul dan pesan tidak boleh kosong!"
+                delay_minutes = int(delay_hours * 60)
+                js_code = f"""
+                <script>
+                window.AnthroNotification.schedule('{title}', '{message}', {delay_minutes}, '⏰');
+                alert('✅ Reminder dijadwalkan! Akan muncul dalam {delay_hours} jam.');
+                </script>
+                """
+                return (f"✅ **Reminder Dijadwalkan!**\n\n**Judul:** {title}\n\n**Pesan:** {message}\n\n"
+                        f"**Waktu:** {delay_hours} jam dari sekarang\n\n" + js_code)
+            
+            def handle_use_template(template):
+                templates = {
+                    "Pemeriksaan Bulanan": ("🩺 Pemeriksaan Bulanan", "Sudah saatnya pemeriksaan bulanan! Ukur berat, tinggi, dan lingkar kepala anak.", 8),
+                    "Jadwal Imunisasi": ("💉 Jadwal Imunisasi", "Jangan lupa jadwal imunisasi hari ini! Cek jadwal lengkap di aplikasi.", 1),
+                    "Milestone Perkembangan": ("🎯 Cek Milestone", "Waktunya cek milestone perkembangan anak. Lihat checklist KPSP.", 12),
+                    "Reminder Nutrisi": ("🍽️ Waktu Makan", "Saatnya memberi makan anak. Pastikan menu 4 bintang!", 3)
+                }
+                if template in templates:
+                    title, message, delay = templates[template]
+                    return title, message, delay
+                return "", "", 3
+            
+            def handle_premium_upgrade(package):
+                pkg_info = PREMIUM_PACKAGES.get(package, {})
+                price = pkg_info.get('price', 0)
+                price_formatted = f"Rp {price:,}".replace(',', '.')
+                wa_message = f"Halo PeduliGiziBalita, saya ingin upgrade ke paket {package.upper()} ({price_formatted}/bulan)" # MODIFIED
+                wa_link = f"https://wa.me/{CONTACT_WA}?text={wa_message.replace(' ', '%20')}"
+                return gr.Markdown.update(
+                    value=f"""
+## 🎉 Terima kasih telah memilih paket {package.upper()}!
+**Harga:** {price_formatted}/bulan
+**Langkah selanjutnya:**
+1. Klik tombol WhatsApp di bawah
+2. Konfirmasi pembelian dengan admin
+3. Lakukan pembayaran
+4. Akun premium akan diaktifkan dalam 5 menit
+<div style='text-align: center; margin: 30px 0;'>
+    <a href='{wa_link}' target='_blank'
+       style='display: inline-block; padding: 20px 40px; 
+              background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+              color: white; text-decoration: none; border-radius: 15px;
+              font-size: 18px; font-weight: bold;
+              box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);'>
+        💬 Hubungi Admin via WhatsApp
+    </a>
+</div>
+**Metode Pembayaran:** Transfer Bank (BCA, Mandiri, BRI), E-Wallet (GoPay, OVO, DANA), QRIS
+""", visible=True)
+            
+            # Connect event handlers
             enable_notif_btn.click(fn=handle_enable_notification, outputs=[notif_status])
             schedule_btn.click(
                 fn=handle_schedule_reminder_hours,
@@ -8998,7 +9059,6 @@ with gr.Blocks(
         # ═══════════════════════════════════════════════════════════════════
         
         with gr.TabItem("ℹ️ Tentang & Bantuan", id=6):
-            # ... [Kode untuk Tab 7 (Tentang) tetap sama] ...
             gr.Markdown(f"""
             ## 🏥 Tentang {APP_TITLE}
             
@@ -9054,7 +9114,7 @@ with gr.Blocks(
             © 2024-2025 {APP_TITLE}. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
             """)
     
-    # ... [Kode Footer tetap sama] ...
+    # Footer (MODIFIED)
     gr.Markdown(f"""
     ---
     
@@ -9076,8 +9136,6 @@ with gr.Blocks(
     """)
 
 print("✅ Section 11 (Gradio UI) dimodifikasi: Perpustakaan Interaktif v3.2.2 terintegrasi.")
-
-[...Lanjutan dari Section 11...]
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # SECTION 12: FASTAPI INTEGRATION (MODIFIED FOR v3.2.2)
