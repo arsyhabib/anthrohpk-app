@@ -6929,6 +6929,122 @@ def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
     </div>
     """
     return html
+def tampilkan_perpustakaan_lokal_interaktif() -> str:
+    """
+    (BARU v3.2.2 - SYNTAX ERROR FIXED)
+    Membangun UI untuk tab Perpustakaan Lokal yang interaktif.
+    Menggabungkan CSS, JS, Filter, dan Kartu Artikel.
+    
+    Returns:
+        HTML string lengkap untuk perpustakaan interaktif
+    """
+    
+    # 1. Dapatkan CSS + JS
+    html_head = get_interactive_library_js_css()
+    
+    # 2. Dapatkan data untuk filter
+    categories, sources = get_local_library_filters()
+    
+    # 3. Buat HTML untuk Filter Bar
+    html_filter_bar = """
+    <div class='library-filter-bar'>
+        <div class='filter-group'>
+            <label for='library-search'>Cari berdasarkan Judul atau Kata Kunci</label>
+            <input type='text' id='library-search' placeholder='Contoh: stunting, mpasi, demam...'>
+        </div>
+        <div class='filter-group'>
+            <label for='library-filter-category'>Kategori</label>
+            <select id='library-filter-category'>
+                <option value='all'>Semua Kategori</option>
+    """
+    for cat in categories:
+        html_filter_bar += f"                <option value='{cat}'>{cat}</option>\n"
+    
+    html_filter_bar += """            </select>
+        </div>
+        <div class='filter-group'>
+            <label for='library-filter-source'>Sumber</label>
+            <select id='library-filter-source'>
+                <option value='all'>Semua Sumber</option>
+    """
+    
+    # CRITICAL: Format value sama dengan data-sources di card
+    for src in sources:
+        src_value = src.replace(' ', '-')  # "Kemenkes RI" -> "Kemenkes-RI"
+        html_filter_bar += f"                <option value='{src_value}'>{src}</option>\n"
+    
+    html_filter_bar += """            </select>
+        </div>
+        <div id='library-counter' style='grid-column: 1 / -1;'>
+            <span id='library-counter-span'>Memuat artikel...</span>
+        </div>
+    </div>
+    """
+    
+    # 4. Buat HTML untuk Grid Artikel
+    html_article_grid = "    <div class='article-grid-v3'>\n"
+    for i, article in enumerate(ARTIKEL_LOKAL_DATABASE):
+        html_article_grid += generate_article_card_html(article, i)
+    html_article_grid += "    </div>\n"
+    
+    # 5. Buat HTML untuk Modal Dinamis (satu modal untuk semua artikel)
+    html_modal = """
+    <div class='article-modal-backdrop' id='article-modal-dynamic' 
+         onclick='AnthroHPK_Library.closeArticleContent(event)'>
+        <div class='article-modal-content' onclick='event.stopPropagation()'>
+            <div class='article-modal-header'>
+                <span style='font-size: 16px; font-weight: 600; color: #555;'>Baca Artikel</span>
+                <button class='article-modal-close' 
+                        onclick='AnthroHPK_Library.closeArticleContent(event)'>
+                    &times;
+                </button>
+            </div>
+            <div class='article-modal-body' id='article-modal-body-dynamic'>
+            </div>
+        </div>
+    </div>
+    """
+    
+    # 6. Gabungkan semua komponen
+    return html_head + html_filter_bar + html_article_grid + html_modal
+
+
+def load_article_content_handler(index: int) -> str:
+    """
+    (BARU v3.2.2)
+    Handler untuk memuat konten artikel berdasarkan index.
+    Dipanggil oleh Gradio saat article_index_loader berubah.
+    
+    Args:
+        index: Index artikel dalam ARTIKEL_LOKAL_DATABASE
+        
+    Returns:
+        Markdown string berisi konten artikel lengkap
+    """
+    try:
+        # Validasi index
+        if index < 0 or index >= len(ARTIKEL_LOKAL_DATABASE):
+            return "**Error:** Index artikel tidak valid."
+        
+        # Ambil artikel
+        article = ARTIKEL_LOKAL_DATABASE[index]
+        
+        # Format konten untuk ditampilkan
+        content = f"""
+# {article['title']}
+
+**Kategori:** {article['kategori']}  
+**Sumber:** {article['source']}
+
+---
+
+{article['full_content']}
+        """
+        
+        return content
+        
+    except Exception as e:
+        return f"**Error:** Gagal memuat artikel. {str(e)}"
 
     
 
