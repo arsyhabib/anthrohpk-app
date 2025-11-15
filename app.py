@@ -6938,14 +6938,21 @@ def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
 
 def tampilkan_perpustakaan_lokal_interaktif() -> str:
     """
-    Versi baru fitur 'Perpustakaan Ibu Balita'.
+    Versi baru fitur "Perpustakaan Ibu Balita" (tanpa ketergantungan
+    hidden component Gradio). Seluruh interaktivitas dilakukan oleh
+    JavaScript global yang diinject lewat get_interactive_library_js_css().
 
-    - Tidak bergantung pada hidden component Gradio.
-    - Interaktivitas full di browser (search, filter, modal baca artikel).
+    Di sini kita hanya membangun:
+    - wrapper HTML
+    - filter bar
+    - container kartu
+    - modal
+    - dan payload JSON yang disimpan di <textarea id="pib-library-data">.
     """
     if not ARTIKEL_LOKAL_DATABASE:
         return "<p>Tidak ada artikel perpustakaan yang tersedia.</p>"
 
+    # Ambil daftar kategori & sumber unik
     kategori_list, sumber_list = get_local_library_filters()
     kategori_list = sorted(set(kategori_list))
     sumber_list = sorted(set(sumber_list))
@@ -6966,6 +6973,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
     kategori_options = _build_options(kategori_list)
     sumber_options = _build_options(sumber_list)
 
+    # Susun payload JSON yang akan dipakai JS di browser
     payload = []
     for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE):
         payload.append({
@@ -6986,6 +6994,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
     Kumpulan artikel terkurasi dari IDAI, Kemenkes, WHO, dan sumber terpercaya lain.
     Gunakan pencarian &amp; filter untuk menemukan topik yang Ibu butuhkan.
   </div>
+
   <div class="library-filter-bar">
     <div class="filter-group">
       <label for="pib-search">Cari Judul / Kata Kunci</label>
@@ -7006,184 +7015,29 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
       </select>
     </div>
   </div>
+
   <div id="pib-counter" class="library-counter">
     <span id="pib-counter-span">Memuat artikel perpustakaan...</span>
   </div>
+
   <div id="pib-cards" class="article-card-grid"></div>
 
   <div id="pib-modal" class="pib-modal" aria-hidden="true">
     <div class="pib-modal-content">
       <div class="pib-modal-header">
         <div class="pib-modal-title" id="pib-modal-title">Judul artikel</div>
-        <button class="pib-modal-close" id="pib-modal-close" aria-label="Tutup">&times;</button>
+        <button type="button" class="pib-modal-close" id="pib-modal-close" aria-label="Tutup">
+          ✕
+        </button>
       </div>
-      <div class="pib-modal-body" id="pib-modal-body"></div>
+      <div class="pib-modal-body" id="pib-modal-body">
+        Konten artikel akan tampil di sini.
+      </div>
     </div>
   </div>
 
-  <script>
-  (function() {
-      const RAW_DATA = __DATASET_JSON__;
-      const data = RAW_DATA.map(function(a) {
-          const sources = (a.source || '').split('|').map(function(s) { return s.trim(); }).filter(Boolean);
-          return Object.assign({}, a, {
-              source_list: sources,
-              title_lower: (a.title || '').toLowerCase(),
-              summary_lower: (a.summary || '').toLowerCase(),
-              full_lower: (a.full_content || '').toLowerCase()
-          });
-      });
-
-      const cardsContainer = document.getElementById('pib-cards');
-      const searchInput = document.getElementById('pib-search');
-      const categorySelect = document.getElementById('pib-filter-category');
-      const sourceSelect = document.getElementById('pib-filter-source');
-      const counterSpan = document.getElementById('pib-counter-span');
-
-      const modal = document.getElementById('pib-modal');
-      const modalTitle = document.getElementById('pib-modal-title');
-      const modalBody = document.getElementById('pib-modal-body');
-      const modalClose = document.getElementById('pib-modal-close');
-
-      function pickSourceBadge(sources) {
-          if (!sources || !sources.length) {
-              return { label: 'Artikel Lokal', cls: 'badge-pill-source' };
-          }
-          const joined = sources.join(' ').toLowerCase();
-          if (joined.indexOf('who') !== -1) {
-              return { label: 'WHO', cls: 'badge-pill-source badge-source-who' };
-          }
-          if (joined.indexOf('kemenkes') !== -1 || joined.indexOf('kementerian kesehatan') !== -1) {
-              return { label: 'Kemenkes RI', cls: 'badge-pill-source badge-source-kemenkes' };
-          }
-          if (joined.indexOf('idai') !== -1 || joined.indexOf('ikatan dokter anak') !== -1) {
-              return { label: 'IDAI', cls: 'badge-pill-source badge-source-idai' };
-          }
-          return { label: sources[0], cls: 'badge-pill-source' };
-      }
-
-      function filterData() {
-          const q = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
-          const cat = categorySelect ? categorySelect.value : 'all';
-          const src = sourceSelect ? sourceSelect.value : 'all';
-
-          return data.filter(function(a) {
-              if (cat !== 'all' && a.kategori !== cat) return false;
-              if (src !== 'all' && a.source_list.indexOf(src) === -1) return false;
-              if (!q) return true;
-              return (
-                a.title_lower.indexOf(q) !== -1 ||
-                a.summary_lower.indexOf(q) !== -1 ||
-                a.full_lower.indexOf(q) !== -1
-              );
-          });
-      }
-
-      function renderCards() {
-          const filtered = filterData();
-          if (counterSpan) {
-             counterSpan.textContent = filtered.length + ' artikel ditemukan';
-          }
-          if (!cardsContainer) return;
-          cardsContainer.innerHTML = '';
-
-          filtered.forEach(function(a) {
-              const card = document.createElement('div');
-              card.className = 'article-card-v3';
-              const sumberStr = (a.source || '').replace(/\\|/g, ' • ');
-              const badge = pickSourceBadge(a.source_list);
-
-              card.innerHTML = `
-                <div class="article-card-badge">
-                  <span>📚 ${a.kategori || 'Umum'}</span>
-                </div>
-                <div class="article-card-title">${a.title || 'Tanpa judul'}</div>
-                <div class="article-card-meta">${sumberStr ? 'Sumber: ' + sumberStr : ''}</div>
-                <div class="article-card-summary">${a.summary || ''}</div>
-                <div class="article-card-footer">
-                  <button type="button" data-article-id="${a.id}">Baca ringkasan lengkap</button>
-                  <span class="${badge.cls}">${badge.label}</span>
-                </div>
-              `;
-
-              const btn = card.querySelector('button[data-article-id]');
-              if (btn) {
-                  btn.addEventListener('click', function() {
-                      openModal(a);
-                  });
-              }
-              cardsContainer.appendChild(card);
-          });
-
-          if (filtered.length === 0) {
-              const empty = document.createElement('div');
-              empty.innerHTML = '<p style="font-size:0.85rem;color:#6b7280;">Tidak ada artikel yang cocok dengan filter saat ini.</p>';
-              cardsContainer.appendChild(empty);
-          }
-      }
-
-      function openModal(article) {
-          if (!modal || !modalTitle || !modalBody) return;
-          modalTitle.textContent = article.title || 'Artikel perpustakaan';
-
-          const raw = (article.full_content || '').trim();
-          if (!raw) {
-              modalBody.innerHTML = '<p style="font-size:0.85rem;color:#6b7280;">Belum ada konten lengkap untuk artikel ini.</p>';
-          } else {
-              const escaped = raw
-                  .replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;');
-
-              const paragraphs = escaped.split(/\\n\\s*\\n/);
-              const htmlParas = paragraphs.map(function(p) {
-                  return '<p style="margin:0 0 8px 0; line-height:1.5;">' + p.replace(/\\n/g, '<br/>') + '</p>';
-              }).join('');
-              modalBody.innerHTML = htmlParas;
-          }
-
-          modal.classList.add('open');
-          modal.setAttribute('aria-hidden', 'false');
-      }
-
-      function closeModal() {
-          if (!modal) return;
-          modal.classList.remove('open');
-          modal.setAttribute('aria-hidden', 'true');
-      }
-
-      if (modalClose) {
-          modalClose.addEventListener('click', function() {
-              closeModal();
-          });
-      }
-      if (modal) {
-          modal.addEventListener('click', function(ev) {
-              if (ev.target === modal) {
-                  closeModal();
-              }
-          });
-      }
-
-      if (searchInput) {
-          searchInput.addEventListener('input', function() {
-              renderCards();
-          });
-      }
-      if (categorySelect) {
-          categorySelect.addEventListener('change', function() {
-              renderCards();
-          });
-      }
-      if (sourceSelect) {
-          sourceSelect.addEventListener('change', function() {
-              renderCards();
-          });
-      }
-
-      renderCards();
-  })();
-  </script>
+  <!-- Payload JSON untuk diproses JS global -->
+  <textarea id="pib-library-data" style="display:none;">__DATASET_JSON__</textarea>
 </div>
 """
     html = (
@@ -7193,6 +7047,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
         .replace("__DATASET_JSON__", dataset_json)
     )
     return html
+
 
 
 
@@ -7360,223 +7215,449 @@ def render_perpustakaan_updated() -> str:
 
 def get_interactive_library_js_css() -> str:
     """
-    CSS untuk fitur 'Perpustakaan Ibu Balita'.
+    CSS + JS global untuk fitur "Perpustakaan Ibu Balita".
 
-    Dipanggil di awal layout Gradio melalui:
-        combined_js = notification_js + get_interactive_library_js_css()
-        gr.HTML(combined_js)
+    - CSS mengatur tampilan kartu & modal.
+    - JS mencari elemen #perpustakaan-ibu-balita-wrapper,
+      membaca JSON di #pib-library-data, lalu:
+        * merender kartu artikel di #pib-cards
+        * mengaktifkan search + filter
+        * mengelola modal baca artikel.
     """
     return """
 <style>
 #perpustakaan-ibu-balita-wrapper {
-    margin-top: 8px;
-    margin-bottom: 16px;
-}
-.pib-section-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 4px;
-}
-.pib-section-subtitle {
-    font-size: 0.9rem;
-    color: #6b7280;
-    margin-bottom: 16px;
-}
-.library-filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px 14px;
-    border-radius: 16px;
-    background: #fff5f8;
-    border: 1px solid #ffd4e0;
-    box-shadow: 0 8px 18px rgba(255, 107, 157, 0.08);
-    margin-bottom: 12px;
-}
-.library-filter-bar .filter-group {
-    display: flex;
-    flex-direction: column;
-    min-width: 180px;
-    flex: 1 1 200px;
-}
-.library-filter-bar label {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #6b7280;
-    margin-bottom: 4px;
-}
-.library-filter-bar input,
-.library-filter-bar select {
-    border-radius: 999px;
-    border: 1px solid #e5e7eb;
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    outline: none;
-}
-.library-filter-bar input:focus,
-.library-filter-bar select:focus {
-    border-color: #ff6b9d;
-    box-shadow: 0 0 0 1px rgba(255,107,157,0.35);
-}
-.library-counter {
-    font-size: 0.8rem;
-    color: #6b7280;
-    margin: 4px 2px 10px 2px;
-}
-.article-card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px;
-}
-.article-card-v3 {
-    position: relative;
-    border-radius: 18px;
-    padding: 14px 14px 12px 14px;
-    background: #ffffff;
-    border: 1px solid #ffd4e0;
-    box-shadow: 0 10px 22px rgba(255, 107, 157, 0.10);
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-.article-card-v3:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 30px rgba(255, 107, 157, 0.20);
-}
-.article-card-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: 999px;
-    font-size: 0.7rem;
-    background: #fff5f8;
-    color: #ec4899;
-    margin-bottom: 6px;
-}
-.article-card-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 4px;
-}
-.article-card-meta {
-    font-size: 0.75rem;
-    color: #6b7280;
-    margin-bottom: 6px;
-}
-.article-card-summary {
-    font-size: 0.8rem;
-    color: #4b5563;
-    margin-bottom: 10px;
-}
-.article-card-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-}
-.article-card-footer button {
-    border-radius: 999px;
-    border: none;
-    padding: 5px 10px;
-    font-size: 0.78rem;
-    font-weight: 500;
-    cursor: pointer;
-    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-    color: #111827;
-    box-shadow: 0 6px 14px rgba(255, 107, 157, 0.25);
-}
-.article-card-footer button:hover {
-    filter: brightness(1.03);
-}
-.article-card-footer .badge-pill {
-    padding: 4px 8px;
-    border-radius: 999px;
-    font-size: 0.7rem;
-    background: #f9fafb;
-    color: #6b7280;
+  margin-top: 10px;
 }
 
-/* Source badges */
+.pib-section-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+  color: #1f2933;
+}
+
+.pib-section-subtitle {
+  font-size: 0.92rem;
+  color: #52606d;
+  max-width: 760px;
+  line-height: 1.5;
+  margin-bottom: 1.2rem;
+}
+
+.library-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: #f9fafb;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  margin-bottom: 1rem;
+}
+
+.library-filter-bar .filter-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.library-filter-bar label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+.library-filter-bar input,
+.library-filter-bar select {
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 1px transparent;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.library-filter-bar input:focus,
+.library-filter-bar select:focus {
+  border-color: #fb7185;
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.4);
+  background: #fff;
+}
+
+.library-counter {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin: 6px 4px 10px 4px;
+}
+
+.article-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.article-card-v3 {
+  background: white;
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 10px 26px rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.article-card-badge span {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fee2e2, #eef2ff);
+  color: #7f1d1d;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.article-card-title {
+  margin-top: 8px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.article-card-meta {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin: 2px 0 6px 0;
+}
+
+.article-card-summary {
+  font-size: 0.86rem;
+  color: #374151;
+  line-height: 1.45;
+}
+
+.article-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.article-card-footer button {
+  border-radius: 999px;
+  border: none;
+  padding: 7px 13px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #fb7185, #f97316);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.article-card-footer button:hover {
+  opacity: 0.95;
+  transform: translateY(-0.5px);
+}
+
 .badge-pill-source {
-    padding: 4px 8px;
-    border-radius: 999px;
-    font-size: 0.7rem;
-    background: #eff6ff;
-    color: #1d4ed8;
-    white-space: nowrap;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #e5e7eb;
+  color: #374151;
 }
+
 .badge-source-who {
-    background: #eff6ff;
-    color: #1d4ed8;
+  background: #e0f2fe;
+  color: #0369a1;
 }
+
 .badge-source-kemenkes {
-    background: #ecfdf5;
-    color: #15803d;
+  background: #dcfce7;
+  color: #166534;
 }
+
 .badge-source-idai {
-    background: #fefce8;
-    color: #92400e;
+  background: #fef9c3;
+  color: #92400e;
 }
 
 /* Modal */
 .pib-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(15, 23, 42, 0.55);
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
 }
-.pib-modal.open {
-    display: flex;
+
+.pib-modal[aria-hidden="false"] {
+  display: flex;
 }
+
 .pib-modal-content {
-    max-width: min(820px, 96vw);
-    max-height: 90vh;
-    width: 100%;
-    border-radius: 18px;
-    background: #ffffff;
-    padding: 16px 18px 18px 18px;
-    box-shadow: 0 22px 50px rgba(15, 23, 42, 0.45);
-    display: flex;
-    flex-direction: column;
+  background: white;
+  max-width: min(780px, 92vw);
+  max-height: 84vh;
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.45);
+  display: flex;
+  flex-direction: column;
 }
+
 .pib-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
+
 .pib-modal-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #111827;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  padding-right: 10px;
 }
+
 .pib-modal-close {
-    border: none;
-    background: transparent;
-    font-size: 1.1rem;
-    cursor: pointer;
-    color: #6b7280;
+  border: none;
+  border-radius: 999px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  cursor: pointer;
 }
+
+.pib-modal-close:hover {
+  background: #e5e7eb;
+}
+
 .pib-modal-body {
-    font-size: 0.85rem;
-    color: #374151;
-    overflow-y: auto;
-    padding-right: 4px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  color: #111827;
+  line-height: 1.5;
+  overflow-y: auto;
 }
-.pib-modal-body pre {
-    white-space: pre-wrap;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-@media (max-width: 768px) {
-    .library-filter-bar {
-        padding: 10px 10px;
-    }
+
+/* Responsif */
+@media (max-width: 640px) {
+  .library-filter-bar {
+    padding: 12px 14px;
+  }
 }
 </style>
+<script>
+(function() {
+  if (window.PIBLibraryGlobalInit) return;
+  window.PIBLibraryGlobalInit = true;
+
+  function initPerpustakaan() {
+    var root = document.getElementById('perpustakaan-ibu-balita-wrapper');
+    if (!root) return false;
+    if (root.dataset && root.dataset.initialized === '1') return true;
+    if (root.dataset) root.dataset.initialized = '1';
+
+    var dataHolder = root.querySelector('#pib-library-data');
+    var jsonText = dataHolder ? (dataHolder.value || dataHolder.textContent || '[]') : '[]';
+    var raw;
+    try {
+      raw = JSON.parse(jsonText);
+    } catch (e) {
+      console.error('Gagal parse data Perpustakaan Ibu Balita:', e);
+      raw = [];
+    }
+
+    var data = raw.map(function(a) {
+      var sources = (a.source || '').split('|').map(function(s) { return s.trim(); }).filter(Boolean);
+      return Object.assign({}, a, {
+        source_list: sources,
+        title_lower: (a.title || '').toLowerCase(),
+        summary_lower: (a.summary || '').toLowerCase(),
+        full_lower: (a.full_content || '').toLowerCase()
+      });
+    });
+
+    var cardsContainer = root.querySelector('#pib-cards');
+    var searchInput = root.querySelector('#pib-search');
+    var categorySelect = root.querySelector('#pib-filter-category');
+    var sourceSelect = root.querySelector('#pib-filter-source');
+    var counterSpan = root.querySelector('#pib-counter-span');
+
+    var modal = root.querySelector('#pib-modal');
+    var modalTitle = root.querySelector('#pib-modal-title');
+    var modalBody = root.querySelector('#pib-modal-body');
+    var modalClose = root.querySelector('#pib-modal-close');
+
+    function pickSourceBadge(sources) {
+      if (!sources || !sources.length) {
+        return { label: 'Artikel Lokal', cls: 'badge-pill-source' };
+      }
+      var joined = sources.join(' ').toLowerCase();
+      if (joined.indexOf('who') !== -1) {
+        return { label: 'WHO', cls: 'badge-pill-source badge-source-who' };
+      }
+      if (joined.indexOf('kemenkes') !== -1 || joined.indexOf('kementerian kesehatan') !== -1) {
+        return { label: 'Kemenkes RI', cls: 'badge-pill-source badge-source-kemenkes' };
+      }
+      if (joined.indexOf('idai') !== -1 || joined.indexOf('dokter anak indonesia') !== -1) {
+        return { label: 'IDAI', cls: 'badge-pill-source badge-source-idai' };
+      }
+      return { label: 'Sumber tepercaya', cls: 'badge-pill-source' };
+    }
+
+    function openModal(article) {
+      if (!modal) return;
+      if (modalTitle) modalTitle.textContent = article.title || 'Artikel';
+      if (modalBody) {
+        var html = (article.full_content || '').trim();
+        if (!html) {
+          html = '<p>Konten artikel belum tersedia.</p>';
+        }
+        modalBody.innerHTML = html;
+      }
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+      if (!modal) return;
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    function filterData() {
+      var q = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
+      var cat = categorySelect ? categorySelect.value : 'all';
+      var src = sourceSelect ? sourceSelect.value : 'all';
+
+      return data.filter(function(a) {
+        if (cat !== 'all' && a.kategori !== cat) return false;
+        if (src !== 'all' && a.source_list.indexOf(src) === -1) return false;
+        if (!q) return true;
+        return (
+          a.title_lower.indexOf(q) !== -1 ||
+          a.summary_lower.indexOf(q) !== -1 ||
+          a.full_lower.indexOf(q) !== -1
+        );
+      });
+    }
+
+    function renderCards() {
+      var filtered = filterData();
+      if (counterSpan) {
+        counterSpan.textContent = filtered.length + ' artikel ditemukan';
+      }
+      if (!cardsContainer) return;
+      cardsContainer.innerHTML = '';
+
+      filtered.forEach(function(a) {
+        var card = document.createElement('div');
+        card.className = 'article-card-v3';
+        var sumberStr = (a.source || '').replace(/\\|/g, ' • ');
+        var badge = pickSourceBadge(a.source_list || []);
+
+        card.innerHTML =
+          '<div class="article-card-badge">' +
+            '<span>📚 ' + (a.kategori || 'Umum') + '</span>' +
+          '</div>' +
+          '<div class="article-card-title">' + (a.title || 'Tanpa judul') + '</div>' +
+          '<div class="article-card-meta">' + (sumberStr ? 'Sumber: ' + sumberStr : '') + '</div>' +
+          '<div class="article-card-summary">' + (a.summary || '') + '</div>' +
+          '<div class="article-card-footer">' +
+            '<button type="button" data-article-id="' + a.id + '">Baca ringkasan lengkap</button>' +
+            '<span class="' + badge.cls + '">' + badge.label + '</span>' +
+          '</div>';
+
+        var btn = card.querySelector('button[data-article-id]');
+        if (btn) {
+          btn.addEventListener('click', function() {
+            openModal(a);
+          });
+        }
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    if (modalClose) {
+      modalClose.addEventListener('click', function() {
+        closeModal();
+      });
+    }
+    if (modal) {
+      modal.addEventListener('click', function(ev) {
+        if (ev.target === modal) {
+          closeModal();
+        }
+      });
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        renderCards();
+      });
+    }
+    if (categorySelect) {
+      categorySelect.addEventListener('change', function() {
+        renderCards();
+      });
+    }
+    if (sourceSelect) {
+      sourceSelect.addEventListener('change', function() {
+        renderCards();
+      });
+    }
+
+    renderCards();
+    return true;
+  }
+
+  function tryInitNow() {
+    try {
+      return initPerpustakaan();
+    } catch (e) {
+      console.error('Error init Perpustakaan Ibu Balita:', e);
+      return false;
+    }
+  }
+
+  function setupObserver() {
+    if (tryInitNow()) return;
+    var observer = new MutationObserver(function() {
+      if (tryInitNow()) {
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.body || document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupObserver);
+  } else {
+    setupObserver();
+  }
+})();
+</script>
 """
 
 
@@ -8520,7 +8601,7 @@ def plot_kejar_tumbuh_trajectory(
     fig.suptitle(f"Trajectory Kejar Tumbuh — {gender}", fontsize=11, y=0.98)
 
     # Simpan gambar ke OUTPUTS_DIR
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"kejar_tumbuh_{timestamp}.png"
     filepath = os.path.join(OUTPUTS_DIR, filename)
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
