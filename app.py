@@ -5459,7 +5459,8 @@ def generate_article_card_html_v3_2_3(article: Dict[str, Any], index: int) -> st
         </span>
         """
 
-    html = f"""
+    # --- PERBAIKAN: Ubah nama variabel 'html' menjadi 'html_output' ---
+    html_output = f"""
     <div class='lib-article-card' 
          data-category='{article['kategori']}' 
          data-sources='{sources_formatted}'
@@ -5484,7 +5485,7 @@ def generate_article_card_html_v3_2_3(article: Dict[str, Any], index: int) -> st
         </div>
     </div>
     """
-    return html
+    return html_output
 
 def render_perpustakaan_ibu_balita_v3_2_3() -> str:
     """
