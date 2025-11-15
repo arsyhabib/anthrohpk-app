@@ -100,7 +100,7 @@ from reportlab.lib import colors as rl_colors
 from reportlab.lib.units import cm
 
 # Web Framework
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -9741,6 +9741,69 @@ app_fastapi = FastAPI(
     redoc_url="/api/redoc",
 )
 
+# -------------------------------------------------------------------
+# Helper: Filter artikel perpustakaan untuk API JSON
+# -------------------------------------------------------------------
+
+def _filter_library_items_for_api(
+    q: str = "",
+    kategori: str = "",
+    sumber: str = "",
+) -> List[Dict[str, Any]]:
+    """
+    Filter ARTIKEL_LOKAL_DATABASE untuk keperluan endpoint JSON.
+
+    q        : keyword bebas (judul, ringkasan, isi)
+    kategori : harus persis sama dengan field 'kategori' (jika diisi)
+    sumber   : harus cocok dengan salah satu elemen pada 'source' (dipisah '|')
+    """
+    q = (q or "").strip().lower()
+    kategori = (kategori or "").strip()
+    sumber = (sumber or "").strip()
+
+    results: List[Dict[str, Any]] = []
+
+    for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE):
+        title = str(art.get("title", ""))
+        summary = str(art.get("summary", ""))
+        full_content = str(art.get("full_content", ""))
+        art_kategori = str(art.get("kategori", ""))
+        art_source_raw = str(art.get("source", ""))
+
+        # Filter kategori (jika diminta)
+        if kategori and art_kategori != kategori:
+            continue
+
+        # Filter sumber (jika diminta)
+        if sumber:
+            sources = [
+                s.strip()
+                for s in art_source_raw.split("|")
+                if s.strip()
+            ]
+            if sumber not in sources:
+                continue
+
+        # Filter keyword (judul / summary / full)
+        if q:
+            combined = " ".join([title, summary, full_content]).lower()
+            if q not in combined:
+                continue
+
+        # Untuk API list, kita tidak kirim full_content (biar ringkas)
+        results.append(
+            {
+                "id": idx,
+                "title": title,
+                "kategori": art_kategori,
+                "source": art_source_raw,
+                "summary": summary,
+            }
+        )
+
+    return results
+
+
 # CORS middleware
 app_fastapi.add_middleware(
     CORSMiddleware,
@@ -9792,6 +9855,90 @@ async def health_check():
             "health": "/health",
         }
     }
+
+# -------------------------------------------------------------------
+# Endpoint API: Perpustakaan Ibu Balita (JSON)
+# -------------------------------------------------------------------
+
+@app_fastapi.get("/api/library/meta")
+async def library_meta():
+    """
+    Metadata singkat Perpustakaan Ibu Balita:
+    - jumlah artikel
+    - daftar kategori
+    - daftar sumber
+    """
+    try:
+        kategori_list, sumber_list = get_local_library_filters()
+        kategori_unik = sorted(set(kategori_list))
+        sumber_unik = sorted(set(sumber_list))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Gagal membaca metadata perpustakaan: {e}",
+        )
+
+    return {
+        "jumlah_artikel": len(ARTIKEL_LOKAL_DATABASE),
+        "kategori": kategori_unik,
+        "sumber": sumber_unik,
+    }
+
+
+@app_fastapi.get("/api/library")
+async def library_list(
+    q: str = Query("", alias="q", description="Kata kunci bebas (judul, ringkasan, isi)"),
+    kategori: str = Query("", alias="kategori", description="Filter kategori (opsional)"),
+    sumber: str = Query("", alias="sumber", description="Filter sumber (opsional, persis teks sumber)"),
+):
+    """
+    Mengembalikan daftar artikel Perpustakaan Ibu Balita dalam bentuk JSON.
+
+    Contoh:
+      - /api/library             -> semua artikel
+      - /api/library?q=stunting  -> semua artikel yang mengandung kata 'stunting'
+      - /api/library?kategori=Gizi
+      - /api/library?sumber=Kemenkes RI
+    """
+    try:
+        items = _filter_library_items_for_api(q=q, kategori=kategori, sumber=sumber)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Gagal memproses filter perpustakaan: {e}",
+        )
+
+    return {
+        "count": len(items),
+        "items": items,
+    }
+
+
+@app_fastapi.get("/api/library/{item_id}")
+async def library_detail(item_id: int):
+    """
+    Ambil detail satu artikel perpustakaan berdasarkan index (0-based).
+
+    Catatan:
+    - `item_id` di sini sama dengan index yang dipakai di front-end (kartu).
+    """
+    try:
+        art = ARTIKEL_LOKAL_DATABASE[item_id]
+    except (IndexError, TypeError):
+        raise HTTPException(
+            status_code=404,
+            detail="Artikel perpustakaan tidak ditemukan",
+        )
+
+    return {
+        "id": item_id,
+        "title": art.get("title", ""),
+        "kategori": art.get("kategori", ""),
+        "source": art.get("source", ""),
+        "summary": art.get("summary", ""),
+        "full_content": art.get("full_content", ""),
+    }
+
 
 # API info endpoint
 @app_fastapi.get("/api/info")
