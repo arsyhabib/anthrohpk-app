@@ -6931,84 +6931,236 @@ def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
 
     return html
     
+# Pastikan ARTIKEL_LOKAL_DATABASE dan get_local_library_filters()
+# tetap ada di atas section ini (tidak dihapus).
+
 def tampilkan_perpustakaan_lokal_interaktif() -> str:
     """
-    (BARU v3.2.2 - SYNTAX ERROR FIXED)
-    Membangun UI untuk tab Perpustakaan Lokal yang interaktif.
-    Menggabungkan CSS, JS, Filter, dan Kartu Artikel.
-    
-    Returns:
-        HTML string lengkap untuk perpustakaan interaktif
+    Versi baru fitur 'Perpustakaan Ibu Balita'.
+
+    - Tidak lagi bergantung pada hidden component Gradio
+      (article_index_loader, article_content_holder, dsb).
+    - Semua interaktivitas (filter, pencarian, modal artikel)
+      berjalan full di browser dengan dataset JSON.
     """
-    
-    # 1. Dapatkan CSS + JS
-    html_head = get_interactive_library_js_css()
-    
-    # 2. Dapatkan data untuk filter
-    categories, sources = get_local_library_filters()
-    
-    # 3. Buat HTML untuk Filter Bar
-    html_filter_bar = """
-    <div class='library-filter-bar'>
-        <div class='filter-group'>
-            <label for='library-search'>Cari berdasarkan Judul atau Kata Kunci</label>
-            <input type='text' id='library-search' placeholder='Contoh: stunting, mpasi, demam...'>
-        </div>
-        <div class='filter-group'>
-            <label for='library-filter-category'>Kategori</label>
-            <select id='library-filter-category'>
-                <option value='all'>Semua Kategori</option>
-    """
-    for cat in categories:
-        html_filter_bar += f"                <option value='{cat}'>{cat}</option>\n"
-    
-    html_filter_bar += """            </select>
-        </div>
-        <div class='filter-group'>
-            <label for='library-filter-source'>Sumber</label>
-            <select id='library-filter-source'>
-                <option value='all'>Semua Sumber</option>
-    """
-    
-    # CRITICAL: Format value sama dengan data-sources di card
-    for src in sources:
-        src_value = src.replace(' ', '-')  # "Kemenkes RI" -> "Kemenkes-RI"
-        html_filter_bar += f"                <option value='{src_value}'>{src}</option>\n"
-    
-    html_filter_bar += """            </select>
-        </div>
-        <div id='library-counter' style='grid-column: 1 / -1;'>
-            <span id='library-counter-span'>Memuat artikel...</span>
-        </div>
+    if not ARTIKEL_LOKAL_DATABASE:
+        return "<p>Tidak ada artikel perpustakaan yang tersedia.</p>"
+
+    # Ambil daftar kategori & sumber dari helper yang sudah ada
+    kategori_list, sumber_list = get_local_library_filters()
+    kategori_list = sorted(set(kategori_list))
+    sumber_list = sorted(set(sumber_list))
+
+    def _esc(s: str) -> str:
+        return (
+            s.replace("&", "&amp;")
+             .replace("<", "&lt;")
+             .replace(">", "&gt;")
+        )
+
+    def _build_options(values):
+        return "\n".join(
+            f'<option value="{_esc(v)}">{_esc(v)}</option>'
+            for v in values
+        )
+
+    kategori_options = _build_options(kategori_list)
+    sumber_options = _build_options(sumber_list)
+
+    # Siapkan payload JSON untuk dipakai di sisi JS (front-end)
+    payload = []
+    for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE):
+        payload.append({
+            "id": idx,
+            "title": art.get("title", ""),
+            "kategori": art.get("kategori", ""),
+            "source": art.get("source", ""),
+            "summary": art.get("summary", ""),
+            "full_content": art.get("full_content", ""),
+        })
+
+    dataset_json = json.dumps(payload, ensure_ascii=False)
+
+    # Template HTML + JS front-end only
+    template = """
+<div id="perpustakaan-ibu-balita-wrapper">
+  <div class="pib-section-title">Perpustakaan Ibu Balita</div>
+  <div class="pib-section-subtitle">
+    Kumpulan artikel terkurasi dari IDAI, Kemenkes, WHO, dan sumber terpercaya lain.
+    Gunakan pencarian &amp; filter untuk menemukan topik yang Ibu butuhkan.
+  </div>
+  <div class="library-filter-bar">
+    <div class="filter-group">
+      <label for="pib-search">Cari Judul / Kata Kunci</label>
+      <input id="pib-search" type="text" placeholder="Contoh: stunting, MPASI, ASI eksklusif"/>
     </div>
-    """
-    
-    # 4. Buat HTML untuk Grid Artikel
-    html_article_grid = "    <div class='article-grid-v3'>\n"
-    for i, article in enumerate(ARTIKEL_LOKAL_DATABASE):
-        html_article_grid += generate_article_card_html(article, i)
-    html_article_grid += "    </div>\n"
-    
-    # 5. Buat HTML untuk Modal Dinamis (satu modal untuk semua artikel)
-    html_modal = """
-    <div class='article-modal-backdrop' id='article-modal-dynamic' 
-         onclick='AnthroHPK_Library.closeArticleContent(event)'>
-        <div class='article-modal-content' onclick='event.stopPropagation()'>
-            <div class='article-modal-header'>
-                <span style='font-size: 16px; font-weight: 600; color: #555;'>Baca Artikel</span>
-                <button class='article-modal-close' 
-                        onclick='AnthroHPK_Library.closeArticleContent(event)'>
-                    &times;
-                </button>
-            </div>
-            <div class='article-modal-body' id='article-modal-body-dynamic'>
-            </div>
-        </div>
+    <div class="filter-group">
+      <label for="pib-filter-category">Kategori</label>
+      <select id="pib-filter-category">
+        <option value="all">Semua kategori</option>
+        __KATEGORI_OPTIONS__
+      </select>
     </div>
-    """
-    
-    # 6. Gabungkan semua komponen
-    return html_head + html_filter_bar + html_article_grid + html_modal
+    <div class="filter-group">
+      <label for="pib-filter-source">Sumber</label>
+      <select id="pib-filter-source">
+        <option value="all">Semua sumber</option>
+        __SUMBER_OPTIONS__
+      </select>
+    </div>
+  </div>
+  <div id="pib-counter" class="library-counter">
+    <span id="pib-counter-span">Memuat artikel perpustakaan...</span>
+  </div>
+  <div id="pib-cards" class="article-card-grid"></div>
+
+  <div id="pib-modal" class="pib-modal" aria-hidden="true">
+    <div class="pib-modal-content">
+      <div class="pib-modal-header">
+        <div class="pib-modal-title" id="pib-modal-title">Judul artikel</div>
+        <button class="pib-modal-close" id="pib-modal-close" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="pib-modal-body" id="pib-modal-body">
+        <pre>Memuat isi artikel...</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+      const RAW_DATA = __DATASET_JSON__;
+      const data = RAW_DATA.map(function(a) {
+          const sources = (a.source || '').split('|').map(s => s.trim()).filter(Boolean);
+          return Object.assign({}, a, {
+              source_list: sources,
+              title_lower: (a.title || '').toLowerCase(),
+              summary_lower: (a.summary || '').toLowerCase(),
+              full_lower: (a.full_content || '').toLowerCase()
+          });
+      });
+
+      const cardsContainer = document.getElementById('pib-cards');
+      const searchInput = document.getElementById('pib-search');
+      const categorySelect = document.getElementById('pib-filter-category');
+      const sourceSelect = document.getElementById('pib-filter-source');
+      const counterSpan = document.getElementById('pib-counter-span');
+
+      const modal = document.getElementById('pib-modal');
+      const modalTitle = document.getElementById('pib-modal-title');
+      const modalBody = document.getElementById('pib-modal-body');
+      const modalClose = document.getElementById('pib-modal-close');
+
+      function filterData() {
+          const q = (searchInput.value || '').toLowerCase();
+          const cat = categorySelect.value;
+          const src = sourceSelect.value;
+          return data.filter(function(a) {
+              if (cat !== 'all' && a.kategori !== cat) return false;
+              if (src !== 'all' && a.source_list.indexOf(src) === -1) return false;
+              if (!q) return true;
+              return (
+                a.title_lower.indexOf(q) !== -1 ||
+                a.summary_lower.indexOf(q) !== -1 ||
+                a.full_lower.indexOf(q) !== -1
+              );
+          });
+      }
+
+      function renderCards() {
+          const filtered = filterData();
+          if (counterSpan) {
+             counterSpan.textContent = filtered.length + ' artikel ditemukan';
+          }
+          cardsContainer.innerHTML = '';
+          filtered.forEach(function(a) {
+              const card = document.createElement('div');
+              card.className = 'article-card-v3';
+              const sumberStr = (a.source || '').replace(/\\|/g, ' • ');
+              card.innerHTML = `
+                <div class="article-card-badge">
+                  <span>📚 ${a.kategori || 'Umum'}</span>
+                </div>
+                <div class="article-card-title">${a.title || 'Tanpa judul'}</div>
+                <div class="article-card-meta">${sumberStr ? 'Sumber: ' + sumberStr : ''}</div>
+                <div class="article-card-summary">${a.summary || ''}</div>
+                <div class="article-card-footer">
+                  <button type="button" data-article-id="${a.id}">Baca ringkasan lengkap</button>
+                  <span class="badge-pill">${(a.id + 1)} / ${data.length}</span>
+                </div>
+              `;
+              const btn = card.querySelector('button[data-article-id]');
+              if (btn) {
+                  btn.addEventListener('click', function() {
+                      openModal(a);
+                  });
+              }
+              cardsContainer.appendChild(card);
+          });
+          if (filtered.length === 0) {
+              const empty = document.createElement('div');
+              empty.innerHTML = '<p style="font-size:0.85rem;color:#6b7280;">Tidak ada artikel yang cocok dengan filter saat ini.</p>';
+              cardsContainer.appendChild(empty);
+          }
+      }
+
+      function openModal(article) {
+          modalTitle.textContent = article.title || 'Artikel perpustakaan';
+          const safeText = (article.full_content || '').trim();
+          const escaped = safeText
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;');
+          modalBody.innerHTML = '<pre>' + escaped + '</pre>';
+          modal.classList.add('open');
+          modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal() {
+          modal.classList.remove('open');
+          modal.setAttribute('aria-hidden', 'true');
+      }
+
+      if (modalClose) {
+          modalClose.addEventListener('click', closeModal);
+      }
+      if (modal) {
+          modal.addEventListener('click', function(ev) {
+              if (ev.target === modal) {
+                  closeModal();
+              }
+          });
+      }
+
+      if (searchInput) {
+          searchInput.addEventListener('input', function() {
+              renderCards();
+          });
+      }
+      if (categorySelect) {
+          categorySelect.addEventListener('change', function() {
+              renderCards();
+          });
+      }
+      if (sourceSelect) {
+          sourceSelect.addEventListener('change', function() {
+              renderCards();
+          });
+      }
+
+      renderCards();
+  })();
+  </script>
+</div>
+"""
+
+    html = (
+        template
+        .replace("__KATEGORI_OPTIONS__", kategori_options)
+        .replace("__SUMBER_OPTIONS__", sumber_options)
+        .replace("__DATASET_JSON__", dataset_json)
+    )
+    return html
+
 
 
 def load_article_content_handler(index: int) -> str:
@@ -7167,196 +7319,215 @@ def render_perpustakaan_updated() -> str:
 
 
 
+# =========================================
+# SECTION 10B – Perpustakaan Ibu Balita
+# Styling global (CSS saja, tanpa JS bridge)
+# =========================================
+
 def get_interactive_library_js_css() -> str:
     """
-    (REVISI v3.2.2 - LOGIC ERROR FIXED V2)
-    Mengembalikan blok <style> dan <script> untuk perpustakaan interaktif.
-    
-    PERBAIKAN:
-    1. Menambahkan CSS spinner untuk loading modal (sesuai permintaan user).
-    2. Mengubah showArticleContent JS untuk memicu event 'input' DAN 'change'.
-       Ini jauh lebih robust untuk dideteksi oleh Gradio.
-    3. Menghapus fungsi setup JS 'setupLibraryWhenReady()' yang tidak reliable.
-       Inisialisasi akan dipindahkan ke 'demo.load()' di Python.
+    CSS untuk fitur 'Perpustakaan Ibu Balita'.
+
+    Dipanggil di awal layout Gradio melalui:
+        combined_js = notification_js + get_interactive_library_js_css()
+        gr.HTML(combined_js)
+
+    Tidak lagi berisi JS bridge ke komponen Gradio,
+    karena interaktivitas perpustakaan sekarang murni
+    dikelola di browser (front-end only) oleh HTML + JS
+    di fungsi `tampilkan_perpustakaan_lokal_interaktif`.
     """
-    
-    # PART 1: CSS STYLES (DENGAN TAMBAHAN SPINNER)
-    css = """
+    return """
 <style>
-/* Filter Bar */
+#perpustakaan-ibu-balita-wrapper {
+    margin-top: 8px;
+    margin-bottom: 16px;
+}
+.pib-section-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+.pib-section-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
 .library-filter-bar {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 15px;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    border: 1px solid #e9ecef;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: #fff5f8;
+    border: 1px solid #ffd4e0;
+    box-shadow: 0 8px 18px rgba(255, 107, 157, 0.08);
+    margin-bottom: 12px;
 }
-@media (max-width: 768px) {
-    .library-filter-bar { grid-template-columns: 1fr; }
+.library-filter-bar .filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    flex: 1 1 200px;
 }
-.library-filter-bar .filter-group { display: flex; flex-direction: column; }
-.library-filter-bar label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px; }
-.library-filter-bar input[type='text'],
+.library-filter-bar label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+.library-filter-bar input,
 .library-filter-bar select {
-    width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: 8px;
-    font-size: 14px; transition: all 0.3s ease; -webkit-appearance: none;
-    -moz-appearance: none; appearance: none; background-color: white;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    outline: none;
 }
-.library-filter-bar select {
-    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23555" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');
-    background-repeat: no-repeat; background-position: right 15px center;
-    background-size: 16px; padding-right: 40px;
-}
-.library-filter-bar input[type='text']:focus,
+.library-filter-bar input:focus,
 .library-filter-bar select:focus {
-    border-color: #ff6b9d; box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15); outline: none;
+    border-color: #ff6b9d;
+    box-shadow: 0 0 0 1px rgba(255,107,157,0.35);
 }
-.library-filter-bar input[type='text'] {
-    background: white url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23999" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat 97% 50%;
-    background-size: 16px; padding-right: 40px;
+.library-counter {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 4px 2px 10px 2px;
 }
-#library-counter {
-    margin-top: 15px; font-size: 14px; color: #667eea;
-    font-weight: 500; grid-column: 1 / -1; text-align: center;
-}
-#library-counter .count { font-weight: 700; font-size: 16px; }
-
-.article-grid-v3 {
+.article-card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
 }
-
 .article-card-v3 {
-    background: #ffffff; border-radius: 15px; border: 1px solid #e9ecef;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
-    overflow: hidden; transition: all 0.3s ease;
+    position: relative;
+    border-radius: 18px;
+    padding: 14px 14px 12px 14px;
+    background: #ffffff;
+    border: 1px solid #ffd4e0;
+    box-shadow: 0 10px 22px rgba(255, 107, 157, 0.10);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.article-card-v3[style*="display: none"] { display: none !important; }
 .article-card-v3:hover {
-    transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: #ff9a9e;
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px rgba(255, 107, 157, 0.20);
+}
+.article-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    background: #fff5f8;
+    color: #ec4899;
+    margin-bottom: 6px;
 }
 .article-card-title {
-    font-size: 18px; font-weight: 700; color: #2c3e50; margin: 0 0 10px 0;
-    padding: 0 20px; line-height: 1.4;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+}
+.article-card-meta {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 6px;
 }
 .article-card-summary {
-    font-size: 14px; color: #555; line-height: 1.6; margin: 0;
-    padding: 0 20px 15px; flex-grow: 1;
+    font-size: 0.8rem;
+    color: #4b5563;
+    margin-bottom: 10px;
 }
-.article-card-tags { padding: 0 20px 15px; display: flex; flex-wrap: wrap; gap: 8px; }
-.article-card-tag {
-    padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.5px;
-}
-.category-badge { background-color: #f0f0f0; color: #555; border: 1px solid #ddd; }
-.source-badge { color: white; }
 .article-card-footer {
-    padding: 15px 20px; background-color: #fcfdff;
-    border-top: 1px solid #f0f0f0; margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
 }
-.article-card-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
-    border: none; padding: 10px 18px; border-radius: 8px; font-size: 13px;
-    font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-}
-.article-card-button:hover {
-    transform: scale(1.05); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.article-modal-backdrop {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); display: none; justify-content: center;
-    align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
-    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
-}
-.article-modal-backdrop.visible { display: flex; opacity: 1; }
-.article-modal-content {
-    background: white; border-radius: 15px; width: 90%; max-width: 800px;
-    height: 90vh; display: flex; flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: scale(0.95);
-    transition: transform 0.3s ease; overflow: hidden;
-}
-.article-modal-backdrop.visible .article-modal-content { transform: scale(1); }
-.article-modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 25px; border-bottom: 1px solid #eee; flex-shrink: 0;
-}
-.article-modal-close {
-    background: #f0f0f0; border: none; border-radius: 50%; width: 30px;
-    height: 30px; font-size: 20px; font-weight: bold; color: #888;
-    cursor: pointer; line-height: 30px; text-align: center;
-    transition: all 0.2s ease; flex-shrink: 0;
-}
-.article-modal-close:hover { background: #ff6b9d; color: white; }
-.article-modal-body {
-    padding: 25px; overflow-y: auto; line-height: 1.7;
-    color: #333; flex-grow: 1;
-}
-.article-modal-body h1, .article-modal-body h2, .article-modal-body h3 {
-    color: #667eea; margin-top: 20px; margin-bottom: 10px;
-    border-bottom: 2px solid #f0f0f0; padding-bottom: 5px;
-}
-.article-modal-body h1 { font-size: 26px; }
-.article-modal-body h2 { font-size: 22px; }
-.article-modal-body h3 { font-size: 18px; }
-.article-modal-body p { margin-bottom: 15px; }
-.article-modal-body ul, .article-modal-body ol { padding-left: 25px; margin-bottom: 15px; }
-.article-modal-body li { margin-bottom: 8px; }
-.article-modal-body blockquote {
-    background: #f8f9fa; border-left: 5px solid #667eea; padding: 15px;
-    margin: 20px 0; border-radius: 8px; font-style: italic;
-}
-.article-modal-body strong { color: #d94680; }
-
-/* REVISI: Tambahan CSS untuk spinner loading */
-.modal-loading-spinner {
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    height: 100%; min-height: 200px; color: #888; font-size: 16px;
+.article-card-footer button {
+    border-radius: 999px;
+    border: none;
+    padding: 5px 10px;
+    font-size: 0.78rem;
     font-weight: 500;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    color: #111827;
+    box-shadow: 0 6px 14px rgba(255, 107, 157, 0.25);
 }
-.modal-loading-spinner::after {
-    content: ''; display: block; width: 40px; height: 40px;
-    border-radius: 50%; border: 5px solid #f0f0f0;
-    border-top-color: #667eea;
-    animation: modal-spin 1s linear infinite;
-    margin-top: 20px;
+.article-card-footer button:hover {
+    filter: brightness(1.03);
 }
-@keyframes modal-spin {
-    to { transform: rotate(360deg); }
+.article-card-footer .badge-pill {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    background: #f9fafb;
+    color: #6b7280;
 }
 
-@media (prefers-color-scheme: dark) {
-    .library-filter-bar { background-color: #2d2d2d; border-color: #505050; }
-    .library-filter-bar label { color: #e0e0e0; }
-    .library-filter-bar input[type='text'],
-    .library-filter-bar select { background-color: #3a3a3a; border-color: #505050; color: #ffffff; }
-    .article-card-v3 { background: #2a2a2a; border-color: #505050; }
-    .article-card-v3:hover { border-color: #ff9a9e; }
-    .article-card-title { color: #ffffff; }
-    .article-card-summary { color: #e0e0e0; }
-    .article-card-footer { background-color: #303030; border-top-color: #505050; }
-    .category-badge { background-color: #3a3a3a; color: #e0e0e0; border-color: #505050; }
-    .article-modal-content { background: #2d2d2d; color: #e0e0e0; }
-    .article-modal-header { border-bottom-color: #505050; }
-    .article-modal-close { background: #4a4a4a; color: #e0e0e0; }
-    .article-modal-close:hover { background: #ff6b9d; }
-    .article-modal-body { color: #e0e0e0; }
-    .article-modal-body h1, .article-modal-body h2, .article-modal-body h3 {
-        color: #8a9cff; border-bottom-color: #505050;
+/* Modal */
+.pib-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.55);
+}
+.pib-modal.open {
+    display: flex;
+}
+.pib-modal-content {
+    max-width: min(820px, 96vw);
+    max-height: 90vh;
+    width: 100%;
+    border-radius: 18px;
+    background: #ffffff;
+    padding: 16px 18px 18px 18px;
+    box-shadow: 0 22px 50px rgba(15, 23, 42, 0.45);
+    display: flex;
+    flex-direction: column;
+}
+.pib-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.pib-modal-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+}
+.pib-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #6b7280;
+}
+.pib-modal-body {
+    font-size: 0.85rem;
+    color: #374151;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+.pib-modal-body pre {
+    white-space: pre-wrap;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+@media (max-width: 768px) {
+    .library-filter-bar {
+        padding: 10px 10px;
     }
-    .article-modal-body blockquote { background: #3a3a3a; border-left-color: #8a9cff; }
-    .article-modal-body strong { color: #ff9a9e; }
-    
-    /* REVISI: Dark mode untuk spinner */
-    .modal-loading-spinner { color: #aaa; }
-    .modal-loading-spinner::after { border-color: #444; border-top-color: #8a9cff; }
 }
 </style>
-    """
+"""
+
     
     # PART 2: JAVASCRIPT (REVISI TOTAL)
     js = """
@@ -8111,116 +8282,203 @@ def hapus_data_terakhir(data_state):
     
     return data_state, display_html
 
-def plot_kejar_tumbuh_trajectory(data_list: List[Dict], gender: str, theme_name: str = "pink_pastel") -> Optional[str]:
+# =========================================
+# SECTION 10B – Extra
+# Plot Kejar Tumbuh (versi smooth)
+# =========================================
+
+def plot_kejar_tumbuh_trajectory(
+    data_list: List[Dict],
+    gender: str,
+    theme_name: str = "pink_pastel",
+) -> Optional[str]:
     """
-    (BARU DITAMBAHKAN)
-    Membuat plot trajectory BB/U dan TB/U untuk Kalkulator Kejar Tumbuh.
+    Versi baru plot Kejar Tumbuh:
+    - Tetap memakai kurva rujukan WHO (WFA & HFA).
+    - Trajectory anak digambar dengan garis SMOOTH (cubic spline)
+      sehingga bentuk kurva mendekati grafik referensi,
+      bukan garis patah-patah antar titik.
     """
+    import numpy as np
+
     if not data_list or len(data_list) < 2:
+        # Minimal 2 titik agar ada bentuk kurva
         return None
-    
+
     theme = apply_matplotlib_theme(theme_name)
-    sex_code = 'M' if gender == "Laki-laki" else 'F'
-    
-    # Siapkan data dari state
-    ages = [d['usia_bulan'] for d in data_list]
-    weights = [d['bb'] for d in data_list]
-    heights = [d['tb'] for d in data_list]
-    
-    min_age = max(0, math.floor(min(ages)) - 1)
-    max_age = min(60, math.ceil(max(ages)) + 1)
-    
-    # Buat age grid lokal untuk plot
-    plot_age_grid = np.arange(min_age, max_age + 0.25, 0.25)
-    
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 14), sharex=True)
-    
-    # --- PLOT 1: Berat Badan (WFA) ---
-    
-    # Generate curves
-    wfa_curves = {
-        -3: generate_wfa_curve(sex_code, -3)[1],
-        -2: generate_wfa_curve(sex_code, -2)[1],
-        0:  generate_wfa_curve(sex_code, 0)[1],
-        2:  generate_wfa_curve(sex_code, 2)[1],
-        3:  generate_wfa_curve(sex_code, 3)[1],
-    }
-    
-    # Filter curves based on local age grid (untuk performa)
-    age_grid_full = AGE_GRID # 0-60 bulan
-    indices = (age_grid_full >= min_age) & (age_grid_full <= max_age)
-    local_age_grid = age_grid_full[indices]
-    
-    # Fill zones
-    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[-3][indices], wfa_curves[-2][indices], '#FFE6E6', 0.4, 'Sangat Kurang')
-    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[-2][indices], wfa_curves[2][indices],  '#E8F5E9', 0.45, 'Normal')
-    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[2][indices],  wfa_curves[3][indices],  '#FFF3CD', 0.35, 'Risiko Lebih')
-    
-    # Plot SD lines
-    ax1.plot(local_age_grid, wfa_curves[0][indices], color=theme['secondary'], linestyle='-', linewidth=2, label='Median (0 SD)')
-    ax1.plot(local_age_grid, wfa_curves[-2][indices], color='#FF6347', linestyle='-', linewidth=2, label='-2 SD')
-    ax1.plot(local_age_grid, wfa_curves[2][indices], color='#FF6347', linestyle='-', linewidth=2, label='+2 SD')
-    ax1.plot(local_age_grid, wfa_curves[-3][indices], color='#DC143C', linestyle='--', linewidth=1.5, label='-3 SD')
-    ax1.plot(local_age_grid, wfa_curves[3][indices], color='#DC143C', linestyle='--', linewidth=1.5, label='+3 SD')
-    
-    # Plot trajectory anak
-    ax1.plot(ages, weights, color='#667eea', marker='o', markersize=8, linestyle='-', linewidth=2.5, label='Trajectory Anak', zorder=10)
-    
-    ax1.set_ylabel("Berat Badan (kg)", fontsize=12, fontweight='bold')
-    ax1.set_title(f"Trajectory Berat Badan vs Umur (BB/U) - {gender}", fontsize=14, fontweight='bold')
-    ax1.legend(loc='upper left')
-    ax1.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
-    
-    # --- PLOT 2: Tinggi Badan (HFA) ---
-    
-    # Generate curves
-    hfa_curves = {
-        -3: generate_hfa_curve(sex_code, -3)[1],
-        -2: generate_hfa_curve(sex_code, -2)[1],
-        0:  generate_hfa_curve(sex_code, 0)[1],
-        2:  generate_hfa_curve(sex_code, 2)[1],
-        3:  generate_hfa_curve(sex_code, 3)[1],
-    }
-    
-    # Fill zones
-    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[-3][indices], hfa_curves[-2][indices], '#FFE6E6', 0.4, 'Sangat Pendek')
-    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[-2][indices], hfa_curves[2][indices],  '#E8F5E9', 0.45, 'Normal')
-    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[2][indices],  hfa_curves[3][indices],  '#FFF3CD', 0.35, 'Tinggi')
-    
-    # Plot SD lines
-    ax2.plot(local_age_grid, hfa_curves[0][indices], color=theme['secondary'], linestyle='-', linewidth=2, label='Median (0 SD)')
-    ax2.plot(local_age_grid, hfa_curves[-2][indices], color='#FF6347', linestyle='-', linewidth=2, label='-2 SD')
-    ax2.plot(local_age_grid, hfa_curves[2][indices], color='#FF6347', linestyle='-', linewidth=2, label='+2 SD')
-    ax2.plot(local_age_grid, hfa_curves[-3][indices], color='#DC143C', linestyle='--', linewidth=1.5, label='-3 SD')
-    ax2.plot(local_age_grid, hfa_curves[3][indices], color='#DC143C', linestyle='--', linewidth=1.5, label='+3 SD')
-    
-    # Plot trajectory anak
-    ax2.plot(ages, heights, color='#e91e63', marker='o', markersize=8, linestyle='-', linewidth=2.5, label='Trajectory Anak', zorder=10)
-    
-    ax2.set_xlabel("Usia (bulan)", fontsize=12, fontweight='bold')
-    ax2.set_ylabel("Panjang/Tinggi Badan (cm)", fontsize=12, fontweight='bold')
-    ax2.set_title(f"Trajectory Tinggi Badan vs Umur (TB/U) - {gender}", fontsize=14, fontweight='bold')
-    ax2.legend(loc='upper left')
-    ax2.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
-    
-    # Finalize
-    ax1.set_xlim(min_age, max_age)
-    
-    plt.tight_layout()
-    
-    # Save plot
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filepath = os.path.join(OUTPUTS_DIR, f"KejarTumbuh_{timestamp}.png")
-    
+    sex_code = "M" if gender.lower().startswith("l") else "F"
+
+    ages = np.array([float(d.get("usia_bulan", 0.0)) for d in data_list], dtype=float)
+    weights = np.array([float(d.get("bb", 0.0)) for d in data_list], dtype=float)
+    heights = np.array([float(d.get("tb", 0.0)) for d in data_list], dtype=float)
+
+    # Urutkan berdasarkan usia untuk mencegah garis bolak-balik
+    order = np.argsort(ages)
+    ages = ages[order]
+    weights = weights[order]
+    heights = heights[order]
+
+    # Batasi rentang usia agar tidak keluar jauh dari data anak
+    min_age = max(0.0, float(ages.min()) - 1.0)
+    max_age = min(60.0, float(ages.max()) + 1.0)
+    plot_age_grid = AGE_GRID[(AGE_GRID >= min_age) & (AGE_GRID <= max_age)]
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.8), sharex=True)
+    ax1, ax2 = axes
+
+    # --- Kurva rujukan WFA WHO ---
+    wfa_curves = {}
+    for sd in range(-3, 4):
+        x, y = generate_wfa_curve(sex_code, sd)
+        mask = (x >= min_age) & (x <= max_age)
+        wfa_curves[sd] = (x[mask], y[mask])
+
+    # --- Kurva rujukan HFA WHO ---
+    hfa_curves = {}
+    for sd in range(-3, 4):
+        x, y = generate_hfa_curve(sex_code, sd)
+        mask = (x >= min_age) & (x <= max_age)
+        hfa_curves[sd] = (x[mask], y[mask])
+
+    local_age_grid = plot_age_grid
+
+    # Zona WFA
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[-2][1], wfa_curves[-1][1],
+        "#FFEBEE", 0.55, "Sangat Kurus"
+    )
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[-1][1], wfa_curves[1][1],
+        "#E8F5E9", 0.35, "Normal"
+    )
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[1][1], wfa_curves[2][1],
+        "#FFF3CD", 0.35, "Risiko BB Lebih"
+    )
+
+    for sd, (x, y) in wfa_curves.items():
+        ax1.plot(
+            x, y,
+            linestyle="--" if abs(sd) == 2 else "-",
+            linewidth=1,
+            alpha=0.8,
+            label=f"BB z={sd}" if sd in (-2, 0, 2) else None,
+        )
+
+    # Zona HFA
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[-2][1], hfa_curves[-1][1],
+        "#FFEBEE", 0.55, "Sangat Pendek"
+    )
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[-1][1], hfa_curves[2][1],
+        "#E8F5E9", 0.45, "Normal"
+    )
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[2][1],  hfa_curves[3][1],
+        "#FFF3CD", 0.35, "Tinggi"
+    )
+
+    for sd, (x, y) in hfa_curves.items():
+        ax2.plot(
+            x, y,
+            linestyle="--" if abs(sd) == 2 else "-",
+            linewidth=1,
+            alpha=0.8,
+            label=f"TB z={sd}" if sd in (-2, 0, 2) else None,
+        )
+
+    # --- Trajectory anak: smoothing dengan cubic spline ---
     try:
-        fig.savefig(filepath)
-        print(f"✅ Kejar Tumbuh plot saved: {filepath}")
-        return filepath
-    except Exception as e:
-        print(f"❌ Error saving Kejar Tumbuh plot: {e}")
-        return None
-    finally:
-        cleanup_matplotlib_figures([fig])
+        from scipy.interpolate import make_interp_spline
+
+        # Pilih derajat spline sesuai jumlah titik
+        if len(ages) >= 4:
+            k = 3
+        elif len(ages) == 3:
+            k = 2
+        else:
+            k = 1  # fallback hampir linear (mirip garis biasa)
+
+        age_smooth = np.linspace(float(ages.min()), float(ages.max()), 200)
+
+        w_spline = make_interp_spline(ages, weights, k=k)
+        w_smooth = w_spline(age_smooth)
+
+        h_spline = make_interp_spline(ages, heights, k=k)
+        h_smooth = h_spline(age_smooth)
+    except Exception:
+        # Kalau SciPy tidak tersedia atau ada error lain → pakai garis biasa
+        age_smooth = ages
+        w_smooth = weights
+        h_smooth = heights
+
+    primary = theme.get("primary", "#ff6b9d")
+
+    # BB vs usia: garis smooth + titik pengukuran
+    ax1.plot(
+        age_smooth, w_smooth,
+        color=primary,
+        linewidth=2.4,
+        label="Trajectory BB (smooth)",
+        zorder=10,
+    )
+    ax1.scatter(
+        ages, weights,
+        color="#111827",
+        s=28,
+        zorder=11,
+    )
+
+    # TB vs usia: garis smooth + titik pengukuran
+    ax2.plot(
+        age_smooth, h_smooth,
+        color=primary,
+        linewidth=2.4,
+        label="Trajectory TB (smooth)",
+        zorder=10,
+    )
+    ax2.scatter(
+        ages, heights,
+        color="#111827",
+        s=28,
+        zorder=11,
+    )
+
+    # Label & grid
+    ax1.set_title("Kejar Tumbuh BB vs Usia")
+    ax1.set_xlabel("Usia (bulan)")
+    ax1.set_ylabel("Berat Badan (kg)")
+    ax1.grid(True, which="both", linestyle=":", alpha=0.4)
+
+    ax2.set_title("Kejar Tumbuh TB vs Usia")
+    ax2.set_xlabel("Usia (bulan)")
+    ax2.set_ylabel("Tinggi/Panjang Badan (cm)")
+    ax2.grid(True, which="both", linestyle=":", alpha=0.4)
+
+    ax1.legend(fontsize=7, loc="upper left")
+    ax2.legend(fontsize=7, loc="upper left")
+
+    fig.suptitle(f"Trajectory Kejar Tumbuh — {gender}", fontsize=11, y=0.98)
+
+    # Simpan gambar ke OUTPUTS_DIR
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"kejar_tumbuh_{timestamp}.png"
+    filepath = os.path.join(OUTPUTS_DIR, filename)
+    os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.savefig(filepath, dpi=160)
+    cleanup_matplotlib_figures(fig)
+
+    return filepath
+
 
 def kalkulator_kejar_tumbuh_handler(data_list: List[Dict], gender: str) -> Tuple[str, Optional[str]]:
     """
@@ -8941,49 +9199,25 @@ checklist yang disesuaikan dengan status gizi anak.
                 outputs=[kejar_output_html, kejar_output_plot]
             )
 
-        # ===================================================================
-        # TAB 5: PERPUSTAKAAN (LOKAL) - (DIMODIFIKASI v3.2.2)
-        # ===================================================================
+# =========================================
+# Tab 5 – Perpustakaan Ibu Balita (versi baru)
+# =========================================
+       
         
-        with gr.TabItem("📚 Perpustakaan Interaktif", id=4):
-            gr.Markdown("""
-            ### 📚 Perpustakaan Ibu Balita Interaktif (v3.2.2)
-            
-            Selamat datang di perpustakaan baru! Kami telah mengkurasi **40 artikel esensial** berbasis bukti dari **WHO, Kemenkes RI, IDAI, CDC, dan AAP**.
-            
-            Gunakan fitur di bawah untuk **mencari** atau **memfilter** artikel yang Anda butuhkan, 
-            lalu klik "Baca Selengkapnya" untuk membacanya langsung di *popup* interaktif.
-            """)
-            
-            # --- Bagian Tersembunyi untuk Komunikasi JS <-> Python ---
-            with gr.Column(visible=False):
-                # 1. Komponen input (JS akan mengubah nilai ini)
-                article_index_loader = gr.Number(
-                    value=-1, 
-                    label="Article Index Loader",
-                    elem_classes=["article-index-loader"] # Ditemukan oleh JS
-                )
-                # 2. Komponen output (JS akan mengamati perubahan di sini)
-                article_content_holder = gr.Markdown(
-                    value="", 
-                    label="Article Content Holder",
-                    elem_classes=["article-content-holder"] # Ditemukan oleh JS
-                )
-            # --- Akhir Bagian Tersembunyi ---
-
-            # Tampilkan UI Perpustakaan utama
-            # Fungsi ini akan mengembalikan string HTML besar
-            gr.HTML(tampilkan_perpustakaan_lokal_interaktif())
-            
-            # Wire up handler dinamis
-            # Saat 'article_index_loader' berubah (dipicu oleh JS),
-            # panggil 'load_article_content_handler' untuk memuat konten,
-            # lalu tampilkan hasilnya di 'article_content_holder' (dibaca oleh JS).
-            article_index_loader.change(
-                fn=load_article_content_handler,
-                inputs=[article_index_loader],
-                outputs=[article_content_holder]
+        with gr.TabItem("📚 Perpustakaan Ibu Balita", id=4):
+            gr.Markdown(
+                "### 📚 Perpustakaan Ibu Balita\n"
+                "Perpustakaan digital ringkas untuk orang tua dan tenaga kesehatan balita.\n"
+                "Gunakan pencarian dan filter kategori/sumber untuk menemukan topik yang relevan."
             )
+
+            # UI utama perpustakaan (sudah berisi filter bar + kartu + modal)
+            gr.HTML(
+                tampilkan_perpustakaan_lokal_interaktif(),
+                elem_id="perpustakaan-ibu-balita-html",
+            )
+
+
 
         # ===================================================================
         # TAB 6: PREMIUM & NOTIFIKASI
@@ -9398,47 +9632,32 @@ checklist yang disesuaikan dengan status gizi anak.
 # === REVISI: PERBAIKAN LOGIKA INISIALISASI TAB ===
     # Handler ini akan berjalan SETIAP KALI tab diganti.
     
+    # === BLOK REVISI: handler seleksi tab (disederhanakan) ===
+
     def on_tab_select(tab_index: int):
         """
-        Memicu inisialisasi JS HANYA saat tab perpustakaan (id=4) dipilih.
-        Ini untuk mengatasi masalah lazy loading Gradio.
+        Handler ketika tab utama dipilih.
+
+        Versi baru:
+        - Tidak lagi memanggil JS khusus 'AnthroHPK_Library'.
+        - Perpustakaan Ibu Balita sudah inisialisasi penuh via
+          HTML + <script> di `tampilkan_perpustakaan_lokal_interaktif()`.
         """
-        if tab_index == 4:  # ID Tab Perpustakaan Interaktif adalah 4
-            print("🚀 Tab 4 (Library) selected. Triggering JS init.")
-            # Kirim sinyal JS untuk menginisialisasi library
-            # Kita gunakan timestamp untuk memastikan nilainya selalu unik & memicu update
-            js_call = f"""
-            <script>
-                console.log('Gradio on_tab_select fired for tab 4 at {datetime.now().isoformat()}');
-                // Beri delay 100ms untuk memastikan DOM tab-nya sudah di-render
-                setTimeout(() => {{
-                    if (window.AnthroHPK_Library && !window.AnthroHPK_Library.initialized) {{
-                        console.log('Running AnthroHPK_Library.init()...');
-                        window.AnthroHPK_Library.init();
-                    }} else if (window.AnthroHPK_Library && window.AnthroHPK_Library.initialized) {{
-                        console.log('Library JS already initialized.');
-                    }} else {{
-                        console.error('AnthroHPK_Library object not found on tab select!');
-                    }}
-                }}, 100);
-            </script>
-            """
-            return gr.update(value=js_call)
-        
-        # Jangan update apapun jika tab lain yang dipilih
+        # Tidak perlu mengirim script apa pun → kembalikan nilai kosong
         return gr.update(value=None)
 
-    # Buat komponen HTML tersembunyi untuk Menerima sinyal JS
-    # Ini diperlukan agar output 'on_tab_select' punya tujuan
+    # Komponen HTML tersembunyi untuk menerima output on_tab_select
     js_init_trigger = gr.HTML(visible=False, value="")
 
-    # Hubungkan event 'select' dari main_tabs ke handler 'on_tab_select'
+    # Tetap hubungkan event select (aman, no-op untuk sisi JS)
     main_tabs.select(
         fn=on_tab_select,
         inputs=[main_tabs],
-        outputs=[js_init_trigger]
+        outputs=[js_init_trigger],
     )
+
     # === AKHIR BLOK REVISI ===
+
     
 # Footer (MODIFIED)
     gr.Markdown(f"""
@@ -9598,7 +9817,7 @@ print(f"📱 Contact: +{CONTACT_WA}")
 print(f"🎨 Themes: {len(UI_THEMES)} available")
 print(f"💉 Immunization: {len(IMMUNIZATION_SCHEDULE)} schedules")
 print(f"🧠 KPSP: {len(KPSP_QUESTIONS)} question sets")
-print(f"📚 Library: {len(ARTIKEL_LOKAL_DATABASE)} Artikel Interaktif (v3.2.2)") # MODIFIED
+print(f"📚 Perpustakaan Ibu Balita: {len(ARTIKEL_LOKAL_DATABASE)} artikel lokal")  # MODIFIED
 print(f"🎥 Videos: {len(KPSP_YOUTUBE_VIDEOS) + sum(len(v) for v in MPASI_YOUTUBE_VIDEOS.values())} video links (v3.1)")
 print("=" * 80)
 print("▶️  Run Command: uvicorn app:app --host 0.0.0.0 --port $PORT")
