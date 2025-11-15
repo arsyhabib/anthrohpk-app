@@ -8106,6 +8106,141 @@ def hapus_data_terakhir(data_state):
     
     return data_state, display_html
 
+def plot_kejar_tumbuh_trajectory(data_list: List[Dict], gender: str, theme_name: str = "pink_pastel") -> Optional[str]:
+    """
+    (BARU DITAMBAHKAN)
+    Membuat plot trajectory BB/U dan TB/U untuk Kalkulator Kejar Tumbuh.
+    """
+    if not data_list or len(data_list) < 2:
+        return None
+    
+    theme = apply_matplotlib_theme(theme_name)
+    sex_code = 'M' if gender == "Laki-laki" else 'F'
+    
+    # Siapkan data dari state
+    ages = [d['usia_bulan'] for d in data_list]
+    weights = [d['bb'] for d in data_list]
+    heights = [d['tb'] for d in data_list]
+    
+    min_age = max(0, math.floor(min(ages)) - 1)
+    max_age = min(60, math.ceil(max(ages)) + 1)
+    
+    # Buat age grid lokal untuk plot
+    plot_age_grid = np.arange(min_age, max_age + 0.25, 0.25)
+    
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 14), sharex=True)
+    
+    # --- PLOT 1: Berat Badan (WFA) ---
+    
+    # Generate curves
+    wfa_curves = {
+        -3: generate_wfa_curve(sex_code, -3)[1],
+        -2: generate_wfa_curve(sex_code, -2)[1],
+        0:  generate_wfa_curve(sex_code, 0)[1],
+        2:  generate_wfa_curve(sex_code, 2)[1],
+        3:  generate_wfa_curve(sex_code, 3)[1],
+    }
+    
+    # Filter curves based on local age grid (untuk performa)
+    age_grid_full = AGE_GRID # 0-60 bulan
+    indices = (age_grid_full >= min_age) & (age_grid_full <= max_age)
+    local_age_grid = age_grid_full[indices]
+    
+    # Fill zones
+    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[-3][indices], wfa_curves[-2][indices], '#FFE6E6', 0.4, 'Sangat Kurang')
+    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[-2][indices], wfa_curves[2][indices],  '#E8F5E9', 0.45, 'Normal')
+    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[2][indices],  wfa_curves[3][indices],  '#FFF3CD', 0.35, 'Risiko Lebih')
+    
+    # Plot SD lines
+    ax1.plot(local_age_grid, wfa_curves[0][indices], color=theme['secondary'], linestyle='-', linewidth=2, label='Median (0 SD)')
+    ax1.plot(local_age_grid, wfa_curves[-2][indices], color='#FF6347', linestyle='-', linewidth=2, label='-2 SD')
+    ax1.plot(local_age_grid, wfa_curves[2][indices], color='#FF6347', linestyle='-', linewidth=2, label='+2 SD')
+    ax1.plot(local_age_grid, wfa_curves[-3][indices], color='#DC143C', linestyle='--', linewidth=1.5, label='-3 SD')
+    ax1.plot(local_age_grid, wfa_curves[3][indices], color='#DC143C', linestyle='--', linewidth=1.5, label='+3 SD')
+    
+    # Plot trajectory anak
+    ax1.plot(ages, weights, color='#667eea', marker='o', markersize=8, linestyle='-', linewidth=2.5, label='Trajectory Anak', zorder=10)
+    
+    ax1.set_ylabel("Berat Badan (kg)", fontsize=12, fontweight='bold')
+    ax1.set_title(f"Trajectory Berat Badan vs Umur (BB/U) - {gender}", fontsize=14, fontweight='bold')
+    ax1.legend(loc='upper left')
+    ax1.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
+    
+    # --- PLOT 2: Tinggi Badan (HFA) ---
+    
+    # Generate curves
+    hfa_curves = {
+        -3: generate_hfa_curve(sex_code, -3)[1],
+        -2: generate_hfa_curve(sex_code, -2)[1],
+        0:  generate_hfa_curve(sex_code, 0)[1],
+        2:  generate_hfa_curve(sex_code, 2)[1],
+        3:  generate_hfa_curve(sex_code, 3)[1],
+    }
+    
+    # Fill zones
+    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[-3][indices], hfa_curves[-2][indices], '#FFE6E6', 0.4, 'Sangat Pendek')
+    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[-2][indices], hfa_curves[2][indices],  '#E8F5E9', 0.45, 'Normal')
+    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[2][indices],  hfa_curves[3][indices],  '#FFF3CD', 0.35, 'Tinggi')
+    
+    # Plot SD lines
+    ax2.plot(local_age_grid, hfa_curves[0][indices], color=theme['secondary'], linestyle='-', linewidth=2, label='Median (0 SD)')
+    ax2.plot(local_age_grid, hfa_curves[-2][indices], color='#FF6347', linestyle='-', linewidth=2, label='-2 SD')
+    ax2.plot(local_age_grid, hfa_curves[2][indices], color='#FF6347', linestyle='-', linewidth=2, label='+2 SD')
+    ax2.plot(local_age_grid, hfa_curves[-3][indices], color='#DC143C', linestyle='--', linewidth=1.5, label='-3 SD')
+    ax2.plot(local_age_grid, hfa_curves[3][indices], color='#DC143C', linestyle='--', linewidth=1.5, label='+3 SD')
+    
+    # Plot trajectory anak
+    ax2.plot(ages, heights, color='#e91e63', marker='o', markersize=8, linestyle='-', linewidth=2.5, label='Trajectory Anak', zorder=10)
+    
+    ax2.set_xlabel("Usia (bulan)", fontsize=12, fontweight='bold')
+    ax2.set_ylabel("Panjang/Tinggi Badan (cm)", fontsize=12, fontweight='bold')
+    ax2.set_title(f"Trajectory Tinggi Badan vs Umur (TB/U) - {gender}", fontsize=14, fontweight='bold')
+    ax2.legend(loc='upper left')
+    ax2.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
+    
+    # Finalize
+    ax1.set_xlim(min_age, max_age)
+    
+    plt.tight_layout()
+    
+    # Save plot
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filepath = os.path.join(OUTPUTS_DIR, f"KejarTumbuh_{timestamp}.png")
+    
+    try:
+        fig.savefig(filepath)
+        print(f"✅ Kejar Tumbuh plot saved: {filepath}")
+        return filepath
+    except Exception as e:
+        print(f"❌ Error saving Kejar Tumbuh plot: {e}")
+        return None
+    finally:
+        cleanup_matplotlib_figures([fig])
+
+def kalkulator_kejar_tumbuh_handler(data_list: List[Dict], gender: str) -> Tuple[str, Optional[str]]:
+    """
+    (BARU DITAMBAHKAN)
+    Handler utama untuk Kalkulator Kejar Tumbuh.
+    Menghasilkan HTML analisis dan path ke plot.
+    """
+    if not data_list or len(data_list) < 2:
+        html = "<p style='color: #e74c3c; padding: 20px;'>⚠️ Minimal 2 data pengukuran diperlukan untuk menghitung laju pertumbuhan dan membuat grafik.</p>"
+        return html, None
+    
+    try:
+        # 1. Hitung analisis velocity (HTML)
+        html_report = hitung_kejar_tumbuh(data_list)
+        
+        # 2. Buat plot trajectory (PNG)
+        plot_path = plot_kejar_tumbuh_trajectory(data_list, gender)
+        
+        return html_report, plot_path
+        
+    except Exception as e:
+        print(f"❌ Error in kalkulator_kejar_tumbuh_handler: {e}")
+        traceback.print_exc()
+        return f"<p style='color: #e74c3c; padding: 20px;'>Terjadi error saat analisis: {e}</p>", None
+
 print("✅ Section 10B-Extra loaded: Kejar Tumbuh functions defined")
 
 # Build Gradio Interface
@@ -8780,16 +8915,23 @@ checklist yang disesuaikan dengan status gizi anak.
             )
             
             # Handler Tombol "Analisis Pertumbuhan"
-            def kejar_tumbuh_handler_wrapper(data_list, gender):
-                # Panggil handler baru yang dimodifikasi
+            # Handler Tombol "Analisis Pertumbuhan"
+            def kejar_tumbuh_wrapper_fixed(data_list, gender):
+                """
+                Wrapper baru untuk memanggil handler yang benar dan mengatur visibilitas plot.
+                """
+                # Ini memanggil fungsi baru yang Anda tambahkan di Langkah 2
                 html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender) 
+                
                 if plot_path:
+                    # Jika plot berhasil dibuat, kirim HTML dan buat plot terlihat
                     return html, gr.update(value=plot_path, visible=True)
                 else:
+                    # Jika plot gagal (misal < 2 data), kirim HTML error dan sembunyikan plot
                     return html, gr.update(visible=False)
 
             kejar_btn.click(
-                fn=kejar_tumbuh_handler_wrapper,
+                fn=kejar_tumbuh_wrapper_fixed,  # <-- Pastikan menggunakan nama fungsi wrapper yang baru
                 inputs=[kejar_tumbuh_data_state, kejar_gender],
                 outputs=[kejar_output_html, kejar_output_plot]
             )
@@ -9300,71 +9442,9 @@ checklist yang disesuaikan dengan status gizi anak.
     <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
     ...
     
-    # Footer (MODIFIED)
-    gr.Markdown(f"""
-    ---
     
-    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
-                border-radius: 12px; margin-top: 30px;'>
-        <p style='font-size: 14px; color: #666; margin: 10px 0;'>
-            <strong>{APP_TITLE} v{APP_VERSION}</strong> | 
-            WHO Child Growth Standards 2006 | 
-            Permenkes RI No. 2/2020
-        </p>
-        <p style='font-size: 13px; color: #888; margin: 10px 0;'>
-            Developed by <strong>Habib Arsy</strong> - FKIK Universitas Jambi
-        </p>
-        <p style='font-size: 12px; color: #999; margin: 10px 0;'>
-            📱 Contact: <a href="https://wa.me/{CONTACT_WA}" target="_blank">+{CONTACT_WA}</a> | 
-            🌐 <a href="{BASE_URL}" target="_blank">{BASE_URL}</a>
-        </p>
-    </div>
-    """)
     
-    # === REVISI: PERBAIKAN LOGIKA INISIALISASI TAB ===
-    # Handler ini akan berjalan SETIAP KALI tab diganti.
     
-    def on_tab_select(tab_index: int):
-        """
-        Memicu inisialisasi JS HANYA saat tab perpustakaan (id=4) dipilih.
-        Ini untuk mengatasi masalah lazy loading Gradio.
-        """
-        if tab_index == 4:  # ID Tab Perpustakaan Interaktif adalah 4
-            print("🚀 Tab 4 (Library) selected. Triggering JS init.")
-            # Kirim sinyal JS untuk menginisialisasi library
-            # Kita gunakan timestamp untuk memastikan nilainya selalu unik & memicu update
-            js_call = f"""
-            <script>
-                console.log('Gradio on_tab_select fired for tab 4 at {datetime.now().isoformat()}');
-                // Beri delay 100ms untuk memastikan DOM tab-nya sudah di-render
-                setTimeout(() => {{
-                    if (window.AnthroHPK_Library && !window.AnthroHPK_Library.initialized) {{
-                        console.log('Running AnthroHPK_Library.init()...');
-                        window.AnthroHPK_Library.init();
-                    }} else if (window.AnthroHPK_Library && window.AnthroHPK_Library.initialized) {{
-                        console.log('Library JS already initialized.');
-                    }} else {{
-                        console.error('AnthroHPK_Library object not found on tab select!');
-                    }}
-                }}, 100);
-            </script>
-            """
-            return gr.update(value=js_call)
-        
-        # Jangan update apapun jika tab lain yang dipilih
-        return gr.update(value=None)
-
-    # Buat komponen HTML tersembunyi untuk Menerima sinyal JS
-    # Ini diperlukan agar output 'on_tab_select' punya tujuan
-    js_init_trigger = gr.HTML(visible=False, value="")
-
-    # Hubungkan event 'select' dari main_tabs ke handler 'on_tab_select'
-    main_tabs.select(
-        fn=on_tab_select,
-        inputs=[main_tabs],
-        outputs=[js_init_trigger]
-    )
-    # === AKHIR BLOK REVISI ===
 
 print("✅ Section 11 (Gradio UI) dimodifikasi: Perpustakaan Interaktif v3.2.2 terintegrasi.")
 
