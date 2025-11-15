@@ -6938,15 +6938,12 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
     """
     Versi baru fitur 'Perpustakaan Ibu Balita'.
 
-    - Tidak lagi bergantung pada hidden component Gradio
-      (article_index_loader, article_content_holder, dsb).
-    - Semua interaktivitas (filter, pencarian, modal artikel)
-      berjalan full di browser dengan dataset JSON.
+    - Tidak bergantung pada hidden component Gradio.
+    - Interaktivitas full di browser (search, filter, modal baca artikel).
     """
     if not ARTIKEL_LOKAL_DATABASE:
         return "<p>Tidak ada artikel perpustakaan yang tersedia.</p>"
 
-    # Ambil daftar kategori & sumber dari helper yang sudah ada
     kategori_list, sumber_list = get_local_library_filters()
     kategori_list = sorted(set(kategori_list))
     sumber_list = sorted(set(sumber_list))
@@ -6967,7 +6964,6 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
     kategori_options = _build_options(kategori_list)
     sumber_options = _build_options(sumber_list)
 
-    # Siapkan payload JSON untuk dipakai di sisi JS (front-end)
     payload = []
     for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE):
         payload.append({
@@ -6981,7 +6977,6 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
 
     dataset_json = json.dumps(payload, ensure_ascii=False)
 
-    # Template HTML + JS front-end only
     template = """
 <div id="perpustakaan-ibu-balita-wrapper">
   <div class="pib-section-title">Perpustakaan Ibu Balita</div>
@@ -7020,9 +7015,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
         <div class="pib-modal-title" id="pib-modal-title">Judul artikel</div>
         <button class="pib-modal-close" id="pib-modal-close" aria-label="Tutup">&times;</button>
       </div>
-      <div class="pib-modal-body" id="pib-modal-body">
-        <pre>Memuat isi artikel...</pre>
-      </div>
+      <div class="pib-modal-body" id="pib-modal-body"></div>
     </div>
   </div>
 
@@ -7030,7 +7023,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
   (function() {
       const RAW_DATA = __DATASET_JSON__;
       const data = RAW_DATA.map(function(a) {
-          const sources = (a.source || '').split('|').map(s => s.trim()).filter(Boolean);
+          const sources = (a.source || '').split('|').map(function(s) { return s.trim(); }).filter(Boolean);
           return Object.assign({}, a, {
               source_list: sources,
               title_lower: (a.title || '').toLowerCase(),
@@ -7050,10 +7043,28 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
       const modalBody = document.getElementById('pib-modal-body');
       const modalClose = document.getElementById('pib-modal-close');
 
+      function pickSourceBadge(sources) {
+          if (!sources || !sources.length) {
+              return { label: 'Artikel Lokal', cls: 'badge-pill-source' };
+          }
+          const joined = sources.join(' ').toLowerCase();
+          if (joined.indexOf('who') !== -1) {
+              return { label: 'WHO', cls: 'badge-pill-source badge-source-who' };
+          }
+          if (joined.indexOf('kemenkes') !== -1 || joined.indexOf('kementerian kesehatan') !== -1) {
+              return { label: 'Kemenkes RI', cls: 'badge-pill-source badge-source-kemenkes' };
+          }
+          if (joined.indexOf('idai') !== -1 || joined.indexOf('ikatan dokter anak') !== -1) {
+              return { label: 'IDAI', cls: 'badge-pill-source badge-source-idai' };
+          }
+          return { label: sources[0], cls: 'badge-pill-source' };
+      }
+
       function filterData() {
-          const q = (searchInput.value || '').toLowerCase();
-          const cat = categorySelect.value;
-          const src = sourceSelect.value;
+          const q = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
+          const cat = categorySelect ? categorySelect.value : 'all';
+          const src = sourceSelect ? sourceSelect.value : 'all';
+
           return data.filter(function(a) {
               if (cat !== 'all' && a.kategori !== cat) return false;
               if (src !== 'all' && a.source_list.indexOf(src) === -1) return false;
@@ -7071,11 +7082,15 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
           if (counterSpan) {
              counterSpan.textContent = filtered.length + ' artikel ditemukan';
           }
+          if (!cardsContainer) return;
           cardsContainer.innerHTML = '';
+
           filtered.forEach(function(a) {
               const card = document.createElement('div');
               card.className = 'article-card-v3';
               const sumberStr = (a.source || '').replace(/\\|/g, ' • ');
+              const badge = pickSourceBadge(a.source_list);
+
               card.innerHTML = `
                 <div class="article-card-badge">
                   <span>📚 ${a.kategori || 'Umum'}</span>
@@ -7085,9 +7100,10 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
                 <div class="article-card-summary">${a.summary || ''}</div>
                 <div class="article-card-footer">
                   <button type="button" data-article-id="${a.id}">Baca ringkasan lengkap</button>
-                  <span class="badge-pill">${(a.id + 1)} / ${data.length}</span>
+                  <span class="${badge.cls}">${badge.label}</span>
                 </div>
               `;
+
               const btn = card.querySelector('button[data-article-id]');
               if (btn) {
                   btn.addEventListener('click', function() {
@@ -7096,6 +7112,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
               }
               cardsContainer.appendChild(card);
           });
+
           if (filtered.length === 0) {
               const empty = document.createElement('div');
               empty.innerHTML = '<p style="font-size:0.85rem;color:#6b7280;">Tidak ada artikel yang cocok dengan filter saat ini.</p>';
@@ -7104,24 +7121,39 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
       }
 
       function openModal(article) {
+          if (!modal || !modalTitle || !modalBody) return;
           modalTitle.textContent = article.title || 'Artikel perpustakaan';
-          const safeText = (article.full_content || '').trim();
-          const escaped = safeText
-              .replace(/&/g, '&amp;')
-              .replace(/</g, '&lt;')
-              .replace(/>/g, '&gt;');
-          modalBody.innerHTML = '<pre>' + escaped + '</pre>';
+
+          const raw = (article.full_content || '').trim();
+          if (!raw) {
+              modalBody.innerHTML = '<p style="font-size:0.85rem;color:#6b7280;">Belum ada konten lengkap untuk artikel ini.</p>';
+          } else {
+              const escaped = raw
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;');
+
+              const paragraphs = escaped.split(/\\n\\s*\\n/);
+              const htmlParas = paragraphs.map(function(p) {
+                  return '<p style="margin:0 0 8px 0; line-height:1.5;">' + p.replace(/\\n/g, '<br/>') + '</p>';
+              }).join('');
+              modalBody.innerHTML = htmlParas;
+          }
+
           modal.classList.add('open');
           modal.setAttribute('aria-hidden', 'false');
       }
 
       function closeModal() {
+          if (!modal) return;
           modal.classList.remove('open');
           modal.setAttribute('aria-hidden', 'true');
       }
 
       if (modalClose) {
-          modalClose.addEventListener('click', closeModal);
+          modalClose.addEventListener('click', function() {
+              closeModal();
+          });
       }
       if (modal) {
           modal.addEventListener('click', function(ev) {
@@ -7152,7 +7184,6 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
   </script>
 </div>
 """
-
     html = (
         template
         .replace("__KATEGORI_OPTIONS__", kategori_options)
@@ -7160,6 +7191,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
         .replace("__DATASET_JSON__", dataset_json)
     )
     return html
+
 
 
 
@@ -7331,11 +7363,6 @@ def get_interactive_library_js_css() -> str:
     Dipanggil di awal layout Gradio melalui:
         combined_js = notification_js + get_interactive_library_js_css()
         gr.HTML(combined_js)
-
-    Tidak lagi berisi JS bridge ke komponen Gradio,
-    karena interaktivitas perpustakaan sekarang murni
-    dikelola di browser (front-end only) oleh HTML + JS
-    di fungsi `tampilkan_perpustakaan_lokal_interaktif`.
     """
     return """
 <style>
@@ -7468,6 +7495,28 @@ def get_interactive_library_js_css() -> str:
     color: #6b7280;
 }
 
+/* Source badges */
+.badge-pill-source {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+    white-space: nowrap;
+}
+.badge-source-who {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+.badge-source-kemenkes {
+    background: #ecfdf5;
+    color: #15803d;
+}
+.badge-source-idai {
+    background: #fefce8;
+    color: #92400e;
+}
+
 /* Modal */
 .pib-modal {
     position: fixed;
@@ -7527,6 +7576,7 @@ def get_interactive_library_js_css() -> str:
 }
 </style>
 """
+
 
     
     # PART 2: JAVASCRIPT (REVISI TOTAL)
