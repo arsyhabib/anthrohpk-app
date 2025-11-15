@@ -6928,7 +6928,9 @@ def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
         </div>
     </div>
     """
+
     return html
+    
 def tampilkan_perpustakaan_lokal_interaktif() -> str:
     """
     (BARU v3.2.2 - SYNTAX ERROR FIXED)
@@ -7883,18 +7885,21 @@ def tambah_data_kejar_tumbuh(data_state, mode, dob, dom, usia_manual, bb, tb):
             return data_state, "⚠️ Masukkan tanggal lahir dan tanggal pengukuran", None, None, None, None
         
         try:
-            from datetime import datetime
-            dob_date = datetime.strptime(str(dob), "%Y-%m-%d")
-            dom_date = datetime.strptime(str(dom), "%Y-%m-%d")
+            # Gunakan 'parse_date' yang sudah Anda buat
+            dob_date = parse_date(dob) 
+            dom_date = parse_date(dom)
             
+            if dob_date is None or dom_date is None:
+                raise ValueError("Format tanggal tidak valid (gunakan YYYY-MM-DD atau DD/MM/YYYY)")
+
             if dom_date < dob_date:
                 return data_state, "⚠️ Tanggal pengukuran tidak boleh sebelum tanggal lahir", None, None, None, None
             
             # Hitung usia dalam bulan
             age_days = (dom_date - dob_date).days
             age_months = age_days / 30.4375
-        except:
-            return data_state, "⚠️ Format tanggal tidak valid", None, None, None, None
+        except Exception as e:
+            return data_state, f"⚠️ Error Tanggal: {e}", None, None, None, None
     else:
         if usia_manual is None or usia_manual < 0:
             return data_state, "⚠️ Masukkan usia yang valid", None, None, None, None
@@ -9435,16 +9440,20 @@ checklist yang disesuaikan dengan status gizi anak.
     )
     # === AKHIR BLOK REVISI ===
     
-    # Footer (MODIFIED)
+# Footer (MODIFIED)
     gr.Markdown(f"""
     ---
     
     <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
-    ...
-    
-    
-    
-    
+    border-top: 2px solid #ffdde5;'>
+        <p style='margin: 0; color: #555; font-size: 14px;'>
+            {APP_TITLE} v{APP_VERSION} © 2024-2025 | Dibuat oleh <strong>Habib Arsy</strong>
+        </p>
+        <p style='margin: 5px 0 0 0; color: #888; font-size: 12px;'>
+            Bukan pengganti konsultasi medis. Selalu konfirmasi dengan tenaga kesehatan.
+        </p>
+    </div>
+    """) # <-- INI ADALAH PENUTUP YANG HILANG
 
 print("✅ Section 11 (Gradio UI) dimodifikasi: Perpustakaan Interaktif v3.2.2 terintegrasi.")
 
