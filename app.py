@@ -57,6 +57,8 @@ import warnings
 from datetime import datetime, date, timedelta
 from functools import lru_cache
 from typing import Dict, List, Tuple, Optional, Any, Union
+from pydantic import BaseModel
+
 
 # Suppress warnings for cleaner logs
 warnings.filterwarnings('ignore')
@@ -9857,6 +9859,22 @@ async def health_check():
     }
 
 # -------------------------------------------------------------------
+# Pydantic Models untuk API Kejar Tumbuh
+# -------------------------------------------------------------------
+
+class KejarTumbuhDataPoint(BaseModel):
+    usia_bulan: float
+    bb: float
+    tb: float
+
+
+class KejarTumbuhRequest(BaseModel):
+    gender: str  # "Laki-laki" atau "Perempuan"
+    data: List[KejarTumbuhDataPoint]
+    theme: Optional[str] = "pink_pastel"
+
+
+# -------------------------------------------------------------------
 # Endpoint API: Perpustakaan Ibu Balita (JSON)
 # -------------------------------------------------------------------
 
@@ -9938,6 +9956,97 @@ async def library_detail(item_id: int):
         "summary": art.get("summary", ""),
         "full_content": art.get("full_content", ""),
     }
+
+# -------------------------------------------------------------------
+# Endpoint API: Kalkulator Kejar Tumbuh
+# -------------------------------------------------------------------
+
+@app_fastapi.post("/api/kejar-tumbuh/analyze")
+async def kejar_tumbuh_analyze(payload: KejarTumbuhRequest):
+    """
+    Analisis Kejar Tumbuh via API.
+    
+    Body (JSON) contoh:
+    {
+      "gender": "Laki-laki",
+      "theme": "pink_pastel",
+      "data": [
+        {"usia_bulan": 6.0, "bb": 7.2, "tb": 66.0},
+        {"usia_bulan": 9.0, "bb": 7.8, "tb": 70.0}
+      ]
+    }
+    """
+    # Konversi Pydantic → list dict seperti yang digunakan kalkulator
+    data_list = [
+        {
+            "usia_bulan": float(p.usia_bulan),
+            "bb": float(p.bb),
+            "tb": float(p.tb),
+        }
+        for p in payload.data
+    ]
+
+    if len(data_list) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Minimal diperlukan 2 pengukuran untuk analisis Kejar Tumbuh."
+        )
+
+    gender = payload.gender
+    # Handler UI sudah menggunakan gender dalam bahasa Indonesia ("Laki-laki"/"Perempuan")
+    html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender)
+
+    return {
+        "gender": gender,
+        "theme": payload.theme or "pink_pastel",
+        "poin_pengukuran": len(data_list),
+        "html": html,
+        "plot_path": plot_path,  # path relatif di server (jika ingin diakses via /outputs)
+    }
+
+
+@app_fastapi.post("/api/kejar-tumbuh/plot")
+async def kejar_tumbuh_plot(payload: KejarTumbuhRequest):
+    """
+    Menghasilkan file PNG grafik Kejar Tumbuh via API.
+
+    Menggunakan fungsi plot_kejar_tumbuh_trajectory() yang sudah ada
+    (versi CURVE SMOOTH yang kamu pasang di Part 1).
+    """
+    data_list = [
+        {
+            "usia_bulan": float(p.usia_bulan),
+            "bb": float(p.bb),
+            "tb": float(p.tb),
+        }
+        for p in payload.data
+    ]
+
+    if len(data_list) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Minimal diperlukan 2 pengukuran untuk membuat grafik Kejar Tumbuh."
+        )
+
+    gender = payload.gender
+    theme = payload.theme or "pink_pastel"
+
+    # Memakai fungsi plot yang sudah ada (tidak mengubah logic internal)
+    plot_path = plot_kejar_tumbuh_trajectory(data_list, gender, theme_name=theme)
+
+    if not plot_path or not os.path.exists(plot_path):
+        raise HTTPException(
+            status_code=500,
+            detail="Gagal menghasilkan grafik Kejar Tumbuh."
+        )
+
+    filename = os.path.basename(plot_path)
+
+    return FileResponse(
+        plot_path,
+        media_type="image/png",
+        filename=filename,
+    )
 
 
 # API info endpoint
