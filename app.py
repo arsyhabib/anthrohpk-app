@@ -7061,8 +7061,8 @@ document.addEventListener('DOMContentLoaded', () => console.log('AnthroNotificat
                     with gr.Group():
                         kejar_tumbuh_dom = gr.Textbox(label="Tanggal Pengukuran (DOM)", placeholder="YYYY-MM-DD", visible=True)
                         kejar_tumbuh_usia = gr.Number(label="Usia (bulan)", visible=False)
-                        kejar_tumbuh_bb = gr.Number(label="Berat Badan (kg)", placeholder="misal: 8.5")
-                        kejar_tumbuh_tb = gr.Number(label="Panjang/Tinggi Badan (cm)", placeholder="misal: 70.2")
+                        kejar_tumbuh_bb = gr.Number(label="Berat Badan (kg)", info="misal: 8.5")
+                        kejar_tumbuh_tb = gr.Number(label="Panjang/Tinggi Badan (cm)", info="misal: 70.2")
                     
                     with gr.Row():
                         tambah_data_btn = gr.Button("➕ Tambah Data", variant="secondary", scale=2)
