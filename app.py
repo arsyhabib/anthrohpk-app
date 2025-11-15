@@ -1944,16 +1944,26 @@ def plot_zscore_summary_bars(payload: Dict, theme_name: str = "pink_pastel") -> 
     return fig
 
 
-def cleanup_matplotlib_figures(figures: List[Figure]):
+def cleanup_matplotlib_figures(figures: Union[Figure, List[Figure]]):
     """
-    Properly cleanup matplotlib figures to prevent memory leaks
-    
+    Properly cleanup matplotlib figures to prevent memory leaks.
+
     Args:
-        figures: List of matplotlib Figure objects
+        figures: Bisa satu Figure, atau list[Figure].
     """
+    from matplotlib.figure import Figure as _Fig
+
+    if figures is None:
+        return
+
+    # Kalau yang dikirim satu Figure → jadikan list
+    if isinstance(figures, _Fig):
+        figures = [figures]
+
     for fig in figures:
         if fig is not None:
             plt.close(fig)
+
 
 
 print("✅ Section 7B loaded: WFL plotting, bar chart & figure cleanup")
@@ -6938,21 +6948,14 @@ def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
 
 def tampilkan_perpustakaan_lokal_interaktif() -> str:
     """
-    Versi baru fitur "Perpustakaan Ibu Balita" (tanpa ketergantungan
-    hidden component Gradio). Seluruh interaktivitas dilakukan oleh
-    JavaScript global yang diinject lewat get_interactive_library_js_css().
-
-    Di sini kita hanya membangun:
-    - wrapper HTML
-    - filter bar
-    - container kartu
-    - modal
-    - dan payload JSON yang disimpan di <textarea id="pib-library-data">.
+    Versi final "Perpustakaan Ibu Balita":
+    - HTML murni (filter bar + container kartu + modal).
+    - Payload artikel disimpan sebagai JSON di <textarea id="pib-library-data">
+      dan diproses oleh JS global dari get_interactive_library_js_css().
     """
     if not ARTIKEL_LOKAL_DATABASE:
         return "<p>Tidak ada artikel perpustakaan yang tersedia.</p>"
 
-    # Ambil daftar kategori & sumber unik
     kategori_list, sumber_list = get_local_library_filters()
     kategori_list = sorted(set(kategori_list))
     sumber_list = sorted(set(sumber_list))
@@ -6965,7 +6968,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
         )
 
     def _build_options(values):
-        return "\n".join(
+        return "\\n".join(
             f'<option value="{_esc(v)}">{_esc(v)}</option>'
             for v in values
         )
@@ -6973,7 +6976,6 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
     kategori_options = _build_options(kategori_list)
     sumber_options = _build_options(sumber_list)
 
-    # Susun payload JSON yang akan dipakai JS di browser
     payload = []
     for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE):
         payload.append({
@@ -7047,6 +7049,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
         .replace("__DATASET_JSON__", dataset_json)
     )
     return html
+
 
 
 
@@ -7217,12 +7220,9 @@ def get_interactive_library_js_css() -> str:
     """
     CSS + JS global untuk fitur "Perpustakaan Ibu Balita".
 
-    - CSS mengatur tampilan kartu & modal.
-    - JS mencari elemen #perpustakaan-ibu-balita-wrapper,
-      membaca JSON di #pib-library-data, lalu:
-        * merender kartu artikel di #pib-cards
-        * mengaktifkan search + filter
-        * mengelola modal baca artikel.
+    Dipanggil di awal layout melalui:
+        combined_js = notification_js + get_interactive_library_js_css()
+        gr.HTML(combined_js)
     """
     return """
 <style>
@@ -7230,13 +7230,13 @@ def get_interactive_library_js_css() -> str:
   margin-top: 10px;
 }
 
+/* Judul & subjudul */
 .pib-section-title {
   font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 0.2rem;
   color: #1f2933;
 }
-
 .pib-section-subtitle {
   font-size: 0.92rem;
   color: #52606d;
@@ -7245,6 +7245,7 @@ def get_interactive_library_js_css() -> str:
   margin-bottom: 1.2rem;
 }
 
+/* Filter bar */
 .library-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -7255,21 +7256,18 @@ def get_interactive_library_js_css() -> str:
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
   margin-bottom: 1rem;
 }
-
 .library-filter-bar .filter-group {
   display: flex;
   flex-direction: column;
   flex: 1 1 220px;
   min-width: 0;
 }
-
 .library-filter-bar label {
   font-size: 0.78rem;
   font-weight: 600;
   color: #4b5563;
   margin-bottom: 4px;
 }
-
 .library-filter-bar input,
 .library-filter-bar select {
   border-radius: 999px;
@@ -7281,7 +7279,6 @@ def get_interactive_library_js_css() -> str:
   box-shadow: 0 0 0 1px transparent;
   transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
-
 .library-filter-bar input:focus,
 .library-filter-bar select:focus {
   border-color: #fb7185;
@@ -7289,18 +7286,19 @@ def get_interactive_library_js_css() -> str:
   background: #fff;
 }
 
+/* Counter & grid */
 .library-counter {
   font-size: 0.82rem;
   color: #6b7280;
   margin: 6px 4px 10px 4px;
 }
-
 .article-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
 }
 
+/* Kartu artikel */
 .article-card-v3 {
   background: white;
   border-radius: 18px;
@@ -7311,7 +7309,6 @@ def get_interactive_library_js_css() -> str:
   flex-direction: column;
   position: relative;
 }
-
 .article-card-badge span {
   display: inline-flex;
   align-items: center;
@@ -7322,33 +7319,28 @@ def get_interactive_library_js_css() -> str:
   font-size: 0.72rem;
   font-weight: 600;
 }
-
 .article-card-title {
   margin-top: 8px;
   font-size: 1.02rem;
   font-weight: 700;
   color: #111827;
 }
-
 .article-card-meta {
   font-size: 0.78rem;
   color: #6b7280;
   margin: 2px 0 6px 0;
 }
-
 .article-card-summary {
   font-size: 0.86rem;
   color: #374151;
   line-height: 1.45;
 }
-
 .article-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 10px;
 }
-
 .article-card-footer button {
   border-radius: 999px;
   border: none;
@@ -7363,12 +7355,12 @@ def get_interactive_library_js_css() -> str:
   align-items: center;
   gap: 4px;
 }
-
 .article-card-footer button:hover {
   opacity: 0.95;
   transform: translateY(-0.5px);
 }
 
+/* Badge sumber */
 .badge-pill-source {
   border-radius: 999px;
   padding: 3px 10px;
@@ -7377,17 +7369,14 @@ def get_interactive_library_js_css() -> str:
   background: #e5e7eb;
   color: #374151;
 }
-
 .badge-source-who {
   background: #e0f2fe;
   color: #0369a1;
 }
-
 .badge-source-kemenkes {
   background: #dcfce7;
   color: #166534;
 }
-
 .badge-source-idai {
   background: #fef9c3;
   color: #92400e;
@@ -7403,11 +7392,9 @@ def get_interactive_library_js_css() -> str:
   justify-content: center;
   z-index: 60;
 }
-
 .pib-modal[aria-hidden="false"] {
   display: flex;
 }
-
 .pib-modal-content {
   background: white;
   max-width: min(780px, 92vw);
@@ -7418,21 +7405,18 @@ def get_interactive_library_js_css() -> str:
   display: flex;
   flex-direction: column;
 }
-
 .pib-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
 }
-
 .pib-modal-title {
   font-size: 1rem;
   font-weight: 700;
   color: #111827;
   padding-right: 10px;
 }
-
 .pib-modal-close {
   border: none;
   border-radius: 999px;
@@ -7444,11 +7428,9 @@ def get_interactive_library_js_css() -> str:
   background: #f3f4f6;
   cursor: pointer;
 }
-
 .pib-modal-close:hover {
   background: #e5e7eb;
 }
-
 .pib-modal-body {
   margin-top: 4px;
   padding-top: 4px;
@@ -7529,11 +7511,20 @@ def get_interactive_library_js_css() -> str:
       if (!modal) return;
       if (modalTitle) modalTitle.textContent = article.title || 'Artikel';
       if (modalBody) {
-        var html = (article.full_content || '').trim();
-        if (!html) {
-          html = '<p>Konten artikel belum tersedia.</p>';
+        var raw = (article.full_content || '').trim();
+        if (!raw) {
+          modalBody.innerHTML = '<p>Konten artikel belum tersedia.</p>';
+        } else {
+          var escaped = raw
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+          var paras = escaped.split(/\\n\\s*\\n/);
+          var html = paras.map(function(p) {
+            return '<p style="margin:0 0 8px 0; line-height:1.5;">' + p.replace(/\\n/g, '<br/>') + '</p>';
+          }).join('');
+          modalBody.innerHTML = html;
         }
-        modalBody.innerHTML = html;
       }
       modal.setAttribute('aria-hidden', 'false');
     }
@@ -7594,6 +7585,11 @@ def get_interactive_library_js_css() -> str:
         }
         cardsContainer.appendChild(card);
       });
+
+      if (filtered.length === 0) {
+        cardsContainer.innerHTML =
+          '<p style="font-size:0.85rem;color:#6b7280;">Tidak ada artikel yang cocok dengan filter saat ini.</p>';
+      }
     }
 
     if (modalClose) {
@@ -7610,19 +7606,13 @@ def get_interactive_library_js_css() -> str:
     }
 
     if (searchInput) {
-      searchInput.addEventListener('input', function() {
-        renderCards();
-      });
+      searchInput.addEventListener('input', renderCards);
     }
     if (categorySelect) {
-      categorySelect.addEventListener('change', function() {
-        renderCards();
-      });
+      categorySelect.addEventListener('change', renderCards);
     }
     if (sourceSelect) {
-      sourceSelect.addEventListener('change', function() {
-        renderCards();
-      });
+      sourceSelect.addEventListener('change', renderCards);
     }
 
     renderCards();
@@ -7659,6 +7649,7 @@ def get_interactive_library_js_css() -> str:
 })();
 </script>
 """
+
 
 
     
