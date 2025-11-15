@@ -7294,8 +7294,7 @@ document.addEventListener('DOMContentLoaded', () => console.log('AnthroNotificat
     gr.HTML(js_init_call, visible=False)
     
     # Menghubungkan event load Gradio ke fungsi JS
-    demo.load(fn=lambda: None, _js="initLibrary")
-
+    demo.load(fn=None, inputs=None, outputs=None, js="initLibrary")
 
 # Footer (MODIFIED v3.2.3)
     gr.Markdown(f"""
