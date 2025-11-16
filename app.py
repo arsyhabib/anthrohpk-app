@@ -6892,13 +6892,17 @@ def get_library_categories_list():
 # GANTI FUNGSI LAMA DI SECTION 10B DENGAN YANG INI
 # ===================================================================
 
+# ===================================================================
+# GANTI FUNGSI 'update_library_display' DI SECTION 10B DENGAN YANG INI
+# ===================================================================
+
 def update_library_display(search_term: str, category: str):
     """
-    (VERSI PERBAIKAN - 16 Nov 2025)
+    (VERSI PERBAIKAN #2 - 16 Nov 2025)
     Fungsi Python murni untuk memfilter dan menampilkan artikel
-    sebagai komponen Gradio Accordion.
     
-    PERBAIKAN: Menggunakan gr.Column.update() BUKAN gr.update()
+    PERBAIKAN: Fungsi ini HANYA MENGEMBALIKAN LIST komponen.
+    Gradio akan otomatis memasukkannya ke 'library_output'.
     """
     search_term = search_term.lower().strip()
     
@@ -6921,13 +6925,10 @@ def update_library_display(search_term: str, category: str):
 
     # Buat komponen UI
     if not filtered_articles:
-        # --- INI ADALAH PERBAIKANNYA ---
-        return gr.Column.update(
-            children=[
-                gr.Markdown("### 🔍 Tidak ada artikel ditemukan\n\nCoba ganti kata kunci pencarian atau filter kategori Anda.")
-            ],
-            visible=True
-        )
+        # --- PERBAIKAN: Hanya kembalikan list berisi 1 komponen Markdown ---
+        return [
+            gr.Markdown("### 🔍 Tidak ada artikel ditemukan\n\nCoba ganti kata kunci pencarian atau filter kategori Anda.")
+        ]
 
     # Ubah hasil filter menjadi komponen Accordion
     ui_components = []
@@ -6941,20 +6942,23 @@ def update_library_display(search_term: str, category: str):
         content_md += "---\n"
         content_md += art.get('full_content', 'Konten tidak tersedia.')
         
-        accordion = gr.Accordion(label=label, open=False)
-        with accordion:
+        # Buat Accordion
+        # Kita harus mendefinisikannya di dalam 'with' block agar bisa ditambahkan ke list
+        with gr.Accordion(label=label, open=False) as accordion:
             gr.Markdown(content_md)
-            
+        
+        # Tambahkan komponen Accordion (yang sudah berisi Markdown) ke list
         ui_components.append(accordion)
 
     # Kembalikan daftar komponen untuk diperbarui
-    # --- INI JUGA PERBAIKANNYA ---
-    return gr.Column.update(children=ui_components, visible=True)
+    # --- PERBAIKAN: Hanya kembalikan list komponen ---
+    return ui_components
+
 
 def load_initial_articles():
-    """ (FUNGSI BARU) Memuat semua artikel saat tab pertama kali dibuka """
+    """ (PERBAIKAN #2) Memuat semua artikel saat tab pertama kali dibuka """
+    # Panggil fungsi utama dengan filter kosong
     return update_library_display(search_term="", category="Semua Kategori")
-# --- AKHIR DARI DATABASE ARTIKEL LOKAL ---
 
 print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
 
@@ -8366,8 +8370,7 @@ checklist yang disesuaikan dengan status gizi anak.
             # akan mengembalikan 'gr.Column.update(...)'
             
             library_output = gr.Column(
-                visible=False # Awalnya disembunyikan, ditampilkan setelah load
-            )
+                visible=True # Dibuat terlihat dari awal            )
 
             # --- Event Handlers untuk Tab Perpustakaan ---
             
