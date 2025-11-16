@@ -8658,7 +8658,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 """
     
-    combined_js = notification_js + get_interactive_library_js_css()
+    combined_js = notification_js 
     gr.HTML(combined_js)
     
     # State untuk menyimpan payload
