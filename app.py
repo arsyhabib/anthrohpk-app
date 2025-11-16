@@ -120,7 +120,7 @@ print("✅ All imports successful")
 # ===============================================================================
 
 # Application Metadata
-APP_VERSION = "3.2.2" # MODIFIED (Interactive Library)
+APP_VERSION = "3.2.3" # MODIFIED (Perpustakaan Fix)
 APP_TITLE = "PeduliGiziBalita - Monitor Pertumbuhan Anak Profesional" # MODIFIED
 APP_DESCRIPTION = "Aplikasi berbasis WHO Child Growth Standards untuk pemantauan antropometri anak 0-60 bulan" # MODIFIED
 CONTACT_WA = "6285888858160"
@@ -6865,83 +6865,7 @@ ARTIKEL_LOKAL_DATABASE = [
 print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
 
 
-def get_local_library_filters() -> Tuple[List[str], List[str]]:
-    """
-    (BARU v3.2.2)
-    Memindai ARTIKEL_LOKAL_DATABASE untuk mendapatkan daftar unik
-    Kategori dan Sumber untuk filter UI.
-    """
-    categories = set()
-    sources = set()
-    
-    for article in ARTIKEL_LOKAL_DATABASE:
-        categories.add(article["kategori"])
-        
-        # Pisahkan sumber jika ada tanda '|'
-        source_list = [s.strip() for s in article["source"].split('|')]
-        sources.update(source_list)
-        
-    return sorted(list(categories)), sorted(list(sources))
 
-
-def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
-    """
-    (REVISI v3.2.2 - SYNTAX ERROR FIXED)
-    Generate HTML untuk satu kartu artikel
-    """
-    # Format kategori untuk CSS class
-    kategori_class = article['kategori'].lower().replace(' ', '-').replace('&', '').replace(',', '')
-    
-    # Format sources untuk data-attribute
-    sources_formatted = article['source'].replace(' ', '-')
-    
-    # Batasi panjang summary
-    summary = article['summary']
-    if len(summary) > 150:
-        summary = summary[:147] + '...'
-    
-    # Source colors
-    source_colors = {
-        'IDAI': '#e91e63',
-        'Kemenkes': '#2196f3',
-        'Kemenkes-RI': '#2196f3',
-        'WHO': '#4caf50',
-        'UNICEF': '#00bcd4',
-        'Alodokter': '#ff9800',
-        'Halodoc': '#3f51b5',
-        'KlikDokter': '#9c27b0',
-        'Hellosehat': '#ff5722'
-    }
-    source_color = source_colors.get(sources_formatted, '#757575')
-    
-    html = f"""
-    <div class='article-card-v3' 
-         data-category='{article['kategori']}' 
-         data-sources='{sources_formatted}'>
-        
-        <h3 class='article-card-title'>{article['title']}</h3>
-        
-        <p class='article-card-summary'>{summary}</p>
-        
-        <div class='article-card-tags'>
-            <span class='article-card-tag category-badge category-{kategori_class}'>
-                {article['kategori']}
-            </span>
-            <span class='article-card-tag source-badge' style='background-color: {source_color};'>
-                {article['source']}
-            </span>
-        </div>
-        
-        <div class='article-card-footer'>
-            <button class='article-card-button' 
-                    onclick='AnthroHPK_Library.showArticleContent({index})'>
-                Baca Selengkapnya
-            </button>
-        </div>
-    </div>
-    """
-
-    return html
     
 def generate_perpustakaan_html_revised() -> str:
     """
@@ -7815,159 +7739,11 @@ def generate_perpustakaan_html_revised() -> str:
 
 
 
-def load_article_content_handler(index: int) -> str:
-    """
-    (BARU v3.2.2)
-    Handler untuk memuat konten artikel berdasarkan index.
-    Dipanggil oleh Gradio saat article_index_loader berubah.
-    
-    Args:
-        index: Index artikel dalam ARTIKEL_LOKAL_DATABASE
-        
-    Returns:
-        Markdown string berisi konten artikel lengkap
-    """
-    try:
-        # Validasi index
-        if index < 0 or index >= len(ARTIKEL_LOKAL_DATABASE):
-            return "**Error:** Index artikel tidak valid."
-        
-        # Ambil artikel
-        article = ARTIKEL_LOKAL_DATABASE[index]
-        
-        # Format konten untuk ditampilkan
-        content = f"""
-# {article['title']}
-
-**Kategori:** {article['kategori']}  
-**Sumber:** {article['source']}
-
----
-
-{article['full_content']}
-        """
-        
-        return content
-        
-    except Exception as e:
-        return f"**Error:** Gagal memuat artikel. {str(e)}"
 
     
 
 
-def render_perpustakaan_updated() -> str:
-    """
-    Render perpustakaan dengan link yang sudah diverifikasi
-    
-    Returns:
-        HTML string dengan card artikel yang lebih informatif
-    """
-    
-    html = """
-    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                padding: 30px; border-radius: 20px; color: white; margin-bottom: 25px;
-                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);'>
-        <h2 style='margin: 0 0 10px 0; font-size: 28px;'>
-            📚 Perpustakaan Ibu Balita (Updated)
-        </h2>
-        <p style='margin: 0; opacity: 0.9; font-size: 14px;'>
-            Artikel terpercaya dari WHO, Kemenkes RI, IDAI, CDC, dan UNICEF
-        </p>
-    </div>
-    
-    <div style='background: #fff3cd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #ffc107;'>
-        <p style='margin: 0; color: #856404;'>
-            <strong>✅ Semua link telah diverifikasi dan valid!</strong><br>
-            Klik pada judul artikel untuk membuka di tab baru. Semua sumber berasal dari organisasi kesehatan terpercaya.
-        </p>
-    </div>
-    """
-    
-    # Render setiap kategori
-    category_colors = {
-        "Nutrisi & MPASI": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-        "Tumbuh Kembang": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-        "Kesehatan & Imunisasi": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-        "Parenting & Psikologi": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-        "Keamanan & Pencegahan Kecelakaan": "linear-gradient(135deg, #30cfd0 0%, #330867 100%)"
-    }
-    
-    for category, articles in PERPUSTAKAAN_IBU_BALITA_UPDATED.items():
-        gradient = category_colors.get(category, "linear-gradient(135deg, #667eea 0%, #764ba2 100%)")
-        
-        html += f"""
-        <div style='margin-bottom: 30px;'>
-            <h3 style='background: {gradient}; 
-                       color: white; padding: 15px 20px; border-radius: 12px; 
-                       margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);'>
-                {category}
-            </h3>
-            <div style='display: grid; gap: 15px;'>
-        """
-        
-        for article in articles:
-            # Badge warna berdasarkan sumber
-            source_badge_color = {
-                "WHO": "#0088cc",
-                "WHO Official": "#0088cc",
-                "WHO & UNICEF": "#0088cc",
-                "Kemenkes RI": "#ff4444",
-                "IDAI": "#ff6b6b",
-                "UNICEF": "#00a9e0",
-                "CDC USA": "#005eaa",
-                "AAP": "#00a6d6"
-            }.get(article['source'], "#6c757d")
-            
-            # Verified badge
-            verified_badge = """
-                <span style='background: #28a745; color: white; padding: 4px 8px; 
-                             border-radius: 4px; font-size: 11px; font-weight: bold;
-                             margin-left: 8px;'>
-                    ✓ Verified
-                </span>
-            """ if article.get('verified', False) else ""
-            
-            html += f"""
-            <div style='background: white; padding: 20px; border-radius: 12px; 
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.08); 
-                        border-left: 4px solid {source_badge_color};
-                        transition: all 0.3s ease;
-                        cursor: pointer;'
-                 onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.12)'; this.style.transform='translateY(-2px)';"
-                 onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'; this.style.transform='translateY(0)';">
-                
-                <div style='display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;'>
-                    <a href='{article['url']}' target='_blank' 
-                       style='text-decoration: none; color: #2c3e50; flex: 1;'>
-                        <h4 style='margin: 0 0 8px 0; color: #667eea; font-size: 16px;'>
-                            🔗 {article['title']}
-                        </h4>
-                    </a>
-                </div>
-                
-                <p style='margin: 0 0 12px 0; color: #666; font-size: 14px; line-height: 1.6;'>
-                    {article['description']}
-                </p>
-                
-                <div style='display: flex; justify-content: space-between; align-items: center;'>
-                    <span style='background: {source_badge_color}; color: white; 
-                                 padding: 5px 12px; border-radius: 20px; font-size: 12px; 
-                                 font-weight: 500;'>
-                        {article['source']}
-                    </span>
-                    {verified_badge}
-                    <a href='{article['url']}' target='_blank' 
-                       style='color: #667eea; text-decoration: none; font-size: 13px; font-weight: 500;'>
-                        Buka Artikel →
-                    </a>
-                </div>
-            </div>
-            """
-        
-        html += """
-            </div>
-        </div>
-        """
+
 
 
 
@@ -7976,24 +7752,7 @@ def render_perpustakaan_updated() -> str:
 # Styling global (CSS saja, tanpa JS bridge)
 # =========================================
 
-def get_interactive_library_js_css() -> str:
-    """
-    REVISI v3.2.3 - Simplified JavaScript Global
-    
-    Karena perpustakaan sekarang self-contained (CSS & JS inline di HTML),
-    fungsi ini hanya mengembalikan string kosong atau minimal CSS global jika diperlukan.
-    
-    CATATAN: Jika Anda masih menggunakan fungsi ini di tempat lain, 
-    Anda bisa mengembalikan string kosong atau minimal styling.
-    """
-    return """
-<style>
-/* Global styling minimal untuk perpustakaan */
-#perpustakaan-ibu-balita-wrapper-v3 * {
-  box-sizing: border-box;
-}
-</style>
-"""
+
 
 
 
@@ -9491,18 +9250,6 @@ checklist yang disesuaikan dengan status gizi anak.
         
         with gr.TabItem("📚 Perpustakaan", id=3):
             gr.HTML(generate_perpustakaan_html_revised())
-            gr.Markdown(
-                "### 📚 Perpustakaan Ibu Balita\n"
-                "Perpustakaan digital ringkas untuk orang tua dan tenaga kesehatan balita.\n"
-                "Gunakan pencarian dan filter kategori/sumber untuk menemukan topik yang relevan."
-            )
-
-            # UI utama perpustakaan (sudah berisi filter bar + kartu + modal)
-            gr.HTML(
-                tampilkan_perpustakaan_lokal_interaktif(),
-                elem_id="perpustakaan-ibu-balita-html",
-            )
-
 
 
         # ===================================================================
