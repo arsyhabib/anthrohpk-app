@@ -7175,21 +7175,7 @@ def get_library_categories_list():
     return ["Semua Kategori"] + categories
 
 # ===================================================================
-# GANTI FUNGSI LAMA DI SECTION 10B DENGAN YANG INI
-# ===================================================================
-
-# ===================================================================
 # GANTI FUNGSI 'update_library_display' DI SECTION 10B DENGAN YANG INI
-# ===================================================================
-
-# ===================================================================
-# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
-# DI SECTION 10B DENGAN KODE BARU INI
-# ===================================================================
-
-# ===================================================================
-# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
-# DI SECTION 10B DENGAN KODE BARU INI
 # ===================================================================
 
 def update_library_display(search_term: str, category: str):
@@ -7233,7 +7219,11 @@ def update_library_display(search_term: str, category: str):
         
         # Ambil URL gambar, gunakan placeholder jika tidak ada
         image_url = art.get('image_url', 'https://via.placeholder.com/600x400/E0E0E0/909090?text=Gambar+Tidak+Tersedia')
-
+        
+        # --- PERBAIKAN KRUSIAL DI SINI ---
+        # Escape karakter '&' menjadi '&amp;' agar URL valid di dalam atribut style
+        image_url_safe = image_url.replace('&', '&amp;')
+        
         # Konversi Markdown dasar ke HTML (tetap diperlukan untuk full_content)
         content_html = art.get('full_content', 'Konten tidak tersedia.')
         content_html = content_html.replace('\n\n', '</p><p>')
@@ -7246,7 +7236,6 @@ def update_library_display(search_term: str, category: str):
         content_html = content_html.replace('### ', '<h4>')
         
         # Ubah **...** menjadi <strong>...</strong>
-        # Gunakan regex sederhana untuk menangani bold
         import re
         content_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content_html)
         
@@ -7260,7 +7249,7 @@ def update_library_display(search_term: str, category: str):
         html_output_list.append(f"""
         <div class="article-card-v3-2-3">
             
-            <div class="article-image" style="background-image: url('{image_url}');"></div>
+            <div class="article-image" style="background-image: url('{image_url_safe}');"></div>
             
             <div class="article-summary-content">
                 <span class="article-category">{kategori_safe}</span>
