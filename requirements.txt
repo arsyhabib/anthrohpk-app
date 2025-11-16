@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════
-# requirements.txt for AnthroHPK v3.0
+# requirements.txt for AnthroHPK v3.2.3
 # Production-ready dependencies for Python 3.10.13
 # Tested and compatible with Render deployment
 # ═══════════════════════════════════════════════════════════════════
@@ -14,8 +14,11 @@ fastapi==0.115.4
 # Uvicorn - ASGI server with standard extras (websockets, httptools, uvloop)
 uvicorn[standard]==0.32.0
 
-# Gradio - UI framework for ML/data apps
-gradio==5.7.1
+# Gradio - UI framework (UPGRADED to v4 for stability & Pydantic 2 support)
+gradio==4.31.0
+
+# Gradio-client - Required dependency for Gradio 4.x
+gradio-client==1.0.1
 
 # Pydantic - Data validation using Python type hints
 pydantic==2.9.2
@@ -94,24 +97,9 @@ python-dotenv==1.0.1
 # NOTES:
 # ───────────────────────────────────────────────────────────────────
 # 
-# 1. All versions are TESTED and COMPATIBLE with Python 3.10.13
+# 1. Gradio has been upgraded to 4.31.0 for stability and
+#    compatibility with Pydantic 2 and the 'queue=False' argument.
 # 
-# 2. These versions work on Render.com free tier
-# 
-# 3. pygrowup is NOT listed here because it's a local package
+# 2. pygrowup is NOT listed here because it's a local package
 #    Make sure pygrowup/ folder is in your repository
-# 
-# 4. Installation command for development:
-#    pip install -r requirements.txt
-# 
-# 5. For production (Render), build command:
-#    pip install --upgrade pip && pip install -r requirements.txt
-# 
-# 6. If you encounter "No matching distribution" errors:
-#    - Check Python version (must be 3.10.x)
-#    - Try upgrading pip: pip install --upgrade pip
-#    - Try without version pins temporarily
-# 
-# 7. Memory usage estimate: ~500-800MB (fits in Render free tier)
-# 
-# ═══════════════════════════════════════════════════════════════════
+#
