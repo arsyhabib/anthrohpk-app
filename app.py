@@ -2969,8 +2969,9 @@ def generate_checklist_with_videos(month: int, payload: Dict) -> str:
     return "\n".join(lines)
 
 # ===============================================================================
-# SECTION 10B: NEW FEATURES v3.2 (Termasuk Modifikasi Perpustakaan Lokal v3.2.2)
+# SECTION 10B: NEW FEATURES v3.2 (REVISI LENGKAP v3.2.5)
 # ===============================================================================
+import re # Pastikan 'import re' ada di atas jika belum ada di global
 
 # --- FITUR 1: MODE MUDAH (Dipertahankan dari v3.2) ---
 
@@ -3188,24 +3189,7 @@ def mode_mudah_handler(age_months: int, gender: str) -> str:
     
     return html_output
 
-# ===============================================================================
-# SECTION 10B: NEW FEATURES v3.2 (Termasuk Modifikasi Perpustakaan Lokal v3.2.2)
-# ===============================================================================
-
-# --- FITUR 1: MODE MUDAH (Dipertahankan dari v3.2) ---
-# ... (Semua kode Mode Mudah dan Kejar Tumbuh Anda tetap di sini) ...
-# ... (Fungsi get_normal_ranges_by_age, mode_mudah_handler, dll. TIDAK BERUBAH) ...
-
-
-# --- FITUR 2: PERPUSTAKAAN LOKAL (PENGGANTI v3.2) ---
-# Database artikel lokal baru dengan total 40 artikel
-# ================================================================
-# MULAI REVISI DI SINI
-# ================================================================
-
-# ================================================================
-# MULAI GANTI DATABASE ANDA DENGAN INI
-# ================================================================
+# --- FITUR 2: PERPUSTAKAAN LOKAL (DATABASE BERSIH 40 ARTIKEL) ---
 
 ARTIKEL_LOKAL_DATABASE = [
     # Kategori: Nutrisi & MPASI (10 Artikel)
@@ -3935,7 +3919,7 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-    # ... (Artikel 1-13 dari Bagian 1 ada di atas ini) ...
+# ... (Artikel 0-12 dari Bagian 1 ada di atas ini) ...
 
     {
         "kategori": "Tumbuh Kembang",
@@ -4734,177 +4718,7 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-    {
-        "kategori": "Pola Asuh & Psikologi",
-        "title": "Memahami 'Tantrum' pada Toddler (1-3 Tahun)",
-        "summary": "Mengapa anak tantrum dan bagaimana cara orang tua meresponsnya dengan tepat.",
-        "source": "CDC | AAP",
-        "image_url": "https://images.unsplash.com/photo-1566004100631-35d015d6a491?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
-        "full_content": """
-        # Memahami 'Tantrum' pada Toddler (1-3 Tahun)
-        
-        Tantrum (ledakan emosi) adalah perilaku normal pada anak usia *toddler* (1-3 tahun). Ini bukanlah tanda anak "nakal" atau "cengeng", melainkan tanda frustrasi.
-        
-        ## Mengapa Anak Tantrum?
-        
-        Tantrum terjadi karena "badai" di dalam otak anak. Ini adalah ledakan emosi akibat:
-        
-        1.  **Keterbatasan Bahasa:** Anak sudah memiliki keinginan kuat (misal: "mau biskuit itu"), tapi belum mampu menyampaikannya dengan kata-kata.
-        2.  **Frustrasi:** Keinginan tidak terpenuhi (misal: dilarang bermain).
-        3.  **Kondisi Fisik:** Anak sedang **LAPAR**, **MENGANTUK/LELAH**, atau **SAKIT**. Ini adalah pemicu paling umum.
-        4.  **Perkembangan Otonomi:** Anak sedang dalam fase "aku bisa sendiri" dan ingin mengontrol lingkungannya.
-        
-        ## Cara Merespons Tantrum (Do's and Don'ts)
-        
-        Respons orang tua saat tantrum sangat krusial.
-        
-        ### YANG HARUS DILAKUKAN (Do's):
-        
-        1.  **Tetap Tenang:** Tarik napas. Emosi Anda akan memengaruhi anak. Jika Anda panik atau marah, tantrum akan semakin menjadi.
-        2.  **Validasi Emosi:** Beri nama emosinya. "Adik marah ya karena mainannya diambil," atau "Kakak sedih ya karena kita harus pulang." Ini membantu anak belajar mengenali emosi.
-        3.  **Pastikan Aman:** Jauhkan anak dari benda berbahaya. Jika ia memukul, tahan tangannya dengan lembut sambil berkata, "Boleh marah, tapi tidak boleh memukul."
-        4.  **Alihkan Perhatian (Jika masih ringan):** Coba alihkan perhatiannya ke hal lain yang menarik.
-        5.  **Abaikan (Jika tantrum berat):** Jika tantrum sudah meledak, terkadang yang terbaik adalah tetap berada di dekatnya (agar ia tahu Anda ada) tapi tidak merespon ledakannya. Tunggu hingga reda.
-        
-        ### YANG TIDAK BOLEH DILAKUKAN (Don'ts):
-        
-        1.  **JANGAN Ikut Marah:** Membentak atau memukul anak hanya akan memperburuk situasi dan mengajarkan bahwa kekerasan adalah solusi.
-        2.  **JANGAN Memberi Apa yang Ia Inginkan:** Jika anak tantrum karena ingin permen, dan Anda memberikannya agar ia diam, Anda baru saja mengajarinya bahwa "Tantrum adalah cara ampuh mendapatkan sesuatu."
-        3.  **JANGAN Mengancam atau Menakut-nakuti:** (misal: "Awas ada polisi," "Nanti Mama tinggal"). Ini akan merusak rasa amannya.
-        
-        Setelah tantrum reda, peluk anak. Bicarakan dengan singkat apa yang terjadi ("Tadi Kakak marah sekali ya. Lain kali kalau mau mainan, bilang baik-baik").
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Centers for Disease Control and Prevention (CDC). *Temper Tantrums.*
-        2.  American Academy of Pediatrics (AAP). *How to Handle Tantrums.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Pola Asuh & Psikologi",
-        "title": "Pentingnya Ayah dalam Pengasuhan (Father's Role)",
-        "summary": "Peran ayah bukan hanya mencari nafkah, tapi esensial untuk perkembangan anak.",
-        "source": "AAP | UNICEF",
-        "image_url": "https://images.unsplash.com/photo-1484665754824-1d8e1469956e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
-        "full_content": """
-        # Pentingnya Ayah dalam Pengasuhan (Father's Role)
-        
-        Pengasuhan anak seringkali masih dianggap sebagai tugas utama ibu. Padahal, keterlibatan ayah secara aktif memiliki dampak luar biasa bagi perkembangan anak, baik laki-laki maupun perempuan.
-        
-        ## Dampak Positif Keterlibatan Ayah
-        
-        Penelitian menunjukkan anak-anak yang ayahnya terlibat aktif dalam pengasuhan cenderung:
-        
-        1.  **Memiliki Kecerdasan Kognitif Lebih Tinggi:** Ayah yang sering mengajak anak bermain dan membaca buku (stimulasi) terbukti meningkatkan skor IQ anak.
-        2.  **Lebih Baik dalam Regulasi Emosi:** Anak belajar cara mengelola emosi dan stres dengan lebih baik.
-        3.  **Lebih Percaya Diri dan Mandiri:** Merasa didukung oleh kedua orang tua, anak tumbuh lebih berani mengeksplorasi dunia.
-        4.  **Memiliki Keterampilan Sosial yang Baik:** Anak lebih mudah bergaul dan berempati terhadap orang lain.
-        
-        ## Gaya Bermain Ayah yang Khas
-        
-        Ayah dan Ibu memiliki gaya interaksi yang berbeda, dan anak membutuhkan keduanya.
-        
-        * **Ibu** cenderung lebih verbal, menenangkan, dan menggunakan mainan terstruktur.
-        * **Ayah** cenderung lebih **fisik** (mengajak "terbang", gulat ringan, lempar bola), lebih spontan, dan mendorong anak untuk mengambil risiko yang aman.
-        
-        Gaya bermain ayah yang "kasar" (rough-and-tumble play) ini sangat penting untuk mengajarkan anak regulasi diri (kapan harus berhenti), batasan, dan cara mengelola kegembiraan.
-        
-        ## Bagaimana Ayah Bisa Terlibat (Sejak Hari Pertama)?
-        
-        * **Saat Bayi Baru Lahir:**
-            * Menggendong bayi (skin-to-skin contact).
-            * Menggantikan popok.
-            * Memandikan bayi.
-            * Menemani ibu saat menyusui (misal: memijat punggung ibu).
-        
-        * **Saat Fase MPASI:**
-            * Ikut menyuapi anak.
-            * Bermain saat ibu menyiapkan makanan.
-        
-        * **Saat Balita:**
-            * Membacakan buku cerita sebelum tidur.
-            * Bermain aktif di luar rumah (main bola, lari-larian).
-            * Mendengarkan cerita anak tentang harinya.
-        
-        Keterlibatan ayah bukan hanya "membantu ibu", tetapi merupakan **kebutuhan dasar** anak.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *The Power of Play: How Fun and Games Help Children Thrive.*
-        2.  UNICEF. *Why fathers’ involvement in their children’s lives is so important.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Pola Asuh & Psikologi",
-        "title": "Melatih Tidur Mandiri (Sleep Training)",
-        "summary": "Membantu bayi belajar tidur nyenyak sepanjang malam tanpa bantuan.",
-        "source": "AAP",
-        "image_url": "https://images.unsplash.com/photo-1472090278799-d7c2a7156d68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80",
-        "full_content": """
-        # Melatih Tidur Mandiri (Sleep Training)
-        
-        *Sleep training* adalah proses mengajarkan bayi untuk bisa tenang dan tertidur **secara mandiri** tanpa bantuan (seperti digendong, diayun, atau menyusu). Tujuannya agar bayi bisa tidur nyenyak sepanjang malam.
-        
-        ## Kapan Boleh Memulai?
-        
-        Sebagian besar ahli setuju bahwa *sleep training* aman dimulai saat bayi berusia **4 hingga 6 bulan**.
-        
-        * **Mengapa menunggu?** Sebelum usia 4 bulan, bayi secara fisik masih membutuhkan makan di malam hari dan pola tidurnya belum teratur.
-        
-        PENTING: Selalu konsultasikan dengan dokter anak Anda sebelum memulai metode *sleep training* apa pun.
-        
-        ## Persiapan Kunci: Rutinitas Tidur
-        
-        Sebelum memulai *training*, ciptakan **rutinitas waktu tidur** yang konsisten selama 1-2 minggu. Bayi menyukai prediksi.
-        
-        Contoh rutinitas (lakukan 20-30 menit setiap malam dalam urutan yang sama):
-        1.  Mandi air hangat.
-        2.  Pijat bayi.
-        3.  Ganti popok dan pakaikan baju tidur.
-        4.  Menyusu (pastikan ini dilakukan di awal rutinitas, bukan sebagai "alat" menidurkan).
-        5.  Redupkan lampu.
-        6.  Bacakan buku cerita.
-        7.  Nyanyikan lagu nina bobo.
-        8.  Ucapkan "selamat tidur".
-        9.  **Letakkan bayi di tempat tidurnya saat ia MENGANTUK, tapi MASIH SADAR.**
-        
-        ## Metode Sleep Training Populer
-        
-        Tidak ada satu cara yang benar. Pilih yang sesuai dengan kenyamanan Anda.
-        
-        1.  **Cry It Out (CIO) / Extinction:**
-            * Letakkan bayi di tempat tidur (setelah rutinitas), ucapkan selamat tidur, dan keluar kamar.
-            * Anda tidak kembali lagi sampai pagi (kecuali untuk keadaan darurat).
-            * Metode ini cepat (biasanya 3-4 hari) tapi sulit secara emosional bagi orang tua.
-        
-        2.  **Metode Ferber (Check-and-Console):**
-            * Sama seperti CIO, tapi Anda kembali ke kamar untuk menenangkan bayi (mengusap, bicara lembut) dalam interval waktu yang semakin lama.
-            * Misal: Hari 1 (interval 3, 5, 10 menit), Hari 2 (5, 10, 12 menit).
-            * **PENTING:** Jangan gendong bayi saat interval cek.
-        
-        3.  **Metode Kursi (Fading):**
-            * Duduk di kursi di samping tempat tidur bayi sampai ia tertidur.
-            * Setiap beberapa malam, geser kursi Anda semakin jauh dari tempat tidur, hingga akhirnya Anda berada di luar pintu.
-            * Ini metode paling lembut, tapi butuh waktu paling lama (bisa berminggu-minggu).
-        
-        Kuncinya adalah **Konsistensi**. Apa pun metode yang dipilih, Anda dan pasangan harus konsisten melakukannya setidaknya selama 1 minggu.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Sleep Training Your Baby.*
-        2.  Buku: *Solve Your Child's Sleep Problems* oleh Dr. Richard Ferber.
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    # ... (Artikel 1-26 dari Bagian 1 & 2 ada di atas ini) ...
+# ... (Artikel 1-26 dari Bagian 1 & 2 ada di atas ini) ...
 
     {
         "kategori": "Pola Asuh & Psikologi",
@@ -5624,65 +5438,8 @@ ARTIKEL_LOKAL_DATABASE = [
         
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
-    },
-    
-    # ... (INI ADALAH ARTIKEL KE-40 DAN TERAKHIR) ...
-    {
-        "kategori": "Keamanan & Pencegahan",
-        "title": "Pencegahan Gigitan Nyamuk (Demam Berdarah)",
-        "summary": "Cara melindungi bayi dari gigitan nyamuk Aedes aegypti.",
-        "source": "IDAI | CDC",
-        "image_url": "https://images.unsplash.com/photo-1590005024403-6c838703290f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
-        "full_content": """
-        # Pencegahan Gigitan Nyamuk (Demam Berdarah & Lainnya)
-        
-        Bayi dan balita sangat rentan terhadap gigitan nyamuk, yang tidak hanya gatal tetapi juga bisa menularkan penyakit berbahaya seperti Demam Berdarah Dengue (DBD), Chikungunya, dan Zika (semua ditularkan oleh nyamuk *Aedes aegypti*).
-        
-        ## 1. Perlindungan Lingkungan (Pemberantasan Sarang Nyamuk)
-        
-        Ini adalah langkah terpenting. Nyamuk *Aedes aegypti* berkembang biak di air jernih yang tergenang. Lakukan **3M Plus**:
-        
-        * **Menguras:** Kuras bak mandi, tempat penampungan air, dan vas bunga minimal seminggu sekali.
-        * **Menutup:** Tutup rapat semua tempat penampungan air.
-        * **Mengubur/Mendaur Ulang:** Kubur barang bekas yang bisa menampung air (ban bekas, kaleng).
-        * **Plus:**
-            * Pasang kawat kasa di ventilasi dan jendela.
-            * Pelihara ikan pemakan jentik (jika punya kolam).
-            * Hindari menggantung baju bekas pakai terlalu lama (disukai nyamuk).
-        
-        ## 2. Perlindungan Fisik (Pakaian & Kelambu)
-        
-        * **Kelambu:** Cara teraman melindungi bayi saat tidur (siang dan malam). Pasang kelambu di tempat tidur bayi atau *stroller*.
-        * **Pakaian:** Pakaikan anak pakaian lengan panjang dan celana panjang yang longgar dan berwarna terang, terutama saat beraktivitas di luar rumah pada jam "sibuk" nyamuk (pagi dan sore hari).
-        
-        ## 3. Perlindungan Kimia (Repellent / Losion Anti Nyamuk)
-        
-        Gunakan *repellent* dengan hati-hati pada bayi.
-        
-        * **Usia < 2 Bulan:** **JANGAN** gunakan *repellent* dalam bentuk apa pun. Hanya gunakan perlindungan fisik (kelambu, pakaian).
-        
-        * **Usia > 2 Bulan:**
-            * **Pilih Bahan yang Aman:**
-                * **DEET:** Konsentrasi 10-30%. Sangat efektif. (Rekomendasi AAP & CDC).
-                * **Picaridin:** Konsentrasi 5-20%.
-                * **Minyak Alami (Eucalyptus, Citronella):** Kurang efektif, harus lebih sering dioleskan ulang, dan **tidak direkomendasikan** untuk bayi di bawah 3 tahun karena risiko iritasi.
-            * **Cara Pemakaian yang Benar:**
-                1.  **JANGAN** semprotkan/oleskan di tangan, mata, atau mulut bayi.
-                2.  **JANGAN** oleskan di kulit yang luka atau iritasi.
-                3.  **SEMPROTKAN DI TANGAN ANDA** terlebih dahulu, baru oleskan tipis-tipis ke kulit bayi yang terbuka (hindari area wajah dan tangan).
-                4.  Cuci tangan Anda setelah mengoleskan.
-                5.  Segera cuci kulit bayi dengan sabun dan air setelah kembali ke dalam ruangan.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Melindungi Anak dari Gigitan Nyamuk.*
-        2.  Centers for Disease Control and Prevention (CDC). *Prevent Mosquito Bites.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
     }
-] # <-- INI ADALAH PENUTUP DATABASE ARTIKEL
+] # <-- INI ADALAH PENUTUP DATABASE ARTIKEL (HANYA 40 ARTIKEL)
 
 # ================================================
 # FUNGSI HELPER PERPUSTAKAAN (VERSI PERBAIKAN)
@@ -5777,17 +5534,20 @@ def update_library_display(search_term: str, category: str):
         # Perbaikan regex list (lebih kuat)
         content_html = re.sub(r'(<br>|^)\* (.*?)(<br>|$)', r'\1<li>\2</li>', content_html)
         content_html = content_html.replace('</li><br><li>', '</li><li>') 
-        content_html_list = content_html.split('<li>')
         
+        # Bungkus grup <li> dengan <ul>
+        content_html_list = content_html.split('<li>')
         if len(content_html_list) > 1:
             processed_html = content_html_list[0]
             in_list = False
             for item in content_html_list[1:]:
+                # Jika item baru dimulai TAPI kita belum membuka <ul>, buka <ul>
                 if not in_list:
                     processed_html += '<ul><li>' + item
                     in_list = True
                 else:
-                    if '</p>' in item or '<h2>' in item or '<h3>' in item:
+                    # Jika kita di dalam <ul> dan menemukan tag blok, tutup <ul>
+                    if item.strip().startswith('<p>') or item.strip().startswith('<h2>') or item.strip().startswith('<h3>'):
                          processed_html += '</ul>' + item
                          in_list = False
                     else:
@@ -5830,149 +5590,6 @@ def load_initial_articles():
 
 
 print(f"✅ Section 10B v3.2.5 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
-
-
-# ===============================================================================
-# ===============================================================================
-# SECTION 11: GRADIO UI (REVISI TOTAL - Perbaikan Perpustakaan)
-# ===============================================================================
-
-# UPDATED Custom CSS (v3.2.3)
-# CSS Perpustakaan lama (penyebab error) telah dihapus.
-CUSTOM_CSS = """
-/* ===================================================================
-   GLOBAL STYLES
-   =================================================================== */
-
-.gradio-container {
-    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    max-width: 1400px !important;
-    margin: 0 auto !important;
-}
-
-/* ===================================================================
-   DARK MODE OPTIMIZATION - HIGH CONTRAST (v3.1)
-   =================================================================== */
-
-@media (prefers-color-scheme: dark) {
-    .gradio-container { color: #f0f0f0 !important; }
-    h1, h2, h3, h4, h5, h6 { color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
-    p, span, div, label { color: #e8e8e8 !important; }
-    .gr-input, .gr-textbox, .gr-box, .gr-form { background-color: #2d2d2d !important; color: #ffffff !important; border-color: #505050 !important; }
-    .gr-input::placeholder { color: #999999 !important; }
-    .gr-button { background-color: #404040 !important; color: #ffffff !important; border-color: #606060 !important; }
-    .gr-button:hover { background-color: #505050 !important; border-color: #707070 !important; }
-    .gr-button-primary { background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
-    .gr-button-secondary { background: linear-gradient(135deg, #4ecdc4 0%, #6de0d9 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
-    
-    /* Perbaikan Dark Mode untuk Accordion (Perpustakaan Baru) */
-    .gr-panel, .gr-box, .gr-accordion { background-color: #2a2a2a !important; border-color: #505050 !important; color: #e8e8e8 !important; }
-    .gr-accordion .label-wrap { background-color: #3a3a3a !important; }
-    .gr-accordion .label-wrap:hover { background-color: #4a4a4a !important; }
-    
-    .gr-tab { background-color: #333333 !important; color: #ffffff !important; border-color: #505050 !important; }
-    .gr-tab.selected { background-color: #ff6b9d !important; color: #ffffff !important; font-weight: 600 !important; }
-    .markdown-body { color: #e8e8e8 !important; }
-    .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #ffffff !important; border-bottom-color: #505050 !important; }
-    .markdown-body a { color: #6db4ff !important; }
-    .markdown-body code { background-color: #1e1e1e !important; color: #d4d4d4 !important; border-color: #404040 !important; }
-    .markdown-body pre { background-color: #1e1e1e !important; border-color: #404040 !important; }
-    .status-success { color: #5cff5c !important; }
-    .status-warning { color: #ffd45c !important; }
-    .status-error { color: #ff5c5c !important; }
-    .premium-gold { background: linear-gradient(135deg, #b8860b 0%, #daa520 100%) !important; color: #ffffff !important; border: 2px solid #b8860b !important; }
-    .premium-silver { background: linear-gradient(135deg, #787878 0%, #a0a0a0 100%) !important; color: #ffffff !important; border: 2px solid #787878 !important; }
-    .article-card { background-color: #2a2a2a !important; border: 1px solid #505050 !important; color: #e8e8e8 !important; }
-    .article-card:hover { background-color: #353535 !important; border-color: #606060 !important; box-shadow: 0 4px 12px rgba(255,255,255,0.1) !important; }
-    .article-title { color: #ffffff !important; }
-    .article-meta { color: #b0b0b0 !important; }
-    
-    /* CSS Perpustakaan lama (penyebab error) telah dihapus */
-}
-
-/* ===================================================================
-   LIGHT MODE (Default)
-   =================================================================== */
-
-.status-success { color: #28a745 !important; font-weight: 600; }
-.status-warning { color: #ffc107 !important; font-weight: 600; }
-.status-error { color: #dc3545 !important; font-weight: 600; }
-
-.big-button {
-    font-size: 18px !important; padding: 20px 40px !important; margin: 15px 0 !important;
-    border-radius: 12px !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
-    transition: all 0.3s ease !important;
-}
-.big-button:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important; }
-
-.premium-silver {
-    background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%) !important; color: #333 !important;
-    border: 2px solid #A0A0A0 !important; font-weight: bold !important; padding: 15px 30px !important;
-    border-radius: 10px !important; transition: all 0.3s ease !important;
-}
-.premium-gold {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important; color: #000 !important;
-    border: 2px solid #DAA520 !important; font-weight: bold !important; padding: 15px 30px !important;
-    border-radius: 10px !important; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4) !important;
-    transition: all 0.3s ease !important;
-}
-.premium-gold:hover { transform: scale(1.05) !important; box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important; }
-
-/* ===================================================================
-   VIDEO CARDS (v3.1)
-   =================================================================== */
-
-.video-card {
-    background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); border: 2px solid #ffd4e0;
-    border-radius: 12px; padding: 15px; margin: 10px 0; transition: all 0.3s ease;
-}
-.video-card:hover { transform: scale(1.02); box-shadow: 0 6px 15px rgba(255, 107, 157, 0.2); border-color: #ff6b9d; }
-.video-title { font-size: 16px; font-weight: 700; color: #ff6b9d; margin-bottom: 8px; }
-.video-description { font-size: 13px; color: #666; margin-bottom: 10px; }
-.video-duration { font-size: 12px; color: #999; font-style: italic; }
-
-/* ===================================================================
-   PERPUSTAKAAN INTERAKTIF (BARU v3.2.3) - DIHAPUS
-   =================================================================== */
-/* Semua CSS .library-filter-bar, .article-card-v3, dll. telah dihapus */
-
-
-/* ===================================================================
-   OTHER COMPONENTS
-   =================================================================== */
-
-.gr-input, .gr-textbox {
-    border-radius: 8px !important; border: 2px solid #e8e8e8 !important;
-    transition: border-color 0.3s ease !important;
-}
-.gr-input:focus, .gr-textbox:focus {
-    border-color: #ff6b9d !important;
-    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1) !important;
-}
-.gr-panel, .gr-box {
-    border-radius: 12px !important; border: 1px solid #e8e8e8 !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
-}
-.gr-tab { border-radius: 8px 8px 0 0 !important; font-weight: 600 !important; }
-.gr-plot {
-    border-radius: 12px !important; overflow: hidden !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
-}
-blockquote {
-    background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%);
-    border-left: 6px solid #ff6b9d; padding: 20px; margin: 20px 0;
-    border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-.notification-panel {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 20px; border-radius: 15px; color: white; margin: 15px 0;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-.notification-enabled {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    padding: 15px; border-radius: 10px; color: white;
-    text-align: center; font-weight: bold; margin: 10px 0;
-}
 # ===============================================================================
 # SECTION 11: GRADIO UI (REVISI TOTAL - Perbaikan Perpustakaan)
 # ===============================================================================
