@@ -120,7 +120,7 @@ print("✅ All imports successful")
 # ===============================================================================
 
 # Application Metadata
-APP_VERSION = "3.2.6" # GRADIENT FIX (Perpustakaan - No External Images)
+APP_VERSION = "3.2.3" # MODIFIED (Perpustakaan Fix)
 APP_TITLE = "PeduliGiziBalita - Monitor Pertumbuhan Anak Profesional" # MODIFIED
 APP_DESCRIPTION = "Aplikasi berbasis WHO Child Growth Standards untuk pemantauan antropometri anak 0-60 bulan" # MODIFIED
 CONTACT_WA = "6285888858160"
@@ -191,88 +191,6 @@ PYGROWUP_DIR = "pygrowup"
 for directory in [STATIC_DIR, OUTPUTS_DIR]:
     os.makedirs(directory, exist_ok=True)
     print(f"✅ Directory ensured: {directory}")
-# === Helper Functions: Premium & Browser Notification (Tab 6) ===
-
-def handle_enable_notification():
-    """
-    Backend handler untuk tombol "Aktifkan Notifikasi".
-    Karena backend tidak bisa langsung memanggil Web Notification API,
-    fungsi ini hanya mengembalikan HTML status agar pengguna mendapat feedback.
-    """
-    return """
-    <div style="padding: 12px 16px; border-radius: 10px;
-                background: #e6ffed; color: #046b4c;
-                border: 1px solid #b7eb8f; font-size: 14px;">
-        <strong>✅ Notifikasi siap diaktifkan.</strong>
-        <p style="margin: 6px 0 0;">
-            Jika browser mendukung, silakan izinkan notifikasi di pop-up yang muncul
-            atau cek pengaturan notifikasi browser Anda.
-        </p>
-    </div>
-    """
-
-
-def handle_schedule_reminder_hours(title: str, message: str, delay_hours: float):
-    """
-    Helper sederhana untuk "menjadwalkan" reminder.
-    Di sisi backend, kita hanya mengembalikan teks konfirmasi.
-    """
-    title = (title or "Reminder Gizi SiKecil").strip()
-    message = (message or "Saatnya memantau pertumbuhan dan asupan gizi anak.").strip()
-
-    try:
-        delay_val = float(delay_hours)
-    except (TypeError, ValueError):
-        delay_val = 1.0
-
-    if delay_val <= 0:
-        delay_text = "segera (kurang dari 1 jam)"
-    else:
-        # gunakan :g agar 3.0 -> "3"
-        delay_text = f"dalam {delay_val:g} jam"
-
-    return f"""
-    ### ⏰ Reminder dijadwalkan
-
-    **Judul:** {title}  
-    **Pesan:** {message}  
-    **Waktu:** {delay_text}
-
-    > Catatan: Ini adalah simulasi server-side.  
-    > Untuk alarm nyata, aktifkan notifikasi browser atau atur pengingat di ponsel Anda.
-    """
-
-
-def handle_premium_upgrade(tier: str):
-    """
-    Helper untuk menampilkan informasi paket premium.
-    Ini hanya simulasi, belum terhubung ke pembayaran sungguhan.
-    """
-    tier_key = (tier or "").lower()
-    pkg = PREMIUM_PACKAGES.get(tier_key)
-
-    if not pkg:
-        return "⚠️ Paket premium tidak dikenali."
-
-    features_html = "".join(f"<li>{feat}</li>" for feat in pkg["features"])
-
-    return f"""
-    <div style="padding: 16px 18px; border-radius: 12px;
-                background: linear-gradient(135deg, #fff7e6 0%, #fff 100%);
-                border: 1px solid #ffe58f; font-size: 14px;">
-        <h3 style="margin-top: 0;">Terima kasih telah memilih Paket {pkg['name']} ⭐</h3>
-        <p style="margin: 4px 0 10px;">
-            Ini adalah simulasi upgrade.  
-            Integrasi pembayaran online belum diaktifkan pada versi demo ini.
-        </p>
-        <ul style="margin: 0 0 10px 18px; padding: 0;">
-            {features_html}
-        </ul>
-        <p style="margin: 0; font-size: 12px; color: #555;">
-            Untuk versi produksi, hubungi admin ({CONTACT_WA}) untuk aktivasi manual.
-        </p>
-    </div>
-    """
 
 # WHO Calculator Configuration
 CALC_CONFIG = {
@@ -3051,9 +2969,8 @@ def generate_checklist_with_videos(month: int, payload: Dict) -> str:
     return "\n".join(lines)
 
 # ===============================================================================
-# SECTION 10B: NEW FEATURES v3.2 (REVISI LENGKAP v3.2.5)
+# SECTION 10B: NEW FEATURES v3.2 (Termasuk Modifikasi Perpustakaan Lokal v3.2.2)
 # ===============================================================================
-import re # Pastikan 'import re' ada di atas jika belum ada di global
 
 # --- FITUR 1: MODE MUDAH (Dipertahankan dari v3.2) ---
 
@@ -3271,7 +3188,20 @@ def mode_mudah_handler(age_months: int, gender: str) -> str:
     
     return html_output
 
-# --- FITUR 2: PERPUSTAKAAN LOKAL (DATABASE BERSIH 40 ARTIKEL) ---
+# ===============================================================================
+# SECTION 10B: NEW FEATURES v3.2 (Termasuk Modifikasi Perpustakaan Lokal v3.2.2)
+# ===============================================================================
+
+# --- FITUR 1: MODE MUDAH (Dipertahankan dari v3.2) ---
+# ... (Semua kode Mode Mudah dan Kejar Tumbuh Anda tetap di sini) ...
+# ... (Fungsi get_normal_ranges_by_age, mode_mudah_handler, dll. TIDAK BERUBAH) ...
+
+
+# --- FITUR 2: PERPUSTAKAAN LOKAL (PENGGANTI v3.2) ---
+# Database artikel lokal baru dengan total 40 artikel
+# ================================================================
+# MULAI REVISI DI SINI
+# ================================================================
 
 ARTIKEL_LOKAL_DATABASE = [
     # Kategori: Nutrisi & MPASI (10 Artikel)
@@ -3873,6 +3803,11 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
+    # ... (Sisa artikel akan dilanjutkan di Bagian 3 dan 4) ...
+    
+    # ... (Artikel 1-10 dari Bagian 2 ada di sini) ...
+
+    # Lanjutan Kategori: Tumbuh Kembang (8 Artikel)
     {
         "kategori": "Tumbuh Kembang",
         "title": "Pentingnya Stimulasi untuk Perkembangan Otak",
@@ -4001,8 +3936,6 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-# ... (Artikel 0-12 dari Bagian 1 ada di atas ini) ...
-
     {
         "kategori": "Tumbuh Kembang",
         "title": "Red Flags Keterlambatan Bicara (Speech Delay)",
@@ -4383,6 +4316,10 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
+    # ... (Sisa artikel akan dilanjutkan di Bagian 4) ...
+    # ... (Artikel 1-20 dari Bagian 2 & 3 ada di sini) ...
+
+    # Lanjutan Kategori: Kesehatan & Imunisasi (8 Artikel)
     {
         "kategori": "Kesehatan & Imunisasi",
         "title": "Mengenal Batuk Pilek (ISPA) pada Anak",
@@ -4800,8 +4737,180 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-# ... (Artikel 1-26 dari Bagian 1 & 2 ada di atas ini) ...
+    # ... (Sisa artikel akan dilanjutkan di Bagian 4b) ...
+    # ... (Artikel 1-27 dari Bagian 2, 3, & 4a ada di sini) ...
 
+    # Lanjutan Kategori: Pola Asuh & Psikologi (8 Artikel)
+    {
+        "kategori": "Pola Asuh & Psikologi",
+        "title": "Memahami 'Tantrum' pada Toddler (1-3 Tahun)",
+        "summary": "Mengapa anak tantrum dan bagaimana cara orang tua meresponsnya dengan tepat.",
+        "source": "CDC | AAP",
+        "image_url": "https://images.unsplash.com/photo-1566004100631-35d015d6a491?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        "full_content": """
+        # Memahami 'Tantrum' pada Toddler (1-3 Tahun)
+        
+        Tantrum (ledakan emosi) adalah perilaku normal pada anak usia *toddler* (1-3 tahun). Ini bukanlah tanda anak "nakal" atau "cengeng", melainkan tanda frustrasi.
+        
+        ## Mengapa Anak Tantrum?
+        
+        Tantrum terjadi karena "badai" di dalam otak anak. Ini adalah ledakan emosi akibat:
+        
+        1.  **Keterbatasan Bahasa:** Anak sudah memiliki keinginan kuat (misal: "mau biskuit itu"), tapi belum mampu menyampaikannya dengan kata-kata.
+        2.  **Frustrasi:** Keinginan tidak terpenuhi (misal: dilarang bermain).
+        3.  **Kondisi Fisik:** Anak sedang **LAPAR**, **MENGANTUK/LELAH**, atau **SAKIT**. Ini adalah pemicu paling umum.
+        4.  **Perkembangan Otonomi:** Anak sedang dalam fase "aku bisa sendiri" dan ingin mengontrol lingkungannya.
+        
+        ## Cara Merespons Tantrum (Do's and Don'ts)
+        
+        Respons orang tua saat tantrum sangat krusial.
+        
+        ### YANG HARUS DILAKUKAN (Do's):
+        
+        1.  **Tetap Tenang:** Tarik napas. Emosi Anda akan memengaruhi anak. Jika Anda panik atau marah, tantrum akan semakin menjadi.
+        2.  **Validasi Emosi:** Beri nama emosinya. "Adik marah ya karena mainannya diambil," atau "Kakak sedih ya karena kita harus pulang." Ini membantu anak belajar mengenali emosi.
+        3.  **Pastikan Aman:** Jauhkan anak dari benda berbahaya. Jika ia memukul, tahan tangannya dengan lembut sambil berkata, "Boleh marah, tapi tidak boleh memukul."
+        4.  **Alihkan Perhatian (Jika masih ringan):** Coba alihkan perhatiannya ke hal lain yang menarik.
+        5.  **Abaikan (Jika tantrum berat):** Jika tantrum sudah meledak, terkadang yang terbaik adalah tetap berada di dekatnya (agar ia tahu Anda ada) tapi tidak merespon ledakannya. Tunggu hingga reda.
+        
+        ### YANG TIDAK BOLEH DILAKUKAN (Don'ts):
+        
+        1.  **JANGAN Ikut Marah:** Membentak atau memukul anak hanya akan memperburuk situasi dan mengajarkan bahwa kekerasan adalah solusi.
+        2.  **JANGAN Memberi Apa yang Ia Inginkan:** Jika anak tantrum karena ingin permen, dan Anda memberikannya agar ia diam, Anda baru saja mengajarinya bahwa "Tantrum adalah cara ampuh mendapatkan sesuatu."
+        3.  **JANGAN Mengancam atau Menakut-nakuti:** (misal: "Awas ada polisi," "Nanti Mama tinggal"). Ini akan merusak rasa amannya.
+        
+        Setelah tantrum reda, peluk anak. Bicarakan dengan singkat apa yang terjadi ("Tadi Kakak marah sekali ya. Lain kali kalau mau mainan, bilang baik-baik").
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Centers for Disease Control and Prevention (CDC). *Temper Tantrums.*
+        2.  American Academy of Pediatrics (AAP). *How to Handle Tantrums.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Pola Asuh & Psikologi",
+        "title": "Pentingnya Ayah dalam Pengasuhan (Father's Role)",
+        "summary": "Peran ayah bukan hanya mencari nafkah, tapi esensial untuk perkembangan anak.",
+        "source": "AAP | UNICEF",
+        "image_url": "https://images.unsplash.com/photo-1484665754824-1d8e1469956e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        "full_content": """
+        # Pentingnya Ayah dalam Pengasuhan (Father's Role)
+        
+        Pengasuhan anak seringkali masih dianggap sebagai tugas utama ibu. Padahal, keterlibatan ayah secara aktif memiliki dampak luar biasa bagi perkembangan anak, baik laki-laki maupun perempuan.
+        
+        ## Dampak Positif Keterlibatan Ayah
+        
+        Penelitian menunjukkan anak-anak yang ayahnya terlibat aktif dalam pengasuhan cenderung:
+        
+        1.  **Memiliki Kecerdasan Kognitif Lebih Tinggi:** Ayah yang sering mengajak anak bermain dan membaca buku (stimulasi) terbukti meningkatkan skor IQ anak.
+        2.  **Lebih Baik dalam Regulasi Emosi:** Anak belajar cara mengelola emosi dan stres dengan lebih baik.
+        3.  **Lebih Percaya Diri dan Mandiri:** Merasa didukung oleh kedua orang tua, anak tumbuh lebih berani mengeksplorasi dunia.
+        4.  **Memiliki Keterampilan Sosial yang Baik:** Anak lebih mudah bergaul dan berempati terhadap orang lain.
+        
+        ## Gaya Bermain Ayah yang Khas
+        
+        Ayah dan Ibu memiliki gaya interaksi yang berbeda, dan anak membutuhkan keduanya.
+        
+        * **Ibu** cenderung lebih verbal, menenangkan, dan menggunakan mainan terstruktur.
+        * **Ayah** cenderung lebih **fisik** (mengajak "terbang", gulat ringan, lempar bola), lebih spontan, dan mendorong anak untuk mengambil risiko yang aman.
+        
+        Gaya bermain ayah yang "kasar" (rough-and-tumble play) ini sangat penting untuk mengajarkan anak regulasi diri (kapan harus berhenti), batasan, dan cara mengelola kegembiraan.
+        
+        ## Bagaimana Ayah Bisa Terlibat (Sejak Hari Pertama)?
+        
+        * **Saat Bayi Baru Lahir:**
+            * Menggendong bayi (skin-to-skin contact).
+            * Menggantikan popok.
+            * Memandikan bayi.
+            * Menemani ibu saat menyusui (misal: memijat punggung ibu).
+        
+        * **Saat Fase MPASI:**
+            * Ikut menyuapi anak.
+            * Bermain saat ibu menyiapkan makanan.
+        
+        * **Saat Balita:**
+            * Membacakan buku cerita sebelum tidur.
+            * Bermain aktif di luar rumah (main bola, lari-larian).
+            * Mendengarkan cerita anak tentang harinya.
+        
+        Keterlibatan ayah bukan hanya "membantu ibu", tetapi merupakan **kebutuhan dasar** anak.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *The Power of Play: How Fun and Games Help Children Thrive.*
+        2.  UNICEF. *Why fathers’ involvement in their children’s lives is so important.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Pola Asuh & Psikologi",
+        "title": "Melatih Tidur Mandiri (Sleep Training)",
+        "summary": "Membantu bayi belajar tidur nyenyak sepanjang malam tanpa bantuan.",
+        "source": "AAP",
+        "image_url": "https://images.unsplash.com/photo-1472090278799-d7c2a7156d68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80",
+        "full_content": """
+        # Melatih Tidur Mandiri (Sleep Training)
+        
+        *Sleep training* adalah proses mengajarkan bayi untuk bisa tenang dan tertidur **secara mandiri** tanpa bantuan (seperti digendong, diayun, atau menyusu). Tujuannya agar bayi bisa tidur nyenyak sepanjang malam.
+        
+        ## Kapan Boleh Memulai?
+        
+        Sebagian besar ahli setuju bahwa *sleep training* aman dimulai saat bayi berusia **4 hingga 6 bulan**.
+        
+        * **Mengapa menunggu?** Sebelum usia 4 bulan, bayi secara fisik masih membutuhkan makan di malam hari dan pola tidurnya belum teratur.
+        
+        PENTING: Selalu konsultasikan dengan dokter anak Anda sebelum memulai metode *sleep training* apa pun.
+        
+        ## Persiapan Kunci: Rutinitas Tidur
+        
+        Sebelum memulai *training*, ciptakan **rutinitas waktu tidur** yang konsisten selama 1-2 minggu. Bayi menyukai prediksi.
+        
+        Contoh rutinitas (lakukan 20-30 menit setiap malam dalam urutan yang sama):
+        1.  Mandi air hangat.
+        2.  Pijat bayi.
+        3.  Ganti popok dan pakaikan baju tidur.
+        4.  Menyusu (pastikan ini dilakukan di awal rutinitas, bukan sebagai "alat" menidurkan).
+        5.  Redupkan lampu.
+        6.  Bacakan buku cerita.
+        7.  Nyanyikan lagu nina bobo.
+        8.  Ucapkan "selamat tidur".
+        9.  **Letakkan bayi di tempat tidurnya saat ia MENGANTUK, tapi MASIH SADAR.**
+        
+        ## Metode Sleep Training Populer
+        
+        Tidak ada satu cara yang benar. Pilih yang sesuai dengan kenyamanan Anda.
+        
+        1.  **Cry It Out (CIO) / Extinction:**
+            * Letakkan bayi di tempat tidur (setelah rutinitas), ucapkan selamat tidur, dan keluar kamar.
+            * Anda tidak kembali lagi sampai pagi (kecuali untuk keadaan darurat).
+            * Metode ini cepat (biasanya 3-4 hari) tapi sulit secara emosional bagi orang tua.
+        
+        2.  **Metode Ferber (Check-and-Console):**
+            * Sama seperti CIO, tapi Anda kembali ke kamar untuk menenangkan bayi (mengusap, bicara lembut) dalam interval waktu yang semakin lama.
+            * Misal: Hari 1 (interval 3, 5, 10 menit), Hari 2 (5, 10, 12 menit).
+            * **PENTING:** Jangan gendong bayi saat interval cek.
+        
+        3.  **Metode Kursi (Fading):**
+            * Duduk di kursi di samping tempat tidur bayi sampai ia tertidur.
+            * Setiap beberapa malam, geser kursi Anda semakin jauh dari tempat tidur, hingga akhirnya Anda berada di luar pintu.
+            * Ini metode paling lembut, tapi butuh waktu paling lama (bisa berminggu-minggu).
+        
+        Kuncinya adalah **Konsistensi**. Apa pun metode yang dipilih, Anda dan pasangan harus konsisten melakukannya setidaknya selama 1 minggu.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Sleep Training Your Baby.*
+        2.  Buku: *Solve Your Child's Sleep Problems* oleh Dr. Richard Ferber.
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
     {
         "kategori": "Pola Asuh & Psikologi",
         "title": "Membesarkan Anak di Era Digital",
@@ -4905,6 +5014,7 @@ ARTIKEL_LOKAL_DATABASE = [
         2.  UNICEF. *Positive Discipline in Everyday Parenting.*
         
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy berdasarkan panduan nasional dan internasional.*
+
         """
     },
     {
@@ -4961,7 +5071,9 @@ ARTIKEL_LOKAL_DATABASE = [
         """
     },
     
-    # Kategori: Keamanan & Pencegahan (6 Artikel)
+    # ================================================
+    # Kategori: Keamanan & Pencegahan Kecelakaan (6 Artikel BARU)
+    # ================================================
     {
         "kategori": "Keamanan & Pencegahan",
         "title": "Mencegah Sindrom Kematian Bayi Mendadak (SIDS)",
@@ -5017,6 +5129,10 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
+    # ... (Sisa artikel akan dilanjutkan di Bagian 4c) ...
+    # ... (Artikel 1-34 dari Bagian 2, 3, 4a, & 4b ada di sini) ...
+
+    # Lanjutan Kategori: Keamanan & Pencegahan Kecelakaan
     {
         "kategori": "Keamanan & Pencegahan",
         "title": "Keamanan Rumah: Mencegah Anak Terjatuh",
@@ -5252,7 +5368,8 @@ ARTIKEL_LOKAL_DATABASE = [
         """
     },
     
-    # Kategori: Nutrisi & MPASI (Tambahan)
+    # Kategori: Nutrisi & MPASI (8 Artikel BARU)
+    # INI ADALAH ARTIKEL 36
     {
         "kategori": "Nutrisi & MPASI",
         "title": "Kebutuhan Cairan (Air Putih) pada Bayi dan Balita",
@@ -5520,21 +5637,1528 @@ ARTIKEL_LOKAL_DATABASE = [
         
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Mengenal 'Junk Food' untuk Balita",
+        "summary": "Apa itu makanan HFSS (High Fat, Salt, Sugar) dan dampaknya.",
+        "source": "WHO | Kemenkes RI",
+        "full_content": """
+        # Mengenal 'Junk Food' untuk Balita (Makanan HFSS)
+        
+        Istilah "Junk Food" sering merujuk pada makanan yang Tinggi Lemak, Garam, dan Gula (HFSS - High Fat, Salt, Sugar) serta rendah nutrisi penting (vitamin, mineral, serat).
+        
+        ## Apa Saja Makanan HFSS?
+        
+        Contoh makanan HFSS yang sering diberikan pada balita:
+        
+        * **Minuman Manis:** Soda, jus buah kemasan, teh manis kemasan, susu kental manis (SKM).
+        * **Camilan Kemasan:** Keripik kentang, biskuit manis, wafer, cokelat, permen.
+        * **Makanan Cepat Saji (Fast Food):** Kentang goreng, nugget, sosis.
+        * **Makanan Instan:** Mi instan (terlalu tinggi natrium).
+        * **Kue dan Roti:** Donat, kue bolu manis, roti tawar putih (rendah serat).
+        
+        **Catat:** Susu Kental Manis (SKM) **BUKANLAH** susu pertumbuhan. SKM adalah produk tinggi gula dan tidak boleh diberikan sebagai minuman susu untuk balita.
+        
+        ## Dampak Negatif pada Balita
+        
+        Pemberian makanan HFSS terlalu sering pada 1000 Hari Pertama Kehidupan (HPK) berdampak serius:
+        
+        1.  **Membentuk Selera Makan yang Buruk:** Lidah anak menjadi terbiasa dengan rasa yang sangat kuat (terlalu manis, asin, gurih). Ini membuat mereka menolak makanan sehat alami (sayur, buah, lauk pauk) yang rasanya "hambar".
+        2.  **Menggeser Makanan Bergizi:** Perut balita kecil. Jika sudah kenyang dengan keripik atau biskuit (kalori kosong), mereka tidak akan mau makan makanan utama yang kaya protein dan zat besi.
+        3.  **Risiko 'Hidden Hunger':** Anak mungkin terlihat kenyang atau bahkan gemuk (overweight), tetapi sebenarnya kekurangan zat gizi mikro penting (seperti zat besi, zinc, vitamin A).
+        4.  **Risiko Jangka Panjang:** Membangun fondasi untuk obesitas, diabetes tipe 2, dan penyakit jantung di kemudian hari.
+        
+        ## Tips Mengurangi HFSS
+        
+        * **Jadikan Makanan Sehat sebagai Pilihan Utama:** Selalu sediakan buah potong, sayuran rebus, atau yogurt tawar sebagai camilan.
+        * **Baca Label:** Perhatikan kandungan gula, garam (natrium), dan lemak jenuh pada label makanan kemasan.
+        * **Jadilah Teladan:** Anak meniru apa yang orang tuanya makan.
+        * **Jangan Jadikan Hadiah:** Hindari menggunakan cokelat atau es krim sebagai "hadiah" (reward) karena membuat makanan itu terlihat lebih istimewa.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  World Health Organization (WHO). *Reducing salt intake.*
+        2.  Kementerian Kesehatan RI. *Pedoman Gizi Seimbang.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Peran Protein Hewani vs Nabati dalam MPASI",
+        "summary": "Mengapa protein hewani lebih superior untuk cegah stunting.",
+        "source": "WHO | IDAI | Kemenkes RI",
+        "full_content": """
+        # Peran Protein Hewani vs Nabati dalam MPASI
+        
+        Semua protein penting, tetapi untuk pencegahan stunting pada bayi 6-24 bulan, **protein hewani** memiliki peran yang tidak tergantikan.
+        
+        ## Mengapa Protein Hewani Diutamakan?
+        
+        Protein hewani (daging, ayam, ikan, telur, susu) disebut "superior" dibandingkan protein nabati (tahu, tempe, kacang) karena tiga alasan utama:
+        
+        1.  **Kelengkapan Asam Amino Esensial:**
+            * Protein hewani mengandung **9 asam amino esensial** dalam komposisi yang lengkap dan seimbang, yang sangat dibutuhkan tubuh untuk membangun sel-sel baru (pertumbuhan).
+            * Protein nabati seringkali kekurangan satu atau lebih asam amino esensial (misal: lisin pada biji-bijian).
+        
+        2.  **Ketersediaan Bio (Bioavailability) Zat Gizi Mikro:**
+            * Ini adalah faktor kunci. Bukan hanya soal *kandungan*, tapi seberapa baik zat gizi itu *diserap* tubuh.
+            * **Zat Besi (Fe):** Protein hewani mengandung **zat besi Heme**, yang tingkat penyerapannya oleh tubuh sangat tinggi (15-40%). Protein nabati mengandung zat besi **Non-Heme**, yang penyerapannya jauh lebih rendah (<10%) dan mudah terhambat oleh zat lain (seperti fitat pada sayuran).
+            * **Zinc (Seng):** Zinc dari sumber hewani juga diserap jauh lebih baik daripada dari sumber nabati.
+            * **Vitamin B12:** Vitamin ini **hanya** ditemukan secara alami di produk hewani. Vitamin B12 krusial untuk perkembangan saraf dan otak.
+        
+        3.  **Faktor Pertumbuhan (IGF-1):** Konsumsi protein hewani terbukti lebih kuat merangsang produksi *Insulin-like Growth Factor 1* (IGF-1), hormon yang sangat penting untuk pertumbuhan linear (tinggi badan).
+        
+        ## Apakah Protein Nabati Tidak Penting?
+        
+        **Sangat Penting!** Tahu, tempe, dan kacang-kacangan tetap harus diberikan. Mereka adalah sumber protein, lemak baik, dan serat yang sangat baik.
+        
+        Namun, mereka **tidak bisa** dijadikan sumber protein *utama* untuk menggantikan protein hewani dalam konteks pencegahan stunting.
+        
+        ## Rekomendasi Praktis
+        
+        * **Prioritaskan:** Pastikan ada **protein hewani** dalam **setiap menu makan utama** (pagi, siang, malam) bayi Anda sejak usia 6 bulan.
+        * **Kombinasikan:** Kombinasikan sumber protein hewani dan nabati dalam satu menu.
+        * **Contoh Menu Lengkap:** Nasi (Karbo) + Sup Ikan (Hewani) + Tahu Kukus (Nabati) + Brokoli (Sayur) + Sedikit Minyak (Lemak).
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  World Health Organization (WHO). (2023). *Guideline for complementary feeding.*
+        2.  Kementerian Kesehatan RI. *Strategi Pencegahan Stunting.*
+        3.  Ikatan Dokter Anak Indonesia (IDAI). *Pentingnya Protein Hewani untuk Tumbuh Kembang Optimal.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Konstipasi (Sembelit) Saat Awal MPASI",
+        "summary": "Penyebab dan cara mengatasi sembelit yang umum terjadi saat transisi MPASI.",
+        "source": "IDAI | AAP",
+        "full_content": """
+        # Konstipasi (Sembelit) Saat Awal MPASI
+        
+        Sangat umum terjadi sembelit (susah BAB atau feses keras) saat bayi memulai MPASI. Ini adalah fase adaptasi sistem pencernaan bayi dari makanan cair (ASI) ke makanan padat.
+        
+        ## Tanda-tanda Konstipasi
+        
+        * Frekuensi BAB lebih jarang dari biasanya (misal: 3 hari tidak BAB).
+        * Feses tampak keras, kering, atau seperti kerikil kecil.
+        * Bayi tampak mengejan berlebihan, kesakitan, atau menangis saat BAB.
+        * Kadang disertai sedikit bercak darah di feses (akibat lecet di anus).
+        
+        ## Penyebab Umum
+        
+        1.  **Transisi Usus:** Usus bayi sedang belajar memproses makanan padat yang lebih kompleks.
+        2.  **Kurang Cairan:** Bayi mungkin kurang minum (ASI atau air putih) setelah MPASI dimulai.
+        3.  **Kurang Serat:** Menu MPASI kurang mengandung serat.
+        4.  **Terlalu Banyak Serat:** Anehnya, terlalu banyak serat (terutama dari sereal beras) tanpa diimbangi cairan yang cukup justru bisa memperparah sembelit.
+        5.  **Makanan Pemicu:** Beberapa makanan dikenal sebagai pemicu sembelit pada beberapa bayi, seperti pisang, apel (saus apel), sereal beras, dan produk susu (jika berlebihan).
+        
+        ## Cara Mengatasi di Rumah
+        
+        1.  **Cairan:** Pastikan bayi cukup terhidrasi.
+            * Tawarkan ASI/Susu Formula lebih sering.
+            * Tawarkan air putih matang di sela-sela makan MPASI (untuk bayi >6 bulan).
+        
+        2.  **Makanan "P" (Pelancar):** Berikan makanan yang dikenal membantu melancarkan pencernaan:
+            * **P**runes (Plum kering, dibuat puree)
+            * **P**ears (Pir, dibuat puree)
+            * **P**eaches (Persik, dibuat puree)
+            * **P**apaya (Pepaya)
+        
+        3.  **Hindari Pemicu:** Kurangi sementara makanan pemicu (pisang, apel, sereal beras) dan ganti dengan variasi lain (misal: oatmeal, ubi).
+        
+        4.  **Gerakan:** Lakukan "pijat I-L-U" pada perut bayi searah jarum jam. Gerakkan kaki bayi seperti mengayuh sepeda untuk membantu merangsang pergerakan usus.
+        
+        5.  **Mandi Air Hangat:** Merendam bayi di air hangat bisa membantu merelakskan otot perutnya.
+        
+        ## Kapan Harus ke Dokter?
+        
+        Segera konsultasi ke dokter jika:
+        * Sembelit berlangsung lebih dari 1-2 minggu.
+        * Bayi tampak sangat kesakitan.
+        * Ada darah dalam jumlah banyak di feses.
+        * Perut bayi tampak kembung dan keras.
+        * Bayi menolak makan sama sekali.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Konstipasi pada Anak.*
+        2.  American Academy of Pediatrics (AAP). *Constipation in Children.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Mitos vs Fakta: Makanan Pemicu Alergi",
+        "summary": "Revisi panduan alergi: mengapa menunda telur dan seafood justru salah.",
+        "source": "IDAI | AAP | ASCIA",
+        "full_content": """
+        # Mitos vs Fakta: Makanan Pemicu Alergi (Panduan Baru)
+        
+        Panduan mengenai pengenalan makanan pemicu alergi (seperti telur, kacang, seafood) telah berubah drastis dalam beberapa tahun terakhir.
+        
+        ## MITOS: Menunda Makanan Alergen Mencegah Alergi
+        
+        **PANDUAN LAMA (SALAH):** "Jangan berikan telur sebelum 1 tahun, atau kacang sebelum 3 tahun, untuk mencegah alergi."
+        
+        **FAKTA (PANDUAN BARU):**
+        
+        Penelitian besar (seperti LEAP study) membuktikan bahwa **menunda** pengenalan makanan alergen justru dapat **MENINGKATKAN** risiko alergi makanan.
+        
+        > **Panduan baru merekomendasikan: Kenalkan makanan pemicu alergi (termasuk telur, kacang, ikan) segera setelah bayi mulai MPASI (sekitar usia 6 bulan).**
+        
+        Jendela waktu antara 6-12 bulan dianggap sebagai "jendela emas" untuk melatih sistem imun tubuh agar *mentoleransi* makanan tersebut, bukan melawannya.
+        
+        ## Makanan Alergen Utama
+        
+        Kelompok makanan yang paling sering menyebabkan alergi adalah:
+        * Telur
+        * Susu Sapi (dalam olahan, misal: yogurt)
+        * Kacang Tanah
+        * Kacang Pohon (Mede, Almond)
+        * Gandum
+        * Kedelai
+        * Ikan
+        * Kerang-kerangan (Udang, Kepiting)
+        
+        ## Cara Mengenalkan Makanan Alergen (Aturan 4 Hari)
+        
+        1.  **Mulai dengan Makanan Non-Alergen:** Pastikan bayi sudah terbiasa dengan 1-2 makanan pertamanya (misal: bubur nasi, labu).
+        2.  **Satu per Satu:** Kenalkan makanan alergen **satu jenis** dalam satu waktu.
+        3.  **Mulai dari Jumlah Kecil:** Berikan sedikit saja di hari pertama (misal: seujung sendok teh telur rebus yang dilumatkan).
+        4.  **Tunggu dan Amati (Aturan 4 Hari):** Tunggu 3-4 hari sebelum mengenalkan makanan alergen baru lainnya. Amati tanda-tanda alergi (ruam kulit, bengkak, muntah, diare, sesak napas).
+        5.  **Berikan di Pagi/Siang Hari:** Agar Anda mudah mengamati reaksinya.
+        6.  **Masak Hingga Matang:** Pastikan telur dan ikan dimasak hingga matang sempurna.
+        7.  **Format yang Aman:** Untuk kacang, berikan dalam bentuk selai kacang murni (tanpa gula/garam) yang diencerkan dengan air, atau bubuk kacang yang dicampur ke bubur. **JANGAN** berikan kacang utuh (bahaya tersedak).
+        
+        ## Pengecualian
+        
+        * Jika bayi sudah memiliki **eksim (dermatitis atopik) yang parah** atau **riwayat alergi makanan lain**, konsultasikan terlebih dahulu dengan dokter anak atau ahli alergi sebelum mengenalkan makanan alergen.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Rekomendasi Pencegahan Alergi.*
+        2.  American Academy of Pediatrics (AAP). *Preventing Food Allergies.*
+        3.  ASCIA (Australasian Society of Clinical Immunology and Allergy). *Introducing Solid Foods and Allergy Prevention.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "BLW (Baby-Led Weaning) vs Spoon-Feeding",
+        "summary": "Memahami metode BLW, pro-kontra, dan cara aman melakukannya.",
+        "source": "IDAI | AAP",
+        "full_content": """
+        # BLW (Baby-Led Weaning) vs Spoon-Feeding (Suap)
+        
+        Ada dua metode utama dalam mengenalkan MPASI: *Spoon-Feeding* (disuapi bubur oleh orang tua) dan *Baby-Led Weaning* (BLW), di mana bayi makan sendiri.
+        
+        ## Apa itu Baby-Led Weaning (BLW)?
+        
+        BLW adalah metode MPASI di mana bayi (biasanya mulai usia 6 bulan) langsung ditawari makanan padat dalam bentuk *finger food* (potongan seukuran jari) yang lunak, alih-alih disuapi bubur (puree).
+        
+        Bayi didorong untuk memegang dan memasukkan makanan ke mulutnya sendiri, mengontrol apa dan berapa banyak yang ia makan.
+        
+        ## Syarat Bayi Siap BLW
+        
+        BLW tidak cocok untuk semua bayi. Syaratnya lebih ketat:
+        1.  Usia **tepat 6 bulan**.
+        2.  **Sudah bisa duduk tegak** dengan baik tanpa bantuan (atau hanya sedikit bantuan). Ini sangat penting untuk mencegah tersedak.
+        3.  Koordinasi mata-tangan sudah baik (bisa meraih dan menggenggam makanan).
+        4.  Refleks menjulurkan lidah sudah hilang.
+        
+        ## Pro dan Kontra
+        
+        | Aspek | Spoon-Feeding (Suap Tradisional) | Baby-Led Weaning (BLW) |
+        | :--- | :--- | :--- |
+        | **Kontrol Asupan** | **Pro:** Orang tua bisa mengontrol jumlah dan variasi nutrisi (terutama zat besi) yang masuk. | **Kontra:** Sulit memastikan bayi mendapat cukup kalori dan zat besi (karena makanan lebih banyak terbuang/dimainkan). |
+        | **Keterampilan Motorik** | **Kontra:** Kurang melatih motorik halus (menjimpit) di awal. | **Pro:** Sangat baik melatih keterampilan motorik halus, koordinasi mata-tangan, dan mengunyah. |
+        | **Risiko Tersedak** | **Pro:** Risiko tersedak (choking) rendah jika tekstur puree sesuai. | **Kontra:** Risiko tersedak **lebih tinggi** jika makanan tidak disiapkan dengan benar (terlalu keras/bulat). |
+        | **Gagging (Ogah)** | Sering terjadi saat transisi tekstur. | Sering terjadi di awal. *Gagging* (refleks muntah) adalah normal dan berbeda dari *choking* (tersedak/tersumbat). |
+        | **Kemandirian** | Lambat, perlu diajarkan makan sendiri nanti. | **Pro:** Melatih kemandirian dan mengenali rasa lapar/kenyang sejak dini. |
+        | **Kebersihan** | Relatif bersih. | Sangat berantakan. |
+        
+        ## Cara Aman Melakukan BLW
+        
+        * **Makanan Lunak:** Makanan harus cukup lunak sehingga bisa hancur jika ditekan antara ibu jari dan telunjuk (misal: alpukat, ubi kukus, brokoli kukus).
+        * **Potongan Jari:** Potong makanan seukuran jari orang dewasa agar mudah digenggam bayi.
+        * **Hindari Bahaya Tersedak:** **JANGAN** berikan makanan bulat dan keras (anggur utuh, kacang utuh, potongan apel mentah, sosis utuh).
+        * **Selalu Awasi:** **JANGAN PERNAH** tinggalkan bayi makan sendirian.
+        * **Fokus Zat Besi:** Karena risiko kekurangan zat besi, tawarkan makanan kaya zat besi yang mudah digenggam (misal: potongan hati ayam kukus, daging giling yang dibuat strip).
+        
+        ## Metode Campuran (The Best of Both Worlds)
+        
+        Banyak ahli merekomendasikan metode campuran:
+        * Berikan makanan utama (kaya zat besi & kalori) dengan cara disuapi (spoon-feeding).
+        * Sediakan 1-2 *finger food* (BLW) di piringnya agar ia bisa belajar memegang dan makan sendiri sebagai "camilan".
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Menimbang Metode BLW.*
+        2.  American Academy of Pediatrics (AAP). *Starting Solid Foods.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Pentingnya Omega-3 (DHA/EPA) untuk Otak Bayi",
+        "summary": "Mengapa DHA sangat penting dan dari mana sumber terbaiknya.",
+        "source": "WHO | AAP",
+        "full_content": """
+        # Pentingnya Omega-3 (DHA/EPA) untuk Otak Bayi
+        
+        Asam lemak Omega-3, terutama DHA (Docosahexaenoic Acid), adalah nutrisi krusial untuk perkembangan otak dan mata bayi, terutama selama 1000 Hari Pertama Kehidupan (HPK).
+        
+        ## Apa Peran DHA?
+        
+        * **Blok Pembangun Otak:** DHA adalah komponen struktural utama di otak dan retina (mata). Otak manusia terdiri dari sekitar 60% lemak, dan DHA adalah lemak dominan di dalamnya.
+        * **Mielinisasi:** DHA sangat penting untuk pembentukan mielin, yaitu selubung pelindung yang melapisi sel saraf. Mielin yang sehat memungkinkan sinyal otak bergerak lebih cepat, yang penting untuk pembelajaran, memori, dan fungsi kognitif.
+        * **Perkembangan Visual:** Konsentrasi DHA tertinggi di tubuh ditemukan di retina. DHA sangat penting untuk ketajaman visual (kemampuan melihat) bayi.
+        
+        ## Kapan Kebutuhan DHA Paling Tinggi?
+        
+        Kebutuhan DHA paling tinggi adalah selama **trimester ketiga kehamilan** (saat otak janin berkembang pesat) dan **dua tahun pertama kehidupan**.
+        
+        ## Sumber DHA/EPA
+        
+        1.  **ASI (Air Susu Ibu):**
+            * ASI adalah sumber DHA terbaik untuk bayi 0-6 bulan.
+            * **PENTING:** Kandungan DHA dalam ASI sangat bergantung pada **diet ibu**. Ibu menyusui sangat dianjurkan untuk mengonsumsi makanan kaya Omega-3 atau suplemen.
+        
+        2.  **Ikan Berlemak (Sumber Terbaik MPASI):**
+            * Ini adalah sumber DHA dan EPA (Eicosapentaenoic Acid) paling langsung dan mudah diserap.
+            * **Contoh:** Ikan Kembung, Salmon, Sarden, Tuna, Tongkol.
+            * **Rekomendasi:** Berikan ikan berlemak untuk MPASI bayi setidaknya 2 kali seminggu.
+        
+        3.  **Susu Formula (Fortifikasi):**
+            * Sebagian besar susu formula saat ini sudah difortifikasi (ditambahkan) DHA.
+        
+        4.  **Telur (Terutama Kuningnya):**
+            * Kuning telur mengandung DHA, terutama jika berasal dari ayam yang diberi pakan kaya Omega-3.
+        
+        5.  **Sumber Nabati (ALA):**
+            * Sumber nabati seperti biji chia (chia seeds), biji rami (flaxseed), dan kenari (walnuts) mengandung Omega-3 dalam bentuk **ALA** (Alpha-Linolenic Acid).
+            * **Masalah:** Tubuh manusia (terutama bayi) sangat tidak efisien dalam mengubah ALA menjadi DHA yang dibutuhkan otak. Konversinya sangat kecil (<5%).
+            * **Kesimpulan:** Jangan hanya mengandalkan sumber nabati untuk kebutuhan DHA bayi.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  World Health Organization (WHO). *Fats and fatty acids in human nutrition.*
+        2.  American Academy of Pediatrics (AAP). *Choosing Fish for Your Child.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Zat Gizi Mikro Kunci: Zinc (Seng)",
+        "summary": "Peran penting Zinc untuk imunitas dan pertumbuhan anak.",
+        "source": "WHO | IDAI",
+        "full_content": """
+        # Zat Gizi Mikro Kunci: Zinc (Seng)
+        
+        Selain Zat Besi, Zinc (Seng) adalah mineral mikro esensial yang sangat penting untuk pertumbuhan dan sistem kekebalan tubuh anak. Kekurangan Zinc sering terjadi bersamaan dengan kekurangan zat besi.
+        
+        ## Mengapa Zinc Penting?
+        
+        1.  **Sistem Imun (Kekebalan Tubuh):**
+            * Zinc sangat vital untuk produksi dan fungsi sel-sel imun (seperti sel T dan sel B).
+            * Kekurangan Zinc membuat anak sangat rentan terhadap infeksi.
+            * **Fakta:** Suplementasi Zinc terbukti mengurangi durasi dan keparahan diare akut pada balita.
+        
+        2.  **Pertumbuhan Sel:**
+            * Zinc diperlukan untuk sintesis DNA dan protein, serta pembelahan sel. Proses ini adalah dasar dari pertumbuhan fisik.
+            * Kekurangan Zinc secara langsung berkontribusi pada kegagalan pertumbuhan (stunting).
+        
+        3.  **Nafsu Makan dan Pengecapan:**
+            * Zinc berperan dalam fungsi indra perasa (pengecapan).
+            * Kekurangan Zinc seringkali menyebabkan nafsu makan menurun, yang memperburuk lingkaran setan malnutrisi.
+        
+        4.  **Penyembuhan Luka:**
+            * Zinc diperlukan untuk perbaikan jaringan dan kulit.
+        
+        ## Kapan Kebutuhan Zinc Tinggi?
+        
+        * Sama seperti zat besi, simpanan Zinc dari lahir akan menipis.
+        * Kebutuhan Zinc tidak dapat dipenuhi hanya oleh ASI setelah usia 6 bulan.
+        * MPASI harus menjadi sumber Zinc yang adekuat.
+        
+        ## Sumber Zinc Terbaik untuk MPASI
+        
+        Ketersediaan bio (penyerapan) Zinc dari sumber hewani jauh lebih baik daripada sumber nabati.
+        
+        1.  **Daging Merah (Sapi, Kambing):** Sumber Zinc terbaik dan paling mudah diserap.
+        2.  **Hati (Ayam atau Sapi):** Sangat kaya Zinc dan Zat Besi.
+        3.  **Unggas (Ayam, Kalkun):** Terutama daging bagian paha.
+        4.  **Kerang-kerangan:** Tiram (kandungan tertinggi), kepiting, udang. (Kenalkan dengan hati-hati terkait alergi).
+        5.  **Kacang-kacangan & Biji-bijian:** (Sumber nabati, penyerapan lebih rendah).
+        
+        **Tantangan:** Makanan nabati (seperti sereal dan kacang-kacangan) mengandung *fitat*, yang dapat mengikat Zinc dan menghambat penyerapannya. Ini adalah alasan lain mengapa protein hewani sangat penting dalam MPASI.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  World Health Organization (WHO). *Zinc supplementation in infants and children.*
+        2.  Ikatan Dokter Anak Indonesia (IDAI). *Peran Zinc pada Tumbuh Kembang Anak.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    
+    # ================================================
+    # Kategori: Tumbuh Kembang (7 Artikel BARU)
+    # ================================================
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Milestone (Tonggak) Perkembangan Anak 2-3 Tahun",
+        "summary": "Memantau perkembangan anak usia 24-36 bulan, dari 'ledakan' bahasa hingga kemandirian.",
+        "source": "CDC | IDAI (KPSP)",
+        "full_content": """
+        # Milestone (Tonggak) Perkembangan Anak 2-3 Tahun (24-36 Bulan)
+        
+        Usia 2 tahun adalah masa "ledakan" dalam kemampuan bahasa dan kognitif. Anak Anda berubah dari bayi menjadi individu kecil dengan pemikiran dan keinginannya sendiri.
+        
+        ## Usia 24 Bulan (2 Tahun)
+        
+        * **Motorik Kasar:**
+            * Berlari dengan baik.
+            * Mulai bisa menendang bola ke depan.
+            * Naik turun tangga sambil berpegangan (mungkin masih dengan 2 kaki per langkah).
+        * **Motorik Halus:**
+            * Menumpuk 4-6 balok.
+            * Menggambar garis lurus (vertikal/horizontal).
+            * Membalik halaman buku satu per satu.
+        * **Bahasa & Kognitif:**
+            * **"Ledakan Kosakata"**: Bisa mengucapkan 50+ kata.
+            * **Mulai merangkai 2 kata** (PENTING!). Contoh: "mau susu", "mama pergi".
+            * Mengenali nama benda dan gambar yang familiar.
+            * Mengikuti perintah 2 langkah (misal: "Ambil bola dan berikan ke Papa").
+        * **Sosial & Emosional:**
+            * Mulai menunjukkan kemandirian (fase "Aku bisa sendiri!").
+            * Fase *tantrum* sering terjadi.
+            * Bermain paralel (main di samping teman, tapi belum main bersama).
+        
+        ## Usia 30 Bulan (2.5 Tahun)
+        
+        * **Motorik Kasar:**
+            * Melompat dengan kedua kaki.
+            * Berjalan mundur.
+        * **Motorik Halus:**
+            * Menumpuk 8+ balok.
+            * Mulai bisa memutar gagang pintu.
+            * Mencuci dan mengeringkan tangan sendiri.
+        * **Bahasa & Kognitif:**
+            * Menggunakan kalimat 2-3 kata.
+            * Mulai mengerti konsep "satu" dan "dua".
+            * Menyebutkan nama teman.
+        * **Sosial & Emosional:**
+            * Mulai menunjukkan minat pada *toilet training*.
+            * Menunjukkan berbagai macam emosi.
+        
+        ## Usia 36 Bulan (3 Tahun)
+        
+        * **Motorik Kasar:**
+            * Mengayuh sepeda roda tiga.
+            * Naik turun tangga dengan kaki bergantian.
+            * Berdiri dengan satu kaki selama beberapa detik.
+        * **Motorik Halus:**
+            * Menggambar lingkaran.
+            * Mampu memakai dan melepas beberapa pakaian sendiri.
+            * Menggunakan sendok garpu dengan baik.
+        * **Bahasa & Kognitif:**
+            * Bisa diajak bicara dan mengerti sebagian besar percakapan.
+            * Menggunakan kalimat 3-4 kata.
+            * Mengerti konsep "di dalam", "di atas", "di bawah".
+            * Menyebutkan usia dan jenis kelaminnya.
+        * **Sosial & Emosional:**
+            * Mulai bisa bermain bergiliran.
+            * Menunjukkan empati (misal: memeluk teman yang menangis).
+            * Memahami konsep "milikku" dan "miliknya".
+        
+        ## 🚩 Red Flags (Waspada Keterlambatan)
+        
+        Segera konsultasi ke dokter jika:
+        * **Usia 2 Tahun:**
+            * **Belum bisa merangkai 2 kata** (misal: "mau minum").
+            * Tidak bisa berjalan dengan stabil.
+            * Tidak mengikuti perintah sederhana.
+        * **Usia 3 Tahun:**
+            * Sering jatuh atau sulit naik tangga.
+            * Bicara sangat tidak jelas sehingga orang asing tidak mengerti.
+            * Tidak bisa merangkai kalimat 3 kata.
+            * Tidak mau berinteraksi/bermain dengan anak lain.
+            * Hilangnya kemampuan yang sebelumnya sudah bisa.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Centers for Disease Control and Prevention (CDC). *Milestone Moments Booklet.*
+        2.  Ikatan Dokter Anak Indonesia (IDAI). *Skrining Tumbuh Kembang (KPSP).*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Stimulasi untuk Anak Usia 1-2 Tahun",
+        "summary": "Ide bermain sederhana untuk merangsang otak 'toddler' Anda.",
+        "source": "Kemenkes RI (Buku KIA) | AAP",
+        "full_content": """
+        # Stimulasi untuk Anak Usia 1-2 Tahun (Toddler)
+        
+        Anak usia 1-2 tahun adalah penjelajah ulung. Mereka belajar melalui gerakan fisik dan interaksi langsung. Stimulasi di usia ini berfokus pada bahasa, motorik kasar, dan kemandirian.
+        
+        ## 1. Stimulasi Bahasa (Ledakan Kosakata)
+        
+        Ini adalah prioritas utama. Otak anak sedang "menyerap" kata-kata.
+        
+        * **Membaca Buku (Setiap Hari):** Ini adalah stimulasi terbaik.
+            * Pilih buku dengan gambar besar dan 1-2 kata per halaman.
+            * **Tunjuk dan Sebutkan:** Tunjuk gambar (misal: kucing) dan sebutkan namanya ("Kucing!").
+            * **Minta Anak Menunjuk:** "Di mana bola?" (Biarkan anak menunjuk).
+            * **Tirukan Suara:** "Kucing bunyinya 'Meong'!"
+        * **Narasikan Aktivitas:** Bicarakan apa yang sedang Anda lakukan. "Mama sedang pakai kaos kaki biru." "Adik sedang mandi pakai sabun."
+        * **Ulangi Kata Anak:** Jika anak bilang "bil" (mobil), Anda respon, "Iya betul, itu Mobil. Mobil besar warna merah."
+        
+        ## 2. Stimulasi Motorik Kasar (Bergerak)
+        
+        Anak perlu bergerak untuk melatih otot besar dan keseimbangan.
+        
+        * **Bermain di Luar:** Biarkan anak berlari di taman, memanjat mainan playground (dengan pengawasan), atau bermain di rumput.
+        * **Menendang & Melempar Bola:** Gunakan bola plastik ringan.
+        * **Menari:** Putar musik dan ajak anak menari, melompat, dan berputar.
+        * **Naik Turun:** Latih naik turun tangga (dengan pegangan) atau naik turun sofa.
+        
+        ## 3. Stimulasi Motorik Halus (Keterampilan Tangan)
+        
+        Melatih otot-otot kecil di tangan untuk persiapan menulis.
+        
+        * **Mencoret-coret:** Berikan krayon besar (non-toxic) dan kertas. Awasi agar tidak dimakan.
+        * **Menyusun Balok:** Ajarkan menumpuk 2-3 balok. Biarkan ia merobohkannya (ini juga bagian dari belajar).
+        * **Memasukkan Benda:** Siapkan wadah dan minta anak memasukkan mainan kecil ke dalamnya.
+        * **Makan Sendiri:** Biarkan anak mencoba makan sendiri dengan sendok atau *finger food*. (Akan berantakan, tapi ini proses belajar).
+        
+        ## 4. Stimulasi Sosial & Kemandirian
+        
+        * **Meniru Pekerjaan Rumah:** Berikan anak lap kecil saat Anda bersih-bersih, atau ajak ia "membantu" menaruh baju kotor.
+        * **Mengenal Bagian Tubuh:** "Di mana hidung Adik?" "Mana mata Mama?"
+        * **Playdate (Bermain):** Ajak bertemu anak seusianya. Meskipun mereka mungkin hanya bermain "paralel" (berdampingan), ini adalah awal interaksi sosial.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Kementerian Kesehatan RI. *Buku Kesehatan Ibu dan Anak (Buku KIA) - Stimulasi.*
+        2.  American Academy of Pediatrics (AAP). *Fun and Games: The Prescription for a Healthy Child.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Stimulasi untuk Anak Usia 2-3 Tahun",
+        "summary": "Ide bermain untuk mengembangkan bahasa, kognitif, dan imajinasi.",
+        "source": "CDC | Kemenkes RI",
+        "full_content": """
+        # Stimulasi untuk Anak Usia 2-3 Tahun
+        
+        Pada usia ini, imajinasi anak mulai berkembang pesat. Mereka mulai bermain "pura-pura" (pretend play) dan kemampuan bahasanya semakin kompleks.
+        
+        ## 1. Stimulasi Bahasa & Kognitif
+        
+        Fokus bergeser dari "menyebut nama" ke "memahami konsep".
+        
+        * **Membaca Buku Interaktif:**
+            * Bacakan cerita yang lebih panjang.
+            * Ajukan pertanyaan: "Menurutmu apa yang terjadi selanjutnya?", "Kenapa ya bebeknya sedih?"
+        * **Bermain Pura-pura (Pretend Play):**
+            * Ini adalah stimulasi kognitif terbaik di usia ini.
+            * Main masak-masakan, dokter-dokteran, atau main "rumah" dengan boneka.
+            * Ini mengajarkan anak tentang peran sosial, emosi, dan memecahkan masalah.
+        * **Mengenal Konsep:**
+            * **Warna:** "Ayo kita cari semua mainan yang warna merah."
+            * **Bentuk:** "Ini lingkaran, seperti bola."
+            * **Berhitung Sederhana:** Hitung anak tangga saat naik, "Satu, dua, tiga..."
+            * **Ukuran:** "Ini sendok besar, ini sendok kecil."
+        
+        ## 2. Stimulasi Motorik Kasar
+        
+        Anak semakin lincah dan butuh menyalurkan energi.
+        
+        * **Aktivitas "Berat":** Mendorong kotak, menarik mainan, membawa buku.
+        * **Keseimbangan:** Ajarkan berdiri satu kaki, berjalan di atas garis lurus, atau melompat.
+        * **Mengayuh:** Ajarkan mengayuh sepeda roda tiga.
+        
+        ## 3. Stimulasi Motorik Halus
+        
+        Keterampilan tangan semakin presisi.
+        
+        * **Menggambar:** Ajarkan menggambar garis lurus dan lingkaran.
+        * **Puzzle Sederhana:** Mulai dengan puzzle 2-4 keping yang besar.
+        * **Play-Doh (Lilin Mainan):** Meremas, menggulung, dan memotong play-doh sangat baik untuk menguatkan otot tangan.
+        * **Meronce:** Ajak anak memasukkan manik-manik besar ke dalam tali.
+        
+        ## 4. Stimulasi Kemandirian & Emosi
+        
+        * **Tugas Sederhana:** Minta anak membantu. "Tolong ambilkan sepatu Kakak." "Tolong taruh mainan di kotak." Ini membangun rasa percaya diri.
+        * **Mengenal Emosi:** Saat anak marah (tantrum), validasi emosinya. "Adik marah ya karena mainannya rusak. Mama ngerti." (Lihat artikel Disiplin Positif).
+        * **Pilihan Sederhana:** Berikan pilihan terbatas untuk melatihnya membuat keputusan. "Kakak mau pakai baju biru atau baju merah?"
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Centers for Disease Control and Prevention (CDC). *Milestones and Tips for 2-3 Year Olds.*
+        2.  Kementerian Kesehatan RI. *Buku Kesehatan Ibu dan Anak (Buku KIA) - Stimulasi.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Membedakan 'Gagging' (Ogah) vs 'Choking' (Tersedak)",
+        "summary": "Perbedaan vital antara refleks aman (gagging) dan kondisi darurat (choking).",
+        "source": "AAP | Red Cross",
+        "full_content": """
+        # Membedakan 'Gagging' (Ogah) vs 'Choking' (Tersedak)
+        
+        Saat memulai MPASI, terutama dengan metode BLW atau saat menaikkan tekstur, orang tua sering panik melihat anak seperti mau muntah. Penting untuk membedakan *gagging* (normal) dan *choking* (berbahaya).
+        
+        ## Gagging (Refleks Ogah) - AMAN & NORMAL
+        
+        *Gagging* adalah refleks alami tubuh untuk mencegah tersedak. Ini adalah respons keamanan.
+        
+        * **Apa itu?** Kontraksi tenggorokan untuk mendorong makanan yang terlalu besar atau terlalu cepat ke depan mulut.
+        * **Bagaimana Tampilannya?**
+            * Anak **BERSUARA:** Batuk, terbatuk-batuk, mengeluarkan suara "gah-gah".
+            * Wajah mungkin memerah.
+            * Mata mungkin berair.
+            * Anak mungkin memuntahkan (mengeluarkan) makanan dari mulutnya.
+        * **Apa yang Harus Dilakukan?**
+            * **TETAP TENANG.** Jangan panik.
+            * **JANGAN** masukkan jari Anda ke mulutnya (ini bisa mendorong makanan ke belakang dan menyebabkan tersedak).
+            * Biarkan anak mengatasinya sendiri. Beri ia waktu 10-15 detik.
+            * Ini adalah bagian dari proses belajar bayi mengunyah dan memindahkan makanan di mulut.
+        
+        ## Choking (Tersedak) - KONDISI DARURAT
+        
+        *Choking* terjadi ketika jalan napas **tersumbat** oleh makanan atau benda, sehingga anak tidak bisa bernapas.
+        
+        * **Apa itu?** Sumbatan total atau sebagian pada saluran napas.
+        * **Bagaimana Tampilannya?**
+            * **HENING (TIDAK BERSUARA):** Anak tidak bisa menangis, batuk, atau bicara.
+            * Mungkin ada suara melengking (stridor) saat mencoba bernapas.
+            * **Wajah MEMBIRU** atau pucat (di sekitar bibir dan kuku).
+            * Ekspresi panik, mata melotot.
+            * Anak mungkin mencengkeram lehernya (jika lebih tua).
+        * **Apa yang Harus Dilakukan?**
+            * **SEGERA BERTINDAK!** Teriak minta tolong.
+            * Lakukan **Pertolongan Pertama Tersedak (Heimlich Maneuver untuk Bayi/Anak)**.
+            * **Untuk Bayi (<1 Tahun):**
+                1.  **5 Back Blows:** Telungkupkan bayi di lengan Anda (kepala lebih rendah). Beri 5 hentakan kuat di punggung (di antara tulang belikat) dengan tumit tangan Anda.
+                2.  **5 Chest Thrusts:** Balikkan bayi. Letakkan 2 jari di tengah dada (di bawah garis puting). Tekan ke dalam dan ke atas sebanyak 5 kali.
+                3.  Ulangi (5 back blows, 5 chest thrusts) sampai benda keluar atau bayi tidak sadar.
+            * **Jika Anak Tidak Sadar:** Lakukan CPR.
+        
+        **Pencegahan Tersedak:** Selalu potong makanan dengan benar (hindari bentuk bulat/koin) dan selalu awasi anak saat makan.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Infant Choking and Gagging.*
+        2.  American Red Cross. *Choking: First Aid.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Pentingnya Permainan Sensorik (Sensory Play)",
+        "summary": "Merangsang 5 indra anak untuk membangun koneksi otak.",
+        "source": "AAP",
+        "full_content": """
+        # Pentingnya Permainan Sensorik (Sensory Play)
+        
+        *Sensory Play* (permainan sensorik) adalah aktivitas bermain apa pun yang merangsang indra anak: sentuhan, penciuman, rasa, penglihatan, dan pendengaran.
+        
+        Permainan ini sangat penting untuk membangun koneksi saraf di otak (perkembangan kognitif), bahasa, dan keterampilan motorik.
+        
+        ## Mengapa Permainan Sensorik Penting?
+        
+        * **Membangun Koneksi Otak:** Saat anak menyentuh tekstur baru atau mencium bau baru, otaknya menciptakan jalur saraf baru untuk memproses informasi tersebut.
+        * **Pengembangan Bahasa:** Memberi anak kosakata untuk menggambarkan apa yang mereka rasakan. "Ini *lembut*," "Airnya *dingin*," "Pasirnya *kasar*."
+        * **Keterampilan Motorik:** Meremas *play-doh*, menuang air, atau mengambil biji-bijian melatih keterampilan motorik halus.
+        * **Menenangkan:** Aktivitas seperti bermain air atau pasir bisa sangat menenangkan bagi anak yang sedang rewel atau cemas.
+        
+        ## Ide Permainan Sensorik Sederhana
+        
+        Anda tidak perlu mainan mahal. Gunakan barang-barang di rumah (selalu awasi!).
+        
+        ### 1. Indra Peraba (Sentuhan)
+        
+        * **Sensory Bin:** Ambil kotak kontainer, isi dengan bahan kering.
+            * **Bayi (yang masih memasukkan ke mulut):** Gunakan bahan yang aman jika tertelan (edible). Contoh: Oatmeal kering, remahan biskuit, bubur sagu mutiara.
+            * **Balita (diawasi ketat):** Beras, kacang hijau, pasta kering. Sediakan sendok dan mangkuk untuk menuang.
+        * **Bermain Air:** Aktivitas sensorik terbaik. Biarkan anak bermain di bak mandi (diawasi) atau siapkan baskom air di luar ruangan. Beri spons, cangkir, dan corong.
+        * **Tekstur Makanan:** Biarkan anak menyentuh makanannya (misal: memegang brokoli kukus, meremas alpukat).
+        * **Play-Doh (Lilin Mainan):** Buatan sendiri (tepung, garam, air) atau beli (non-toxic).
+        
+        ### 2. Indra Penciuman & Rasa
+        
+        * **Dapur:** Ajak anak mencium bau bumbu dapur (kayu manis, jahe) atau kulit jeruk.
+        * **MPASI:** Kenalkan berbagai rasa (asam dari tomat, pahit ringan dari sayuran) selain manis dan gurih.
+        
+        ### 3. Indra Penglihatan & Pendengaran
+        
+        * **Botol Suara:** Isi beberapa botol plastik kecil dengan benda berbeda (beras, kancing, air) dan tutup rapat. Biarkan anak mengocoknya dan membedakan suaranya.
+        * **Bermain di Alam:** Ajak anak berjalan di rumput (tanpa alas kaki), menyentuh daun, mendengar suara burung.
+        
+        **Keselamatan:** Selalu awasi anak selama permainan sensorik, terutama dengan benda-benda kecil (bahaya tersedak) atau air (bahaya tenggelam).
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Sensory Play: What It Is and Why It's Important.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Perkembangan Pendengaran Bayi",
+        "summary": "Bagaimana bayi belajar mendengar, dari rahim hingga mengenali nama.",
+        "source": "American Speech-Language-Hearing Association (ASHA)",
+        "full_content": """
+        # Perkembangan Pendengaran Bayi
+        
+        Pendengaran adalah indra yang sangat penting untuk perkembangan bahasa. Bayi sudah mulai mendengar bahkan sejak di dalam rahim.
+        
+        ## Milestone Pendengaran
+        
+        * **Di Dalam Rahim (Trimester Ketiga):**
+            * Janin dapat mendengar suara detak jantung ibu, suara pencernaan, dan suara ibu yang teredam.
+            * Mereka mungkin merespons suara keras dari luar dengan bergerak.
+        
+        * **Baru Lahir (0-1 Bulan):**
+            * Bayi terkejut atau "melompat" (refleks Moro) terhadap suara keras dan tiba-tiba.
+            * Mungkin menjadi tenang saat mendengar suara yang familiar (suara ibu).
+            * Ini adalah waktu dilakukannya **Skrining Pendengaran Bayi Baru Lahir (OAE/BERA)** di rumah sakit. Pastikan bayi Anda mendapatkannya.
+        
+        * **Usia 2-4 Bulan:**
+            * Mulai menolehkan kepala ke arah sumber suara (meskipun belum akurat).
+            * Memperhatikan mainan yang mengeluarkan bunyi (kerincingan).
+            * Mulai membedakan nada suara (misal: suara marah vs. suara lembut).
+        
+        * **Usia 4-6 Bulan:**
+            * Menoleh secara akurat ke arah sumber suara.
+            * Merespons namanya sendiri (mulai menoleh).
+            * Senang bermain dengan mainan yang berbunyi.
+        
+        * **Usia 7-12 Bulan:**
+            * **Memahami kata-kata sederhana:** Mengerti kata "tidak", "dadah", atau "mama" (bukan hanya meniru suara, tapi mengerti maknanya).
+            * Menoleh dengan cepat saat namanya dipanggil.
+            * Mulai meniru suara ("babbling") sebagai respons terhadap ajakan bicara.
+        
+        ## 🚩 Red Flags (Waspada Gangguan Pendengaran)
+        
+        Gangguan pendengaran adalah salah satu penyebab utama keterlambatan bicara (*speech delay*). Intervensi dini sangat penting.
+        
+        Segera konsultasi ke dokter THT atau Audiolog jika:
+        
+        * **Bayi Baru Lahir:** Gagal skrining pendengaran di RS.
+        * **Usia 3-4 Bulan:** Tidak menoleh ke arah suara.
+        * **Usia 6 Bulan:** Tidak merespons saat namanya dipanggil.
+        * **Usia 12 Bulan:** Tidak mengoceh ("babbling") atau tidak merespons perintah sederhana.
+        * **Riwayat Infeksi:** Mengalami infeksi telinga tengah (Otitis Media Efusa / OME) yang berulang atau parah. Cairan di telinga tengah dapat menghalangi pendengaran (tuli konduktif sementara) dan mengganggu belajar bicara.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Speech-Language-Hearing Association (ASHA). *Hearing Development: Birth to 1 Year.*
+        2.  Ikatan Dokter Anak Indonesia (IDAI). *Skrining Pendengaran pada Bayi Baru Lahir.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Tumbuh Kembang",
+        "title": "Perkembangan Emosi: 'Separation Anxiety' (Cemas Berpisah)",
+        "summary": "Mengapa bayi tiba-tiba menangis saat ditinggal ibu dan cara mengatasinya.",
+        "source": "AAP",
+        "full_content": """
+        # Perkembangan Emosi: 'Separation Anxiety' (Cemas Berpisah)
+        
+        *Separation anxiety* (kecemasan berpisah) adalah fase perkembangan emosional yang **NORMAL** di mana bayi menjadi cemas atau takut ketika berpisah dari pengasuh utamanya (biasanya ibu).
+        
+        Ini justru pertanda baik! Ini menunjukkan bayi telah membentuk ikatan (bonding) yang kuat dan aman dengan Anda.
+        
+        ## Kapan Terjadi?
+        
+        * **Mulai:** Biasanya muncul sekitar usia 8-9 bulan.
+        * **Puncak:** Seringkali memuncak antara usia 10-18 bulan.
+        * **Mereda:** Mulai berkurang setelah usia 2 tahun, seiring anak lebih mengerti bahasa dan konsep waktu.
+        
+        ## Mengapa Terjadi?
+        
+        Ini terkait dengan perkembangan kognitif:
+        
+        1.  **Ikatan (Bonding):** Bayi sudah sangat terikat dengan Anda.
+        2.  **Konsep Keabadian Objek (Object Permanence):** Bayi mulai mengerti bahwa Anda tetap ada meskipun Anda tidak terlihat. Dulu, jika Anda hilang dari pandangan, Anda dianggap "tidak ada". Sekarang, ia tahu Anda ada "di suatu tempat" dan ia ingin Anda kembali.
+        3.  **Belum Paham Waktu:** Bayi belum mengerti konsep "Mama pergi sebentar" atau "Mama akan kembali nanti sore". Baginya, "pergi" adalah "pergi selamanya".
+        
+        ## Tanda-tanda Separation Anxiety
+        
+        * Menangis histeris saat ibu berjalan ke kamar mandi atau ruangan lain.
+        * Menempel ketat (clingy) pada pengasuh.
+        * Menangis saat diserahkan ke orang lain, bahkan kakek/nenek.
+        * Terbangun di malam hari dan menangis mencari Anda.
+        
+        ## Cara Mengatasi (Bukan Menghindari)
+        
+        Tujuannya bukan menghindari perpisahan, tapi membantu anak merasa aman.
+        
+        1.  **Jangan Pergi Diam-diam:** Ini adalah kesalahan umum. Pergi diam-diam saat anak lengah akan merusak kepercayaan. Anak akan menjadi lebih cemas karena takut Anda "hilang" tiba-tiba.
+        
+        2.  **Ritual Perpisahan (Cepat & Konsisten):**
+            * Selalu ucapkan pamit.
+            * Buat ritual singkat: "Mama kerja dulu ya. Mama sayang Adik. Dadah!" (Peluk, cium, lalu pergi).
+            * **PENTING:** Setelah Anda pamit, **langsung pergi**. Jangan kembali lagi meskipun anak menangis. Kembali hanya akan memperpanjang drama dan mengajarkan bahwa menangis bisa membuat Anda kembali.
+        
+        3.  **Latih Perpisahan Singkat:** Mulai dengan pergi ke kamar sebelah selama 1 menit, lalu kembali. Tingkatkan durasinya perlahan.
+        
+        4.  **Alihkan Perhatian:** Sebelum Anda pergi, alihkan perhatian anak ke pengasuh lain atau mainan favorit.
+        
+        5.  **Tepati Janji:** Saat Anda kembali, tunjukkan antusiasme. "Mama kembalii!" Ini mengajarkan anak bahwa Anda selalu menepati janji untuk kembali.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Separation Anxiety in Babies.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    # ================================================
+    # Kategori: Kesehatan & Imunisasi (5 Artikel BARU)
+    # ================================================
+    {
+        "kategori": "Kesehatan & Imunisasi",
+        "title": "Mengenal Cacar Air (Varisela)",
+        "summary": "Penyebab, gejala, dan perawatan cacar air pada anak.",
+        "source": "IDAI | AAP",
+        "full_content": """
+        # Mengenal Cacar Air (Varisela)
+        
+        Cacar air (Varisela) adalah infeksi yang sangat menular yang disebabkan oleh virus *Varicella-Zoster*. Penyakit ini paling sering menyerang anak-anak.
+        
+        ## Gejala
+        
+        * **Demam & Lesu:** Gejala awal biasanya demam ringan, sakit kepala, dan rasa lesu, 1-2 hari sebelum ruam muncul.
+        * **Ruam (Gejala Khas):**
+            1.  **Bintik Merah (Makula):** Dimulai sebagai bintik-bintik merah kecil, biasanya di badan (dada/punggung) lalu menyebar ke wajah, kulit kepala, dan anggota gerak.
+            2.  **Lentingan (Vesikel):** Bintik merah ini dengan cepat berubah menjadi lenting-lenting berisi cairan bening (seperti tetesan embun).
+            3.  **Koreng (Krusta):** Lentingan akan pecah, mengering, dan menjadi koreng (keropeng).
+        * **Penting:** Ciri khas cacar air adalah munculnya **semua bentuk ruam (bintik, lenting, koreng)** secara bersamaan di satu area tubuh.
+        * **Gatal:** Ruam ini sangat gatal.
+        
+        ## Perawatan di Rumah
+        
+        Karena disebabkan oleh virus, fokus perawatan adalah meredakan gejala (simptomatik):
+        
+        1.  **Atasi Gatal:**
+            * Mandi air sejuk (bisa dicampur oatmeal koloid).
+            * Gunakan losion *calamine* di area yang gatal (hindari wajah).
+            * Jaga kuku anak tetap pendek dan bersih untuk mencegah infeksi akibat garukan.
+        2.  **Atasi Demam:** Berikan Paracetamol sesuai dosis berat badan. **JANGAN** berikan Aspirin pada anak dengan infeksi virus (risiko Sindrom Reye).
+        3.  **Jaga Kebersihan:** Tetap mandikan anak 2x sehari dengan sabun lembut untuk mencegah infeksi bakteri sekunder pada kulit.
+        
+        ## Kapan Harus ke Dokter?
+        
+        * Jika bayi Anda (< 1 tahun) terkena cacar air.
+        * Jika anak mengalami demam tinggi yang tidak kunjung reda.
+        * Jika lenting tampak sangat merah, bengkak, dan bernanah (tanda infeksi bakteri).
+        * Jika anak tampak kebingungan, kaku leher, atau kejang.
+        
+        ## Pencegahan
+        
+        Pencegahan terbaik adalah **Vaksinasi Varisela**. IDAI merekomendasikan vaksin ini mulai usia 12 bulan.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Cacar Air: Gejala dan Tatalaksana.*
+        2.  American Academy of Pediatrics (AAP). *Chickenpox (Varicella).*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Kesehatan & Imunisasi",
+        "title": "Mengenal Penyakit Tangan, Kaki, dan Mulut (HFMD)",
+        "summary": "Penyakit 'Flu Singapura' yang sering mewabah di penitipan anak.",
+        "source": "IDAI | CDC",
+        "full_content": """
+        # Mengenal Penyakit Tangan, Kaki, dan Mulut (HFMD)
+        
+        Penyakit Tangan, Kaki, dan Mulut (*Hand, Foot, and Mouth Disease* - HFMD) atau sering disebut "Flu Singapura" adalah infeksi virus yang sangat umum pada balita.
+        
+        ## Penyebab
+        
+        Disebabkan oleh *Coxsackievirus* (paling sering) atau *Enterovirus 71*. Penyakit ini sangat menular melalui air liur, cairan hidung, dan feses.
+        
+        ## Gejala
+        
+        1.  **Demam & Sakit Tenggorokan:** Gejala awal mirip flu biasa, seperti demam ringan dan anak mengeluh sakit menelan.
+        2.  **Sariawan (di Mulut):** Muncul bintik-bintik merah kecil yang cepat menjadi sariawan (ulkus) yang nyeri. Biasanya di lidah, gusi, dan bagian dalam pipi. Ini adalah gejala utama yang membuat anak tidak mau makan/minum.
+        3.  **Ruam (di Tangan & Kaki):** Muncul ruam berupa bintik merah rata atau lenting kecil (tidak selalu berisi air) di:
+            * Telapak tangan
+            * Telapak kaki
+        4.  **Area Lain:** Ruam juga bisa muncul di bokong dan area popok.
+        
+        Penyakit ini biasanya ringan dan akan sembuh sendiri (self-limiting) dalam 7-10 hari.
+        
+        ## Perawatan di Rumah
+        
+        Fokus utama adalah mengatasi nyeri dan mencegah dehidrasi.
+        
+        * **Atasi Nyeri:** Berikan Paracetamol atau Ibuprofen sesuai dosis untuk meredakan nyeri sariawan dan demam.
+        * **Cegah Dehidrasi:** Ini adalah komplikasi paling umum karena anak tidak mau minum akibat nyeri telan.
+            * Tawarkan cairan dingin (ASI, susu dingin, air putih dingin).
+            * Berikan makanan lembut dan dingin (es krim, yogurt, puding, agar-agar).
+            * Hindari makanan asam (jeruk) atau asin (keripik) yang akan memperparah nyeri.
+        * **Jaga Kebersihan:** Cuci tangan adalah pencegahan terbaik.
+        
+        ## Kapan Harus ke Dokter?
+        
+        * Jika anak menunjukkan **tanda dehidrasi** (jarang pipis, mulut kering, lemas, menangis tanpa air mata).
+        * Jika demam tinggi tidak kunjung turun.
+        * Jika anak tampak sangat kesakitan.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Hand, Foot, and Mouth Disease (HFMD).*
+        2.  Centers for Disease Control and Prevention (CDC). *Hand, Foot, and Mouth Disease.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Kesehatan & Imunisasi",
+        "title": "Ruam Popok (Diaper Rash): Pencegahan dan Perawatan",
+        "summary": "Cara mengatasi iritasi kulit paling umum pada bayi.",
+        "source": "IDAI | AAP",
+        "full_content": """
+        # Ruam Popok (Diaper Rash): Pencegahan dan Perawatan
+        
+        Ruam popok (dermatitis popok) adalah iritasi kulit di area yang tertutup popok. Hampir semua bayi pernah mengalaminya.
+        
+        ## Penyebab
+        
+        Penyebab utamanya adalah kontak yang terlalu lama dengan **urin (pipis) dan feses (BAB)**.
+        
+        * Kulit yang lembap dan hangat di dalam popok menjadi rentan.
+        * Amonia dalam urin dan enzim dalam feses merusak lapisan pelindung kulit, menyebabkan iritasi.
+        * Gesekan dengan popok memperburuk kondisi.
+        * Kadang bisa diperparah oleh infeksi jamur (Candida) jika tidak segera diatasi.
+        
+        ## Gejala
+        
+        * Kulit di area popok (bokong, lipatan paha, alat kelamin) tampak kemerahan dan meradang.
+        * Kulit bisa tampak bengkak atau melepuh (pada kasus berat).
+        * Bayi tampak tidak nyaman atau menangis saat area tersebut dibersihkan atau disentuh.
+        
+        ## Pencegahan adalah Kunci (A-B-C-D)
+        
+        1.  **A = Air & Area:** Jaga area popok tetap bersih dan kering.
+        2.  **B = Barriers:** Gunakan krim pelindung (barrier cream) **setiap kali** ganti popok.
+            * Pilih krim yang mengandung **Zinc Oxide** atau **Petroleum Jelly**.
+            * Oleskan tebal-tebal (seperti lapisan mentega) untuk membuat lapisan pelindung antara kulit dan popok.
+        3.  **C = Cleansing:** Bersihkan dengan lembut.
+            * Gunakan air bersih dan kapas atau waslap lembut.
+            * Hindari tisu basah yang mengandung alkohol atau pewangi jika kulit sedang iritasi.
+            * Keringkan dengan cara ditepuk-tepuk (jangan digosok) sebelum memakaikan popok baru.
+        4.  **D = Diapers:** Ganti popok **SESERING MUNGKIN**.
+            * Ini adalah pencegahan terpenting.
+            * Ganti popok segera setelah bayi BAB.
+            * Ganti popok setiap 2-3 jam meskipun hanya basah karena pipis.
+        
+        ## Tips Tambahan
+        
+        * **Bebas Popok (Diaper-Free Time):** Biarkan bayi bermain tanpa popok selama 15-30 menit beberapa kali sehari di atas perlak. Paparan udara adalah obat terbaik untuk ruam popok.
+        * **Ukuran Popok:** Pastikan ukuran popok pas (tidak terlalu ketat) agar ada sirkulasi udara.
+        
+        ## Kapan Harus ke Dokter?
+        
+        * Ruam tidak membaik dalam 2-3 hari perawatan di rumah.
+        * Ruam tampak sangat parah, melepuh, atau bernanah.
+        * Ruam disertai bintik-bintik merah kecil terpisah (satelit) di pinggirnya (curiga infeksi jamur, perlu krim anti-jamur).
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Ruam Popok pada Bayi.*
+        2.  American Academy of Pediatrics (AAP). *Diaper Rash: Prevention and Treatment.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Kesehatan & Imunisasi",
+        "title": "Mengenal Eksim (Dermatitis Atopik) pada Bayi",
+        "summary": "Penyebab kulit kering, gatal, dan merah pada bayi dengan 'bakat' atopik.",
+        "source": "IDAI | AAP",
+        "full_content": """
+        # Mengenal Eksim (Dermatitis Atopik) pada Bayi
+        
+        Dermatitis Atopik (DA) atau eksim adalah kondisi kulit kronis (jangka panjang) yang sangat umum pada bayi dan anak-anak. Ini adalah bagian dari "Atopic March", yang juga mencakup alergi makanan, rinitis alergi (pilek alergi), dan asma.
+        
+        ## Gejala
+        
+        * **Kulit Kering:** Gejala utama. Kulit bayi terasa kering, kasar, dan bersisik.
+        * **Gatal:** Ini adalah kunci dari DA. Rasa gatal yang hebat membuat bayi rewel dan menggaruk.
+        * **Ruam Merah:** Akibat garukan, kulit menjadi meradang, kemerahan, dan kadang bengkak atau mengeluarkan cairan.
+        * **Lokasi Khas:**
+            * **Bayi (0-2 tahun):** Paling sering di **pipi**, kulit kepala, dahi, serta bagian luar lengan dan tungkai.
+            * **Anak (>2 tahun):** Pindah ke lipatan (siku, belakang lutut, leher, pergelangan tangan).
+        
+        ## Penyebab
+        
+        Eksim bukan penyakit menular. Penyebabnya kompleks:
+        1.  **Genetik (Bakat):** Paling penting. Jika orang tua punya riwayat eksim, asma, atau alergi, risiko anak lebih tinggi.
+        2.  **Kerusakan Skin Barrier:** Kulit atopik memiliki "skin barrier" (pelindung kulit) yang lemah. Kulit tidak bisa menahan kelembapan (sehingga kering) dan tidak bisa menghalau iritan/alergen (sehingga mudah meradang).
+        
+        ## Pemicu (Bukan Penyebab)
+        
+        Sesuatu yang memperburuk eksim yang sudah ada:
+        * **Iritan:** Sabun yang keras (deterjen tinggi), parfum, keringat, kain wol.
+        * **Alergen:** Tungau debu rumah, bulu hewan, serbuk sari. Pada beberapa (tidak semua) anak, alergi makanan (susu sapi, telur) bisa memperburat eksim.
+        * **Cuaca:** Udara yang terlalu kering (misal: kamar ber-AC) atau terlalu panas (berkeringat).
+        
+        ## Perawatan Dasar (Wajib)
+        
+        Perawatan DA berfokus pada perbaikan skin barrier dan mengontrol gatal.
+        
+        1.  **Mandi Singkat (Maks 10 Menit):** Gunakan **air hangat kuku** (bukan panas). Air panas menghilangkan kelembapan kulit.
+        2.  **Sabun Lembut:** Gunakan sabun khusus kulit sensitif/atopik (pH netral, hipoalergenik, tanpa pewangi).
+        3.  **Lembapkan SEGERA (Kunci Utama):**
+            * **Pravilo 3 Menit:** Segera setelah mandi, keringkan badan anak dengan ditepuk-tepuk lembut (jangan digosok).
+            * **Dalam 3 menit** (saat kulit masih lembap), oleskan **pelembap (moisturizer)** dalam jumlah banyak ke seluruh tubuh.
+            * Pelembap adalah "obat" utama untuk DA. Gunakan pelembap bentuk krim kental atau salep (bukan losion encer) minimal 2x sehari.
+        4.  **Hindari Pemicu:** Kenakan pakaian katun yang lembut. Jaga kuku tetap pendek.
+        
+        Jika ruam sangat merah dan meradang, dokter mungkin akan meresepkan krim steroid ringan untuk mengontrol peradangan.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Dermatitis Atopik pada Anak.*
+        2.  American Academy of Pediatrics (AAP). *Eczema in Babies and Children.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Kesehatan & Imunisasi",
+        "title": "Kapan Harus Khawatir Tentang Muntah pada Bayi?",
+        "summary": "Membedakan gumoh (normal) dan muntah (waspada).",
+        "source": "IDAI | AAP",
+        "full_content": """
+        # Membedakan Gumoh (Spitting Up) vs Muntah (Vomiting)
+        
+        Penting bagi orang tua untuk membedakan antara gumoh yang normal dan muntah yang mungkin menandakan masalah.
+        
+        ## Gumoh (Spitting Up) - NORMAL
+        
+        * **Apa itu?** Aliran balik ASI/susu formula dari lambung ke mulut yang terjadi **tanpa usaha**.
+        * **Kapan?** Biasanya terjadi setelah menyusu, saat bersendawa, atau saat bayi dibaringkan.
+        * **Seperti apa?** Susu mengalir begitu saja dari mulut, jumlahnya sedikit (1-2 sendok makan).
+        * **Perilaku Bayi:** Bayi tampak **nyaman**, tidak rewel, dan berat badan tetap naik dengan baik.
+        * **Mengapa?** Sangat normal. Katup antara kerongkongan dan lambung bayi belum matang dan kuat.
+        * **Solusi:** Sendawakan bayi setelah menyusu, tegakkan bayi 15-30 menit setelah menyusu, jangan menyusu berlebihan.
+        
+        ## Muntah (Vomiting) - PERLU WASPADA
+        
+        * **Apa itu?** Pengeluaran isi lambung yang **disertai paksaan/kontraksi otot perut**.
+        * **Kapan?** Bisa terjadi kapan saja, tidak harus setelah menyusu.
+        * **Seperti apa?** **Menyemprot (proyektil)** atau keluar dalam jumlah banyak, disertai kontraksi perut yang jelas.
+        * **Perilaku Bayi:** Bayi tampak **tidak nyaman**, rewel, menangis, atau lemas.
+        * **Mengapa?** Bisa jadi tanda infeksi (virus, bakteri), alergi, atau sumbatan.
+        
+        ## 🚩 Red Flags: Kapan Muntah Berbahaya?
+        
+        Segera hubungi dokter jika muntah disertai:
+        
+        1.  **Tanda Dehidrasi:**
+            * Jarang pipis (popok kering > 6 jam).
+            * Mulut kering, menangis tanpa air mata.
+            * Ubun-ubun (jika belum menutup) tampak cekung.
+            * Bayi sangat lemas atau tidur terus.
+        
+        2.  **Warna Muntahan:**
+            * **Hijau atau Kuning Terang (Cairan Empedu):** Ini tanda **darurat**, bisa berarti ada sumbatan (obstruksi) usus. **Segera ke UGD!**
+            * **Merah atau Cokelat (Darah):** Bisa karena luka di kerongkongan, tapi harus selalu diperiksakan.
+        
+        3.  **Gejala Penyerta:**
+            * Demam tinggi.
+            * Perut kembung dan keras.
+            * Menolak menyusu/minum sama sekali.
+            * Muntah proyektil (menyemprot hebat) berulang kali, terutama pada bayi < 3 bulan (curiga *stenosis pilorus*).
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Muntah pada Bayi dan Anak.*
+        2.  American Academy of Pediatrics (AAP). *Spitting Up vs. Vomiting.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    
+    # ================================================
+    # Kategori: Pola Asuh & Psikologi (5 Artikel BARU)
+    # ================================================
+    {
+        "kategori": "Pola Asuh & Psikologi",
+        "title": "Membangun Ikatan (Bonding) dengan Bayi",
+        "summary": "Cara memperkuat ikatan emosional antara orang tua dan bayi baru lahir.",
+        "source": "AAP | UNICEF",
+        "full_content": """
+        # Membangun Ikatan (Bonding) dengan Bayi
+        
+        *Bonding* (ikatan) adalah proses terbentuknya hubungan emosional yang kuat antara orang tua dan bayi. Ini adalah fondasi dari rasa aman (*secure attachment*) yang akan memengaruhi perkembangan sosial dan emosional anak seumur hidupnya.
+        
+        Bonding adalah proses dua arah dan membutuhkan waktu.
+        
+        ## Cara Membangun Bonding (Sejak Hari Pertama)
+        
+        1.  **Kontak Kulit ke Kulit (Skin-to-Skin):**
+            * Ini adalah cara paling ampuh.
+            * Buka baju bayi (hanya pakai popok) dan letakkan ia di dada telanjang Anda (berlaku untuk Ibu dan Ayah). Selimuti punggung bayi.
+            * **Manfaat:** Menstabilkan detak jantung dan pernapasan bayi, menghangatkan bayi, menenangkan bayi, dan merangsang produksi ASI.
+            * Lakukan Inisiasi Menyusu Dini (IMD) segera setelah lahir.
+        
+        2.  **Kontak Mata:**
+            * Bayi baru lahir bisa fokus pada jarak 20-30 cm (jarak wajah Anda saat menyusui/menggendong).
+            * Sering-seringlah menatap mata bayi saat Anda menyusui, mengganti popok, atau menggendongnya.
+        
+        3.  **Suara Anda:**
+            * Bayi sudah mengenali suara Anda sejak di dalam rahim.
+            * Ajak bayi bicara dengan nada lembut (*parentese* / "bahasa bayi" yang bernada tinggi), bernyanyi, atau membacakan cerita.
+            * Suara Anda adalah hal yang paling menenangkannya.
+        
+        4.  **Menyusui (Breastfeeding):**
+            * Proses menyusui adalah momen bonding yang luar biasa, menggabungkan sentuhan (skin-to-skin), kontak mata, dan nutrisi.
+        
+        5.  **Responsif (Responsive Caregiving):**
+            * Segera merespons saat bayi menangis.
+            * Menggendong bayi saat ia menangis **TIDAK** akan membuatnya "bau tangan" atau manja.
+            * Ini mengajarkan bayi pelajaran terpenting: "Dunia adalah tempat yang aman, dan ada orang yang peduli padaku."
+        
+        6.  **Pijat Bayi:**
+            * Pijatan lembut setelah mandi dapat memperkuat ikatan dan merelakskan bayi.
+        
+        ## Ayah Juga Penting!
+        
+        Bonding bukan hanya tugas Ibu. Ayah bisa melakukan semua hal di atas (kecuali menyusui langsung):
+        * Melakukan *skin-to-skin contact*.
+        * Mengambil alih tugas memandikan, mengganti popok, dan menidurkan.
+        * Menggendong bayi dan mengajaknya bicara.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Bonding With Your Baby.*
+        2.  UNICEF. *Importance of Bonding.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Pola Asuh & Psikologi",
+        "title": "Pentingnya Konsistensi dalam Pola Asuh",
+        "summary": "Mengapa aturan yang konsisten menciptakan rasa aman bagi anak.",
+        "source": "AAP",
+        "full_content": """
+        # Pentingnya Konsistensi dalam Pola Asuh
+        
+        Konsistensi adalah salah satu pilar utama dalam pengasuhan balita. Konsistensi berarti menerapkan aturan, rutinitas, dan konsekuensi yang sama setiap saat dan oleh semua pengasuh (Ibu, Ayah, Nenek, Pengasuh).
+        
+        ## Mengapa Konsistensi Menciptakan Rasa Aman?
+        
+        Bagi seorang balita, dunia adalah tempat yang besar dan membingungkan. Konsistensi menciptakan **prediktabilitas**.
+        
+        * **Dunia yang Teratur:** Rutinitas yang konsisten (misal: bangun, makan, main, mandi, tidur) membuat dunia anak terasa aman dan teratur. Ia tahu apa yang akan terjadi selanjutnya, yang mengurangi kecemasan.
+        * **Batasan yang Jelas:** Aturan yang konsisten (misal: "Kita tidak melempar makanan") mengajarkan anak batasan perilaku yang jelas.
+        * **Belajar Konsekuensi:** Jika hari ini melempar makanan dilarang, tapi besok dibolehkan (karena orang tua lelah), anak akan bingung. Ia tidak belajar bahwa perilakunya salah, ia hanya belajar bahwa "Kadang boleh, kadang tidak, tergantung mood Mama."
+        
+        ## 3 Area Kunci untuk Konsistensi
+        
+        1.  **Rutinitas Harian:**
+            * **Waktu Tidur:** Usahakan memiliki jam tidur siang dan malam yang sama setiap hari. Lakukan "ritual tidur" yang sama setiap malam (mandi, sikat gigi, baca buku, tidur). Ini memberi sinyal pada tubuh anak bahwa waktunya istirahat.
+            * **Waktu Makan:** Terapkan jadwal makan teratur (3x makan utama, 2x snack). Jangan biarkan anak *ngemil* sepanjang hari. (Lihat artikel *Feeding Rules*).
+        
+        2.  **Aturan dan Batasan:**
+            * Tentukan 2-3 aturan utama yang tidak bisa ditawar (misal: "Tidak boleh memukul", "Tidak boleh lari ke jalan").
+            * Terapkan aturan ini setiap saat. Jika Anda bilang "tidak", itu berarti "tidak".
+        
+        3.  **Antar Pengasuh (Ibu, Ayah, Nenek):**
+            * Ini adalah tantangan terbesar. Ibu, Ayah, dan Nenek/Kakek harus memiliki **satu suara**.
+            * Jika Ibu melarang nonton TV saat makan, tapi Nenek membolehkannya agar anak mau makan, aturan Ibu akan hancur.
+            * Diskusikan aturan pengasuhan saat anak tidak ada, dan sepakati bersama.
+        
+        Konsistensi bukan berarti menjadi kaku. Tentu boleh ada fleksibilitas (misal: saat liburan). Tetapi dalam kehidupan sehari-hari, konsistensi adalah fondasi disiplin dan rasa aman anak.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Consistency in Parenting: Why It's Important.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Pola Asuh & Psikologi",
+        "title": "Mengatasi 'Sibling Rivalry' (Kecemburuan Saudara)",
+        "summary": "Mempersiapkan Kakak untuk menyambut kelahiran Adik.",
+        "source": "AAP",
+        "full_content": """
+        # Mengatasi 'Sibling Rivalry' (Kecemburuan Saudara)
+        
+        Kelahiran bayi baru adalah kebahagiaan, tetapi bagi seorang balita (Kakak), ini bisa terasa seperti "dunianya runtuh". Tiba-tiba, ia harus berbagi perhatian dan kasih sayang utama. Kecemburuan dan kemunduran perilaku (regresi) adalah hal yang SANGAT NORMAL.
+        
+        ## Mempersiapkan Kakak (Sebelum Adik Lahir)
+        
+        * **Beri Tahu di Waktu yang Tepat:** Beri tahu saat kehamilan sudah terlihat jelas (Trimester 2). Gunakan bahasa sederhana, "Nanti akan ada bayi di rumah, Adik akan jadi Kakak."
+        * **Libatkan Kakak:** Ajak Kakak merasakan tendangan di perut, memilih baju bayi, atau membantu menata kamar bayi.
+        * **Jangan Terlalu Memuji:** Hindari berkata, "Nanti kamu akan senang sekali punya teman main." Realitanya, bayi baru lahir tidak bisa diajak main.
+        * **Pindahkan Jauh-jauh Hari:** Jika Kakak harus pindah kamar atau pindah ke tempat tidur besar, lakukan **beberapa bulan sebelum** bayi lahir, agar ia tidak merasa "diusir" oleh si Adik.
+        
+        ## Saat Adik Baru Lahir
+        
+        Minggu-minggu pertama adalah yang terberat bagi Kakak.
+        
+        * **Hadiah dari Adik:** Siapkan kado kecil yang seolah-olah "diberikan" oleh si Adik untuk Kakak saat pertama kali bertemu.
+        * **Prioritaskan Kakak (Saat Tamu Datang):** Saat tamu datang menjenguk, mereka pasti akan fokus ke bayi. Sapa Kakak terlebih dahulu, "Wah, Kakak hebat sudah jadi Kakak!"
+        * **Libatkan dalam Perawatan:** Beri Kakak "tugas penting". "Tolong ambilkan popok Adik," atau "Tolong bantu usap-usap punggung Adik." Puji bantuannya.
+        
+        ## Mengatasi Regresi (Kemunduran Perilaku)
+        
+        Sangat wajar jika Kakak (yang mungkin sudah bisa *toilet training*) tiba-tiba mengompol lagi, atau minta minum dari botol/dot, atau bicara seperti bayi.
+        
+        * **Jangan Dimarahi:** Ini adalah caranya mencari perhatian dan memastikan ia masih disayang.
+        * **Validasi Perasaannya:** "Mama tahu Kakak kesal karena Adik menangis terus."
+        * **Turuti (Sebentar):** Tidak apa-apa menuruti keinginannya (misal: pura-pura menggendongnya seperti bayi) selama beberapa menit.
+        
+        ## Luangkan Waktu Eksklusif
+        
+        Ini adalah hal terpenting.
+        
+        * **'Special Time':** Sisihkan waktu 10-15 menit setiap hari **hanya untuk Kakak**.
+        * Selama waktu itu, fokus 100% padanya. Biarkan Ayah atau pengasuh lain memegang Adik. Lakukan apa yang Kakak mau (misal: membaca buku favoritnya, menyusun balok).
+        * Ini meyakinkan Kakak bahwa cintanya tidak terbagi, melainkan bertambah.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Preparing Your Older Child for a New Baby.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Pola Asuh & Psikologi",
+        "title": "Manfaat Bermain di Luar Ruangan (Outdoor Play)",
+        "summary": "Mengapa bermain di taman (lumpur, rumput, matahari) penting untuk anak.",
+        "source": "AAP",
+        "full_content": """
+        # Manfaat Bermain di Luar Ruangan (Outdoor Play)
+        
+        Di era digital, waktu bermain di dalam ruangan (indoor) dan *screen time* sering mendominasi. Padahal, bermain di luar ruangan (outdoor) memberikan manfaat unik yang tidak tergantikan untuk tumbuh kembang anak.
+        
+        ## 1. Manfaat Fisik
+        
+        * **Motorik Kasar:** Berlari, melompat, memanjat, dan melempar di area terbuka adalah latihan motorik kasar terbaik.
+        * **Vitamin D:** Paparan sinar matahari pagi (sebelum jam 9) membantu tubuh memproduksi Vitamin D, yang sangat penting untuk kesehatan tulang (penyerapan kalsium).
+        * **Kesehatan Mata:** Studi menunjukkan bahwa anak-anak yang menghabiskan lebih banyak waktu di luar ruangan memiliki risiko lebih rendah terkena rabun jauh (miopia).
+        
+        ## 2. Manfaat Kognitif & Sensorik
+        
+        * **Stimulasi Sensorik:** Alam menyediakan stimulasi sensorik yang kaya: merasakan tekstur rumput/tanah, mencium bau hujan, mendengar suara burung, melihat berbagai warna bunga.
+        * **Melatih Fokus:** Lingkungan alam yang tenang terbukti dapat meningkatkan rentang perhatian (fokus) anak.
+        
+        ## 3. Manfaat Emosional & Sosial
+        
+        * **Pengambilan Risiko yang Sehat:** Bermain di luar (misal: memanjat pohon pendek, berlari di permukaan tidak rata) mengajarkan anak untuk menilai risiko, mengatasi tantangan, dan membangun kepercayaan diri.
+        * **Manajemen Stres:** Berada di alam terbukti mengurangi stres dan kecemasan, baik pada anak maupun orang dewasa.
+        * **Interaksi Sosial:** Taman bermain adalah tempat anak belajar berinteraksi, bergiliran (main ayunan), dan bekerja sama.
+        
+        ## 4. Manfaat Imunitas (Hipotesis Higienis)
+        
+        * Teori "Hipotesis Higienis" menyebutkan bahwa lingkungan yang terlalu steril justru membuat sistem imun anak "kurang terlatih".
+        * Bermain kotor (terpapar lumpur, tanah, kuman baik) diyakini dapat membantu melatih sistem imun anak agar tidak bereaksi berlebihan, yang diduga dapat mengurangi risiko alergi dan asma.
+        
+        ## Tips Memulai
+        
+        * **Tidak Perlu Jauh:** Cukup di halaman rumah, taman komplek, atau lapangan terdekat.
+        * **Biarkan Berantakan:** Tidak apa-apa jika anak kotor terkena lumpur atau pasir. Pakaian bisa dicuci.
+        * **Prioritaskan:** Jadikan "waktu main di luar" sebagai bagian dari rutinitas harian, sama pentingnya dengan makan atau tidur.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *The Power of Play: How Fun and Games Help Children Thrive.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Pola Asuh & Psikologi",
+        "title": "Mengenali Tanda Stres pada Balita",
+        "summary": "Balita juga bisa stres. Kenali tanda-tanda yang tidak mereka ucapkan.",
+        "source": "AAP",
+        "full_content": """
+        # Mengenali Tanda Stres pada Balita
+        
+        Stres pada balita seringkali tidak terlihat jelas karena mereka belum bisa mengungkapkannya dengan kata-kata seperti, "Aku cemas." Stres pada balita (disebut *toxic stress* jika berat dan berkepanjangan) dapat memengaruhi perkembangan otak.
+        
+        ## Pemicu Stres Umum pada Balita
+        
+        * **Perubahan Besar:** Pindah rumah, lahirnya adik baru, ibu mulai bekerja, masuk *daycare* baru.
+        * **Konflik di Rumah:** Sering mendengar orang tua bertengkar.
+        * **Rutinitas Kacau:** Jadwal tidur atau makan yang tidak konsisten.
+        * **Overstimulasi:** Terlalu banyak aktivitas, terlalu bising, atau terlalu banyak *screen time*.
+        * **Penyakit atau Nyeri:** Sakit kronis atau nyeri yang tidak terdeteksi.
+        
+        ## Tanda-tanda Stres pada Balita
+        
+        Stres pada balita sering muncul sebagai perubahan perilaku:
+        
+        1.  **Regresi (Kemunduran Perilaku):**
+            * Tiba-tiba mengompol lagi padahal sudah bisa *toilet training*.
+            * Minta dot atau botol padahal sudah lama berhenti.
+            * Bicara seperti bayi.
+        
+        2.  **Perubahan Pola Tidur:**
+            * Tiba-tiba sulit tidur di malam hari.
+            * Sering terbangun atau mengalami mimpi buruk.
+        
+        3.  **Perubahan Pola Makan:**
+            * Menolak makan makanan favoritnya.
+            * Nafsu makan berkurang drastis atau meningkat.
+        
+        4.  **Perilaku Emosional:**
+            * Lebih sering tantrum dan lebih eksplosif dari biasanya.
+            * Lebih "cengeng", mudah menangis untuk hal-hal kecil.
+            * Tiba-tiba menjadi sangat penakut atau *clingy* (menempel terus).
+        
+        5.  **Perilaku Fisik:**
+            * Sakit perut atau sakit kepala "misterius" (psikosomatis).
+            * Mulai melakukan kebiasaan baru: menggigit kuku, memutar-mutar rambut.
+        
+        ## Cara Membantu Anak yang Stres
+        
+        * **Kembali ke Dasar (Rutinitas):** Pastikan jadwal tidur dan makan anak konsisten. Rutinitas adalah "jangkar" rasa aman bagi balita.
+        * **Ekstra Sabar dan Pelukan:** Jangan marahi regresi. Anak sedang butuh "diisi ulang" rasa amannya. Berikan lebih banyak pelukan dan validasi.
+        * **Luangkan Waktu Koneksi:** Sisihkan 10-15 menit waktu berkualitas (tanpa HP) hanya berdua dengan anak.
+        * **Bermain Fisik:** Ajak anak bermain aktif di luar ruangan untuk melepaskan energi terpendam.
+        * **Cari Penyebab:** Coba identifikasi apa pemicunya. Apakah ada perubahan besar di rumah?
+        
+        Jika perilaku ini berlangsung lama dan mengganggu fungsi sehari-hari, konsultasikan dengan dokter anak atau psikolog anak.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Stress in Children: Signs and Strategies.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    
+    # ================================================
+    # Kategori: Keamanan & Pencegahan (3 Artikel BARU)
+    # ================================================
+    {
+        "kategori": "Keamanan & Pencegahan",
+        "title": "Pencegahan Tersedak: Makanan Aman vs Berbahaya",
+        "summary": "Cara memotong makanan untuk meminimalkan risiko tersedak.",
+        "source": "CDC | AAP",
+        "full_content": """
+        # Pencegahan Tersedak: Makanan Aman vs Berbahaya
+        
+        Tersedak (choking) adalah salah satu ketakutan terbesar orang tua saat MPASI. Risiko tersedak bisa diminimalkan dengan cara persiapan dan pemotongan makanan yang benar.
+        
+        Saluran napas (trakea) balita hanya seukuran sedotan kecil.
+        
+        ## Makanan Berisiko Tinggi Tersedak (Hindari / Modifikasi)
+        
+        Kelompok makanan ini **HARUS DIHINDARI** atau **DIMODIFIKASI** secara ketat untuk anak di bawah usia 4 tahun:
+        
+        1.  **Bentuk Bulat & Keras:**
+            * **Anggur, Ceri, Tomat Ceri:** **SANGAT BERBAHAYA.** Bentuknya pas menyumbat jalan napas.
+            * **Cara Aman:** Potong memanjang jadi 4 bagian (quarter).
+        
+        2.  **Bentuk Koin (Bulat Pipih):**
+            * **Sosis (Hot dog):** Ini adalah penyebab tersedak paling umum.
+            * **Cara Aman:** **JANGAN** potong bentuk koin. Potong memanjang jadi 4 bagian, lalu potong dadu kecil.
+        
+        3.  **Keras & Mentah:**
+            * **Potongan Apel Mentah, Wortel Mentah, Seledri Mentah.**
+            * **Cara Aman:** Masak (kukus/rebus) hingga sangat lunak, atau parut halus.
+        
+        4.  **Kacang-kacangan & Biji-bijian Utuh:**
+            * **Kacang Tanah, Kacang Mede, Biji Bunga Matahari.**
+            * **Cara Aman:** Berikan dalam bentuk selai (butter) yang dioles tipis atau bubuk yang dicampur ke makanan.
+        
+        5.  **Lengket atau Kenyal:**
+            * **Permen Karet, Marshmallow, Permen Jeli, Selai Kacang Kental (gumpalan).**
+            * **Cara Aman:** Hindari (permen). Untuk selai kacang, oleskan sangat tipis di biskuit atau encerkan.
+        
+        6.  **Lain-lain:**
+            * **Popcorn:** Teksturnya keras dan mudah menyangkut.
+            * **Potongan Daging/Keju yang Besar dan Keras.**
+        
+        ## Aturan Makan yang Aman
+        
+        * **Selalu Duduk:** Anak harus selalu makan dalam posisi **duduk tegak** (di high chair). Jangan biarkan makan sambil berjalan, berlari, tertawa, atau di dalam mobil.
+        * **Selalu Awasi:** Jangan pernah tinggalkan anak makan sendirian.
+        * **Potong dengan Benar:** Potong makanan (terutama yang bulat) menjadi ukuran yang sangat kecil (dadu < 1 cm) atau potongan memanjang tipis.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Centers for Disease Control and Prevention (CDC). *Choking Hazards for Young Children.*
+        2.  American Academy of Pediatrics (AAP). *Preventing Choking in Children.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Keamanan & Pencegahan",
+        "title": "Keselamatan Hewan Peliharaan dan Bayi",
+        "summary": "Mempersiapkan anjing atau kucing untuk kedatangan bayi baru.",
+        "source": "AAP | The Humane Society",
+        "full_content": """
+        # Keselamatan Hewan Peliharaan dan Bayi
+        
+        Mengenalkan bayi baru kepada hewan peliharaan (anjing/kucing) membutuhkan persiapan agar transisi berjalan mulus dan aman. Jangan pernah berasumsi hewan Anda yang "paling manis" sekalipun akan otomatis menerima bayi.
+        
+        ## Sebelum Bayi Lahir (Persiapan Hewan)
+        
+        * **Biasakan dengan Perubahan Rutinitas:** Mulailah mengubah rutinitas hewan (waktu makan, jalan-jalan) beberapa bulan sebelumnya agar ia tidak mengaitkan perubahan itu dengan si bayi.
+        * **Kenalkan Bau & Suara:**
+            * Putar rekaman suara tangisan bayi di rumah secara bertahap.
+            * Oleskan losion atau bedak bayi di tangan Anda agar hewan terbiasa dengan baunya.
+        * **Area Terlarang:** Latih hewan bahwa kamar bayi adalah area terlarang atau hanya boleh masuk jika diundang. Pasang pagar pengaman.
+        * **Latihan Kepatuhan:** Perkuat latihan dasar (duduk, diam, jangan lompat).
+        
+        ## Saat Pertama Kali Bertemu
+        
+        1.  **Kenalkan Bau Dulu:** Bawa pulang selimut atau pakaian yang sudah dipakai bayi dari RS agar hewan bisa mencium baunya terlebih dahulu.
+        2.  **Sapa Hewan Dulu:** Saat Ibu pulang dari RS, biarkan orang lain menggendong bayi. Sapa hewan peliharaan Anda terlebih dahulu (ia sudah kangen Anda).
+        3.  **Perkenalan Terkontrol:**
+            * Jaga hewan tetap terikat (leash) saat perkenalan pertama.
+            * Biarkan hewan mengendus kaki bayi (jangan wajah) dari jarak aman.
+            * Berikan pujian dan camilan kepada hewan atas perilakunya yang tenang.
+        
+        ## Aturan Keselamatan Utama
+        
+        * **JANGAN PERNAH TINGGALKAN BERDUAAN:** Ini adalah aturan emas. **JANGAN PERNAH** meninggalkan bayi atau balita sendirian dengan hewan peliharaan, bahkan sedetik pun, tidak peduli seberapa percayanya Anda.
+        * **Selalu Awasi:** Harus selalu ada orang dewasa yang mengawasi interaksi secara aktif.
+        * **Area Aman Bayi:** Sediakan tempat aman (seperti *playpen*) di mana bayi bisa bermain tanpa bisa dijangkau oleh hewan.
+        * **Tempat "Kabur" Hewan:** Sediakan juga tempat aman (misal: kandang atau ruangan lain) di mana hewan peliharaan bisa "mundur" jika ia merasa stres oleh bayi.
+        * **Ajari Anak:** Saat anak tumbuh besar, ajari ia cara menghargai hewan (mengelus dengan lembut, tidak menarik ekor/telinga, tidak mengganggu saat hewan makan/tidur).
+        * **Kebersihan:** Selalu cuci tangan setelah memegang hewan dan sebelum menyentuh bayi. Jauhkan kotak pasir kucing dari jangkauan bayi.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  American Academy of Pediatrics (AAP). *Safety with Pets.*
+        2.  The Humane Society of the United States. *Introducing Your Dog to a New Baby.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Keamanan & Pencegahan",
+        "title": "Pencegahan Gigitan Nyamuk (Demam Berdarah)",
+        "summary": "Cara melindungi bayi dari gigitan nyamuk Aedes aegypti.",
+        "source": "IDAI | CDC",
+        "full_content": """
+        # Pencegahan Gigitan Nyamuk (Demam Berdarah & Lainnya)
+        
+        Bayi dan balita sangat rentan terhadap gigitan nyamuk, yang tidak hanya gatal tetapi juga bisa menularkan penyakit berbahaya seperti Demam Berdarah Dengue (DBD), Chikungunya, dan Zika (semua ditularkan oleh nyamuk *Aedes aegypti*).
+        
+        ## 1. Perlindungan Lingkungan (Pemberantasan Sarang Nyamuk)
+        
+        Ini adalah langkah terpenting. Nyamuk *Aedes aegypti* berkembang biak di air jernih yang tergenang. Lakukan **3M Plus**:
+        
+        * **Menguras:** Kuras bak mandi, tempat penampungan air, dan vas bunga minimal seminggu sekali.
+        * **Menutup:** Tutup rapat semua tempat penampungan air.
+        * **Mengubur/Mendaur Ulang:** Kubur barang bekas yang bisa menampung air (ban bekas, kaleng).
+        * **Plus:**
+            * Pasang kawat kasa di ventilasi dan jendela.
+            * Pelihara ikan pemakan jentik (jika punya kolam).
+            * Hindari menggantung baju bekas pakai terlalu lama (disukai nyamuk).
+        
+        ## 2. Perlindungan Fisik (Pakaian & Kelambu)
+        
+        * **Kelambu:** Cara teraman melindungi bayi saat tidur (siang dan malam). Pasang kelambu di tempat tidur bayi atau *stroller*.
+        * **Pakaian:** Pakaikan anak pakaian lengan panjang dan celana panjang yang longgar dan berwarna terang, terutama saat beraktivitas di luar rumah pada jam "sibuk" nyamuk (pagi dan sore hari).
+        
+        ## 3. Perlindungan Kimia (Repellent / Losion Anti Nyamuk)
+        
+        Gunakan *repellent* dengan hati-hati pada bayi.
+        
+        * **Usia < 2 Bulan:** **JANGAN** gunakan *repellent* dalam bentuk apa pun. Hanya gunakan perlindungan fisik (kelambu, pakaian).
+        
+        * **Usia > 2 Bulan:**
+            * **Pilih Bahan yang Aman:**
+                * **DEET:** Konsentrasi 10-30%. Sangat efektif. (Rekomendasi AAP & CDC).
+                * **Picaridin:** Konsentrasi 5-20%.
+                * **Minyak Alami (Eucalyptus, Citronella):** Kurang efektif, harus lebih sering dioleskan ulang, dan **tidak direkomendasikan** untuk bayi di bawah 3 tahun karena risiko iritasi.
+            * **Cara Pemakaian yang Benar:**
+                1.  **JANGAN** semprotkan/oleskan di tangan, mata, atau mulut bayi.
+                2.  **JANGAN** oleskan di kulit yang luka atau iritasi.
+                3.  **SEMPROTKAN DI TANGAN ANDA** terlebih dahulu, baru oleskan tipis-tipis ke kulit bayi yang terbuka (hindari area wajah dan tangan).
+                4.  Cuci tangan Anda setelah mengoleskan.
+                5.  Segera cuci kulit bayi dengan sabun dan air setelah kembali ke dalam ruangan.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Melindungi Anak dari Gigitan Nyamuk.*
+        2.  Centers for Disease Control and Prevention (CDC). *Prevent Mosquito Bites.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
     }
-] # <-- INI ADALAH PENUTUP DATABASE ARTIKEL (HANYA 40 ARTIKEL)
+
+]
 
 # ================================================
-# FUNGSI HELPER PERPUSTAKAAN (VERSI PERBAIKAN)
+# FUNGSI HELPER BARU UNTUK PERPUSTAKAAN & API
+# (Tambahkan ini di SECTION 10B, setelah database artikel)
 # ================================================
 
 def get_local_library_filters():
     """
+    (FUNGSI BARU - MEMPERBAIKI BUG API)
     Helper untuk mengambil kategori & sumber unik dari DB lokal.
     """
     categories = set()
     sources = set()
-    # Pastikan hanya memproses 40 artikel pertama
-    for art in ARTIKEL_LOKAL_DATABASE[:40]:
+    for art in ARTIKEL_LOKAL_DATABASE:
         if art.get("kategori"):
             categories.add(art.get("kategori"))
         if art.get("source"):
@@ -5542,50 +7166,41 @@ def get_local_library_filters():
                 s = s.strip()
                 if s:
                     sources.add(s)
+    # Mengembalikan list kategori yang unik dan sudah diurutkan
     return sorted(list(categories)), sorted(list(sources))
 
 def get_library_categories_list():
-    """ Mengambil daftar kategori untuk dropdown Gradio """
+    """ (FUNGSI BARU) Mengambil daftar kategori untuk dropdown Gradio """
     categories, _ = get_local_library_filters()
     return ["Semua Kategori"] + categories
 
 # ===================================================================
-# FUNGSI RENDER PERPUSTAKAAN (VERSI PERBAIKAN FINAL v3.2.5)
+# GANTI FUNGSI LAMA DI SECTION 10B DENGAN YANG INI
+# ===================================================================
+
+# ===================================================================
+# GANTI FUNGSI 'update_library_display' DI SECTION 10B DENGAN YANG INI
+# ===================================================================
+
+# ===================================================================
+# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
+# DI SECTION 10B DENGAN KODE BARU INI
+# ===================================================================
+
+# ===================================================================
+# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
+# DI SECTION 10B DENGAN KODE BARU INI
 # ===================================================================
 
 def update_library_display(search_term: str, category: str):
     """
-    (REVISI v3.2.6 - GRADIENT FIX - NO EXTERNAL IMAGES)
-    Menggunakan gradient CSS murni untuk visual yang menarik tanpa ketergantungan external URLs
+    (REVISI UI v3.2.3 - Tampilan Kartu Modern dengan Gambar)
+    Fungsi ini mengembalikan STRING HTML, bukan komponen Gradio.
     """
     search_term = search_term.lower().strip()
     
-    # Mapping kategori ke gradient warna yang menarik
-    CATEGORY_GRADIENTS = {
-        "Nutrisi & MPASI": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        "Tumbuh Kembang": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-        "Kesehatan Anak": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-        "Tips Orang Tua": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-        "Imunisasi & Vitamin": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-    }
-    
-    # Icon emoji untuk setiap kategori
-    CATEGORY_ICONS = {
-        "Nutrisi & MPASI": "🍽️",
-        "Tumbuh Kembang": "👶",
-        "Kesehatan Anak": "⚕️",
-        "Tips Orang Tua": "👨‍👩‍👧",
-        "Imunisasi & Vitamin": "💉",
-    }
-    
-    # Ambil 40 artikel pertama untuk menghindari duplikat
-    articles_to_process = ARTIKEL_LOKAL_DATABASE[:40] 
-    
     filtered_articles = []
-    
-    # Filter artikel
-    for idx, art in enumerate(articles_to_process): 
-        
+    for art in ARTIKEL_LOKAL_DATABASE:
         if category != "Semua Kategori" and art.get("kategori") != category:
             continue
         
@@ -5596,65 +7211,56 @@ def update_library_display(search_term: str, category: str):
         if search_term and not (search_term in title or search_term in summary or search_term in content):
             continue
             
-        filtered_articles.append((idx, art)) 
+        filtered_articles.append(art)
 
     if not filtered_articles:
+        # Kembalikan string HTML
         return "<div style='padding: 20px; text-align: center;'><h3>🔍 Tidak ada artikel ditemukan</h3><p>Coba ganti kata kunci pencarian atau filter kategori Anda.</p></div>"
 
+    # Bangun string HTML
     html_output_list = []
     html_output_list.append(f"<p style='text-align:center; font-weight:bold; color:#333;'>Menampilkan {len(filtered_articles)} artikel:</p>")
+    # Buka grid container
     html_output_list.append("<div class='library-grid-container'>")
     
-    for idx, art in filtered_articles:
+    for art in filtered_articles:
         
+        # Amankan teks dari karakter HTML
         title_safe = art.get('title', 'Tanpa Judul').replace('<', '&lt;').replace('>', '&gt;')
         summary_safe = art.get('summary', '').replace('<', '&lt;').replace('>', '&gt;')
         kategori_safe = art.get('kategori', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         source_safe = art.get('source', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         
-        # Tentukan gradient dan icon berdasarkan kategori
-        gradient = CATEGORY_GRADIENTS.get(art.get('kategori'), "linear-gradient(135deg, #667eea 0%, #764ba2 100%)")
-        icon = CATEGORY_ICONS.get(art.get('kategori'), "📚")
-        
-        # Format konten HTML
+        # Ambil URL gambar, gunakan placeholder jika tidak ada
+        image_url = art.get('image_url', 'https://via.placeholder.com/600x400/E0E0E0/909090?text=Gambar+Tidak+Tersedia')
+
+        # Konversi Markdown dasar ke HTML (tetap diperlukan untuk full_content)
         content_html = art.get('full_content', 'Konten tidak tersedia.')
         content_html = content_html.replace('\n\n', '</p><p>')
         content_html = content_html.replace('---', '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">')
         content_html = content_html.replace('\n', '<br>')
+        
+        # Ubah #, ##, ### menjadi tag h
         content_html = content_html.replace('# ', '<h2>')
         content_html = content_html.replace('## ', '<h3>')
         content_html = content_html.replace('### ', '<h4>')
         
+        # Ubah **...** menjadi <strong>...</strong>
+        # Gunakan regex sederhana untuk menangani bold
+        import re
         content_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content_html)
-        content_html = re.sub(r'(<br>|^)\* (.*?)(<br>|$)', r'\1<li>\2</li>', content_html)
-        content_html = content_html.replace('</li><br><li>', '</li><li>') 
         
-        # Bungkus list dengan <ul>
-        content_html_list = content_html.split('<li>')
-        if len(content_html_list) > 1:
-            processed_html = content_html_list[0]
-            in_list = False
-            for item in content_html_list[1:]:
-                if not in_list:
-                    processed_html += '<ul><li>' + item
-                    in_list = True
-                else:
-                    if '</p>' in item or '<h2>' in item or '<h3>' in item:
-                         processed_html += '</ul>' + item
-                         in_list = False
-                    else:
-                         processed_html += '<li>' + item
-            if in_list:
-                processed_html += '</ul>'
-            content_html = processed_html.replace('<ul><br>', '<ul>').replace('</ul><br>', '</ul>')
+        # Ubah * ... (list) menjadi <li>...</li>
+        content_html = re.sub(r'\* (.*?)(<br>|$)', r'<li>\1</li>', content_html)
+        content_html = content_html.replace('</li><li>', '</li><li>') # Bersihkan
+        content_html = content_html.replace('<ul><br>', '<ul>')
+        content_html = content_html.replace('</ul><br>', '</ul>')
+
         
-        # Generate card HTML dengan gradient dan icon
         html_output_list.append(f"""
         <div class="article-card-v3-2-3">
             
-            <div class="article-image-gradient" style="background: {gradient};">
-                <div class="article-icon">{icon}</div>
-            </div>
+            <img src="{image_url}" alt="{title_safe}" class="article-image">
             
             <div class="article-summary-content">
                 <span class="article-category">{kategori_safe}</span>
@@ -5665,7 +7271,9 @@ def update_library_display(search_term: str, category: str):
             <details class="article-details-dropdown">
                 <summary class="article-details-toggle">Baca Selengkapnya</summary>
                 <div class="article-full-content-wrapper">
+                    
                     {content_html}
+                    
                     <span class="article-source">Sumber: {source_safe}</span>
                 </div>
             </details>
@@ -5673,167 +7281,65 @@ def update_library_display(search_term: str, category: str):
         </div>
         """)
 
+    # Tutup grid container
     html_output_list.append("</div>")
+
+    # Gabungkan semua string HTML menjadi satu
     return "".join(html_output_list)
 
 
 def load_initial_articles():
-    """ (PERBAIKAN #4) Memuat semua artikel (versi perbaikan indeks) """
+    """ (PERBAIKAN #3) Memuat semua artikel sebagai string HTML """
+    # Fungsi ini tidak perlu diubah, karena sudah memanggil update_library_display
     return update_library_display(search_term="", category="Semua Kategori")
 
 
-print(f"✅ Section 10B v3.2.5 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
+
+
+print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
+
+
+
+    
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+# =========================================
+# SECTION 10B – Perpustakaan Ibu Balita
+# Styling global (CSS saja, tanpa JS bridge)
+# =========================================
+
+
+
+
+
+
+    
+
+    
+    
+
 
 # ===============================================================================
-# SECTION 10B-EXTRA: FUNGSI KEJAR TUMBUH
+# ===============================================================================
+# SECTION 11: GRADIO UI (REVISI TOTAL - Perbaikan Perpustakaan)
 # ===============================================================================
 
-def toggle_kejar_tumbuh_mode(mode: str):
-    """Toggle input mode untuk Kalkulator Kejar Tumbuh"""
-    if mode == "Tanggal Lahir":
-        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
-    else:  # Usia Langsung
-        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)
-
-# ... (Sisa fungsi Kejar Tumbuh: tambah_data, hitung, reset, hapus, plot, handler) ...
-# ... (SALIN SEMUA FUNGSI KEJAR TUMBUH DARI FILE app(8).py ANDA DI SINI) ...
-# ... (Mulai dari 'def tambah_data_kejar_tumbuh' sampai 'kalkulator_kejar_tumbuh_handler') ...
-
-def tambah_data_kejar_tumbuh(data_state, mode, dob, dom, usia_manual, bb, tb):
-    if data_state is None: data_state = []
-    if bb is None or bb <= 0: return data_state, "⚠️ Masukkan berat badan yang valid", None, None, None, None
-    if tb is None or tb <= 0: return data_state, "⚠️ Masukkan tinggi badan yang valid", None, None, None, None
-    if mode == "Tanggal Lahir":
-        if not dob or not dom: return data_state, "⚠️ Masukkan tanggal lahir dan tanggal pengukuran", None, None, None, None
-        try:
-            dob_date = parse_date(dob); dom_date = parse_date(dom)
-            if dob_date is None or dom_date is None: raise ValueError("Format tanggal tidak valid")
-            if dom_date < dob_date: return data_state, "⚠️ Tanggal pengukuran tidak boleh sebelum tanggal lahir", None, None, None, None
-            age_days = (dom_date - dob_date).days; age_months = age_days / 30.4375
-        except Exception as e: return data_state, f"⚠️ Error Tanggal: {e}", None, None, None, None
-    else:
-        if usia_manual is None or usia_manual < 0: return data_state, "⚠️ Masukkan usia yang valid", None, None, None, None
-        age_months = usia_manual
-    new_data = {'usia_bulan': round(age_months, 1), 'bb': round(bb, 2), 'tb': round(tb, 1)}
-    data_state.append(new_data)
-    data_state = sorted(data_state, key=lambda x: x['usia_bulan'])
-    display_html = "<div style='padding: 15px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 10px;'>"
-    display_html += f"<h4 style='margin-top: 0; color: #2c3e50;'>📊 Data Terinput: {len(data_state)} pengukuran</h4>"
-    display_html += "<table style='width: 100%; border-collapse: collapse;'>... (tabel seperti sebelumnya) ...</table>"
-    for i, data in enumerate(data_state):
-        bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
-        display_html += f"<tr style='background: {bg_color};'>... (isi tabel) ...</tr>"
-    display_html += "</table><p style='margin-top: 10px; color: #27ae60; font-weight: bold;'>✅ Data berhasil ditambahkan!</p></div>"
-    return data_state, display_html, None, None, None, None
-def hitung_kejar_tumbuh(data_state):
-    if not data_state or len(data_state) < 2: return "<p>...</p>"
-    results = []
-    for i in range(len(data_state) - 1):
-        data1 = data_state[i]; data2 = data_state[i + 1]
-        delta_months = data2['usia_bulan'] - data1['usia_bulan']
-        delta_bb = data2['bb'] - data1['bb']; delta_tb = data2['tb'] - data1['tb']
-        if delta_months > 0:
-            velocity_bb = delta_bb / delta_months; velocity_tb = delta_tb / delta_months
-            results.append({'periode': f"{data1['usia_bulan']:.1f} - {data2['usia_bulan']:.1f} bulan", 'delta_months': delta_months, 'velocity_bb': velocity_bb, 'velocity_tb': velocity_tb, 'delta_bb': delta_bb, 'delta_tb': delta_tb})
-    if not results: return "<p>...</p>"
-    html = "<div style='...'><h3>📈 Analisis Laju Pertumbuhan</h3><table style='...'>... (header tabel) ...</tr>"
-    for i, result in enumerate(results):
-        bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
-        if result['velocity_bb'] < 0: bb_status = "⚠️ Penurunan"; bb_color = "#e74c3c"
-        elif result['velocity_bb'] < 0.3: bb_status = "⚠️ Lambat"; bb_color = "#f39c12"
-        elif result['velocity_bb'] <= 1.5: bb_status = "✅ Normal"; bb_color = "#27ae60"
-        else: bb_status = "ℹ️ Cepat"; bb_color = "#3498db"
-        if result['velocity_tb'] < 0: tb_status = "⚠️ Penurunan"; tb_color = "#e74c3c"
-        elif result['velocity_tb'] < 1: tb_status = "⚠️ Lambat"; tb_color = "#f39c12"
-        elif result['velocity_tb'] <= 4: tb_status = "✅ Normal"; tb_color = "#27ae60"
-        else: tb_status = "ℹ️ Cepat"; tb_color = "#3498db"
-        overall_status = "✅ Baik" if "✅" in bb_status and "✅" in tb_status else "⚠️ Perlu Perhatian"
-        overall_color = "#27ae60" if "✅" in overall_status else "#f39c12"
-        html += f"<tr style='background: {bg_color};'>... (isi tabel velocity) ...</tr>"
-    html += "</table>"
-    avg_velocity_bb = sum(r['velocity_bb'] for r in results) / len(results)
-    avg_velocity_tb = sum(r['velocity_tb'] for r in results) / len(results)
-    html += f"<div style='...'><h4>📊 Rata-rata Laju Pertumbuhan</h4><p><strong>Berat Badan:</strong> {avg_velocity_bb:.2f} kg/bulan</p><p><strong>Tinggi Badan:</strong> {avg_velocity_tb:.2f} cm/bulan</p></div>"
-    html += "<div style='...'><p><strong>ℹ️ Catatan:</strong> ...</p></div></div>"
-    return html
-def reset_kejar_tumbuh():
-    return [], "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data. Silakan tambahkan data pengukuran.</p>", None, None, None, None, ""
-def hapus_data_terakhir(data_state):
-    if not data_state or len(data_state) == 0: return [], "<p>...</p>"
-    data_state.pop()
-    if len(data_state) == 0: display_html = "<p>...</p>"
-    else:
-        display_html = "<div style='...'><h4>📊 Data Terinput: {len(data_state)}...</h4><table style='...'>... (header) ...</tr>"
-        for i, data in enumerate(data_state):
-            bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
-            display_html += f"<tr style='background: {bg_color};'>... (isi tabel) ...</tr>"
-        display_html += "</table><p style='...'>🗑️ Data terakhir berhasil dihapus!</p></div>"
-    return data_state, display_html
-def plot_kejar_tumbuh_trajectory(data_list: List[Dict], gender: str, theme_name: str = "pink_pastel") -> Optional[str]:
-    if not data_list or len(data_list) < 2: return None
-    theme = apply_matplotlib_theme(theme_name); sex_code = "M" if gender.lower().startswith("l") else "F"
-    ages = np.array([float(d.get("usia_bulan", 0.0)) for d in data_list], dtype=float)
-    weights = np.array([float(d.get("bb", 0.0)) for d in data_list], dtype=float)
-    heights = np.array([float(d.get("tb", 0.0)) for d in data_list], dtype=float)
-    order = np.argsort(ages); ages = ages[order]; weights = weights[order]; heights = heights[order]
-    min_age = max(0.0, float(ages.min()) - 1.0); max_age = min(60.0, float(ages.max()) + 1.0)
-    plot_age_grid = AGE_GRID[(AGE_GRID >= min_age) & (AGE_GRID <= max_age)]
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.8), sharex=True); ax1, ax2 = axes
-    wfa_curves = {}; hfa_curves = {}
-    for sd in range(-3, 4):
-        x, y = generate_wfa_curve(sex_code, sd); mask = (x >= min_age) & (x <= max_age); wfa_curves[sd] = (x[mask], y[mask])
-        x, y = generate_hfa_curve(sex_code, sd); mask = (x >= min_age) & (x <= max_age); hfa_curves[sd] = (x[mask], y[mask])
-    local_age_grid = plot_age_grid
-    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[-2][1], wfa_curves[-1][1], "#FFEBEE", 0.55, "Sangat Kurus")
-    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[-1][1], wfa_curves[1][1], "#E8F5E9", 0.35, "Normal")
-    _fill_zone_between_curves(ax1, local_age_grid, wfa_curves[1][1], wfa_curves[2][1], "#FFF3CD", 0.35, "Risiko BB Lebih")
-    for sd, (x, y) in wfa_curves.items(): ax1.plot(x, y, linestyle="--" if abs(sd) == 2 else "-", lw=1, alpha=0.8, label=f"BB z={sd}" if sd in (-2, 0, 2) else None)
-    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[-2][1], hfa_curves[-1][1], "#FFEBEE", 0.55, "Sangat Pendek")
-    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[-1][1], hfa_curves[2][1], "#E8F5E9", 0.45, "Normal")
-    _fill_zone_between_curves(ax2, local_age_grid, hfa_curves[2][1],  hfa_curves[3][1], "#FFF3CD", 0.35, "Tinggi")
-    for sd, (x, y) in hfa_curves.items(): ax2.plot(x, y, linestyle="--" if abs(sd) == 2 else "-", lw=1, alpha=0.8, label=f"TB z={sd}" if sd in (-2, 0, 2) else None)
-    try:
-        from scipy.interpolate import make_interp_spline
-        if len(ages) >= 4: k = 3
-        elif len(ages) == 3: k = 2
-        else: k = 1
-        age_smooth = np.linspace(float(ages.min()), float(ages.max()), 200)
-        w_spline = make_interp_spline(ages, weights, k=k); w_smooth = w_spline(age_smooth)
-        h_spline = make_interp_spline(ages, heights, k=k); h_smooth = h_spline(age_smooth)
-    except Exception:
-        age_smooth = ages; w_smooth = weights; h_smooth = heights
-    primary = theme.get("primary", "#ff6b9d")
-    ax1.plot(age_smooth, w_smooth, color=primary, linewidth=2.4, label="Trajectory BB (smooth)", zorder=10)
-    ax1.scatter(ages, weights, color="#111827", s=28, zorder=11)
-    ax2.plot(age_smooth, h_smooth, color=primary, linewidth=2.4, label="Trajectory TB (smooth)", zorder=10)
-    ax2.scatter(ages, heights, color="#111827", s=28, zorder=11)
-    ax1.set_title("Kejar Tumbuh BB vs Usia"); ax1.set_xlabel("Usia (bulan)"); ax1.set_ylabel("Berat Badan (kg)"); ax1.grid(True, which="both", linestyle=":", alpha=0.4)
-    ax2.set_title("Kejar Tumbuh TB vs Usia"); ax2.set_xlabel("Usia (bulan)"); ax2.set_ylabel("Tinggi/Panjang Badan (cm)"); ax2.grid(True, which="both", linestyle=":", alpha=0.4)
-    ax1.legend(fontsize=7, loc="upper left"); ax2.legend(fontsize=7, loc="upper left")
-    fig.suptitle(f"Trajectory Kejar Tumbuh — {gender}", fontsize=11, y=0.98)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S"); filename = f"kejar_tumbuh_{timestamp}.png"
-    filepath = os.path.join(OUTPUTS_DIR, filename); os.makedirs(OUTPUTS_DIR, exist_ok=True)
-    plt.tight_layout(rect=[0, 0, 1, 0.96]); fig.savefig(filepath, dpi=160); cleanup_matplotlib_figures(fig)
-    return filepath
-def kalkulator_kejar_tumbuh_handler(data_list: List[Dict], gender: str) -> Tuple[str, Optional[str]]:
-    if not data_list or len(data_list) < 2:
-        html = "<p style='color: #e74c3c; padding: 20px;'>⚠️ Minimal 2 data pengukuran diperlukan...</p>"
-        return html, None
-    try:
-        html_report = hitung_kejar_tumbuh(data_list)
-        plot_path = plot_kejar_tumbuh_trajectory(data_list, gender)
-        return html_report, plot_path
-    except Exception as e:
-        print(f"❌ Error in kalkulator_kejar_tumbuh_handler: {e}"); traceback.print_exc()
-        return f"<p style='color: #e74c3c; padding: 20px;'>Terjadi error saat analisis: {e}</p>", None
-
-print("✅ Section 10B-Extra loaded: Kejar Tumbuh functions defined")
-
-# ===============================================================================
-# SECTION 11: GRADIO UI (REVISI TOTAL v3.2.5)
-# ===============================================================================
-
-# UPDATED Custom CSS (v3.2.5)
+# UPDATED Custom CSS (v3.2.3)
+# CSS Perpustakaan lama (penyebab error) telah dihapus.
 CUSTOM_CSS = """
 /* ===================================================================
    GLOBAL STYLES
@@ -5860,6 +7366,7 @@ CUSTOM_CSS = """
     .gr-button-primary { background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
     .gr-button-secondary { background: linear-gradient(135deg, #4ecdc4 0%, #6de0d9 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
     
+    /* Perbaikan Dark Mode untuk Accordion (Perpustakaan Baru) */
     .gr-panel, .gr-box, .gr-accordion { background-color: #2a2a2a !important; border-color: #505050 !important; color: #e8e8e8 !important; }
     .gr-accordion .label-wrap { background-color: #3a3a3a !important; }
     .gr-accordion .label-wrap:hover { background-color: #4a4a4a !important; }
@@ -5876,6 +7383,12 @@ CUSTOM_CSS = """
     .status-error { color: #ff5c5c !important; }
     .premium-gold { background: linear-gradient(135deg, #b8860b 0%, #daa520 100%) !important; color: #ffffff !important; border: 2px solid #b8860b !important; }
     .premium-silver { background: linear-gradient(135deg, #787878 0%, #a0a0a0 100%) !important; color: #ffffff !important; border: 2px solid #787878 !important; }
+    .article-card { background-color: #2a2a2a !important; border: 1px solid #505050 !important; color: #e8e8e8 !important; }
+    .article-card:hover { background-color: #353535 !important; border-color: #606060 !important; box-shadow: 0 4px 12px rgba(255,255,255,0.1) !important; }
+    .article-title { color: #ffffff !important; }
+    .article-meta { color: #b0b0b0 !important; }
+    
+    /* CSS Perpustakaan lama (penyebab error) telah dihapus */
 }
 
 /* ===================================================================
@@ -5920,6 +7433,12 @@ CUSTOM_CSS = """
 .video-duration { font-size: 12px; color: #999; font-style: italic; }
 
 /* ===================================================================
+   PERPUSTAKAAN INTERAKTIF (BARU v3.2.3) - DIHAPUS
+   =================================================================== */
+/* Semua CSS .library-filter-bar, .article-card-v3, dll. telah dihapus */
+
+
+/* ===================================================================
    OTHER COMPONENTS
    =================================================================== */
 
@@ -5955,212 +7474,140 @@ blockquote {
     padding: 15px; border-radius: 10px; color: white;
     text-align: center; font-weight: bold; margin: 10px 0;
 }
+# ===============================================================================
+# SECTION 11: GRADIO UI (REVISI TOTAL - Perbaikan Perpustakaan)
+# ===============================================================================
 
-/* ===================================================================
-   PERPUSTAKAAN v3.2.5 (MODERN UI REVISION)
-   =================================================================== */
+# ... (Pastikan semua CSS Anda yang ada sebelumnya tetap di sini) ...
+# ... (Termasuk .gradio-container, DARK MODE, .video-card, dll.) ...
+
+# TAMBAHKAN BLOK CSS BARU INI
+# ===================================================================
+# PERPUSTAKAAN v3.2.3 (MODERN UI REVISION - DENGAN GAMBAR)
+# ===================================================================
 .library-grid-container {
+    /* Ini adalah wrapper yang akan dibuat oleh fungsi Python */
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 24px;
     padding: 10px 0;
 }
+
 .article-card-v3-2-3 {
     background: #ffffff;
     border-radius: 16px;
     border: 1px solid #e8e8e8;
-    margin-bottom: 0;
+    margin-bottom: 0; /* Diatur oleh grid-gap */
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    overflow: hidden;
+    overflow: hidden; /* Penting untuk image border-radius */
     transition: all 0.3s ease;
     display: flex;
-    flex-direction: column;
-    height: 100%;
+    flex-direction: column; /* Mengatur layout card */
+    height: 100%; /* Membuat kartu sama tinggi di grid */
 }
 .article-card-v3-2-3:hover {
     box-shadow: 0 7px 20px rgba(0,0,0,0.08);
     transform: translateY(-3px);
 }
-/* =================================================================== */
-/* PERPUSTAKAAN v3.2.6 - GRADIENT VERSION (NO EXTERNAL IMAGES) */
-/* =================================================================== */
-
-.article-image-gradient {
+.article-image {
     width: 100%;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
+    height: 180px; /* Ukuran pas untuk card */
+    object-fit: cover; /* Agar gambar tidak gepeng */
     border-bottom: 1px solid #eee;
 }
-
-.article-icon {
-    font-size: 72px;
-    opacity: 0.9;
-    animation: float 3s ease-in-out infinite;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-}
-
 .article-summary-content {
     padding: 20px;
-    flex-grow: 1;
+    flex-grow: 1; /* Mendorong dropdown ke bawah */
 }
-
 .article-category {
     display: inline-block;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 6px 14px;
+    background: #fff5f8;
+    color: #ff6b9d;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    border: 1px solid #ffdde5;
 }
-
 .article-title {
-    font-size: 20px;
+    font-size: 18px; /* Ukuran pas untuk card mobile */
     font-weight: 700;
-    color: #1a202c;
-    margin: 0 0 12px 0;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+    line-height: 1.4; /* Keterbacaan */
 }
-
 .article-summary {
-    font-size: 15px;
-    color: #4a5568;
+    font-size: 14px; /* Font mobile-friendly */
+    color: #555;
     line-height: 1.6;
     margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
 }
-
 .article-details-dropdown {
-    border-top: 1px solid #e2e8f0;
-    background: #f7fafc;
-    margin-top: auto;
+    border-top: 1px solid #f0f0f0;
+    margin-top: auto; /* Mendorong ke bagian bawah card */
 }
-
 .article-details-toggle {
     padding: 16px 20px;
     cursor: pointer;
-    font-weight: 600;
-    color: #667eea;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: all 0.2s;
-    user-select: none;
-    list-style: none;
-}
-
-.article-details-toggle:hover {
-    background: #edf2f7;
-    color: #764ba2;
-}
-
-.article-details-toggle::after {
-    content: "▼";
-    font-size: 12px;
-    transition: transform 0.3s;
-}
-
-.article-details-dropdown[open] .article-details-toggle::after {
-    transform: rotate(180deg);
-}
-
-.article-full-content-wrapper {
-    padding: 24px;
-    background: white;
-    color: #2d3748;
-    line-height: 1.8;
     font-size: 15px;
-    max-height: 600px;
-    overflow-y: auto;
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.article-full-content-wrapper h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 24px 0 12px 0;
-    padding-bottom: 8px;
-    border-bottom: 3px solid #667eea;
-}
-
-.article-full-content-wrapper h3 {
-    font-size: 19px;
     font-weight: 600;
-    color: #2d3748;
-    margin: 20px 0 10px 0;
+    color: #3498db;
+    list-style: none; /* Hapus panah default */
+    transition: background 0.2s ease;
+    display: block; /* Agar full width */
+    text-align: center;
 }
-
+.article-details-toggle:hover {
+    background: #f9f9f9;
+}
+/* Style panah custom (mudah dilihat) */
+.article-details-toggle::before {
+    content: '▼';
+    margin-right: 10px;
+    font-size: 12px;
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+.article-details-toggle {
+    list-style-type: none; /* Menghilangkan panah default di semua browser */
+}
+details[open] > .article-details-toggle::before {
+    transform: rotate(-180deg);
+}
+.article-full-content-wrapper {
+    padding: 0 20px 20px 20px;
+    line-height: 1.7; /* Font mudah dibaca */
+    color: #333;
+    font-size: 15px; /* Font mobile-friendly */
+    background: #fafafa;
+}
+.article-full-content-wrapper h2,
+.article-full-content-wrapper h3,
 .article-full-content-wrapper h4 {
-    font-size: 17px;
-    font-weight: 600;
-    color: #4a5568;
-    margin: 16px 0 8px 0;
+    color: #2c3e50;
+    margin-top: 20px;
 }
-
-.article-full-content-wrapper p {
-    margin: 12px 0;
+.article-full-content-wrapper ul,
+.article-full-content-wrapper ol {
+    padding-left: 25px;
 }
-
-.article-full-content-wrapper ul {
-    margin: 12px 0;
-    padding-left: 24px;
-}
-
 .article-full-content-wrapper li {
-    margin: 8px 0;
-    padding-left: 8px;
+    margin-bottom: 10px;
 }
-
 .article-full-content-wrapper strong {
-    color: #2d3748;
-    font-weight: 600;
+    color: #ff6b9d; /* Highlight poin penting */
 }
-
 .article-source {
-    display: block;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 2px solid #e2e8f0;
     font-size: 13px;
-    color: #718096;
+    color: #666;
     font-style: italic;
+    display: block;
+    margin-top: 15px;
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 8px;
 }
-
-/* =================================================================== */
-/* AKHIR BLOK GRADIENT VERSION */
-/* =================================================================== */
-
 /* Dark Mode overrides for new card */
 @media (prefers-color-scheme: dark) {
     .article-card-v3-2-3 {
@@ -6197,15 +7644,508 @@ blockquote {
     }
 }
 """
-# Placeholder JS untuk Tab "Premium & Notifikasi".
-# Saat ini tidak ada JavaScript khusus yang dijalankan; string ini hanya
-# disisipkan ke dalam gr.HTML agar mudah dikembangkan di masa depan.
-enable_notif_js = """
-<!-- JS notifikasi browser dapat ditambahkan di sini.
-     Versi v3.2.6 masih menggunakan simulasi backend saja. -->
-"""
+# ... (CUSTOM_CSS Anda berlanjut) ...
 
-print("✅ Custom CSS (v3.2.5) loaded: CSS Perpustakaan v3.2.5 siap.")
+
+print("✅ Custom CSS (v3.2.3) loaded: CSS Perpustakaan lama (penyebab error) telah dihapus.")
+
+# ===============================================================================
+# SECTION 10B-EXTRA: MISSING FUNCTIONS FOR KEJAR TUMBUH
+# (Ini adalah bagian dari SECTION 10B, tapi di file Anda diletakkan di sini)
+# ===============================================================================
+
+def toggle_kejar_tumbuh_mode(mode: str):
+    """Toggle input mode untuk Kalkulator Kejar Tumbuh"""
+    if mode == "Tanggal Lahir":
+        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+    else:  # Usia Langsung
+        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)
+
+
+def tambah_data_kejar_tumbuh(data_state, mode, dob, dom, usia_manual, bb, tb):
+    """
+    Menambahkan data pengukuran ke state untuk Kalkulator Kejar Tumbuh
+    
+    Args:
+        data_state: List data pengukuran yang sudah ada
+        mode: Mode input ("Tanggal Lahir" atau "Usia Langsung")
+        dob: Tanggal lahir
+        dom: Tanggal pengukuran
+        usia_manual: Usia dalam bulan (jika mode usia langsung)
+        bb: Berat badan (kg)
+        tb: Tinggi badan (cm)
+    
+    Returns:
+        Tuple: (updated_data_state, display_html, cleared_inputs...)
+    """
+    if data_state is None:
+        data_state = []
+    
+    # Validasi input
+    if bb is None or bb <= 0:
+        return data_state, "⚠️ Masukkan berat badan yang valid", None, None, None, None
+    
+    if tb is None or tb <= 0:
+        return data_state, "⚠️ Masukkan tinggi badan yang valid", None, None, None, None
+    
+    # Hitung usia
+    if mode == "Tanggal Lahir":
+        if not dob or not dom:
+            return data_state, "⚠️ Masukkan tanggal lahir dan tanggal pengukuran", None, None, None, None
+        
+        try:
+            # Gunakan 'parse_date' yang sudah Anda buat
+            dob_date = parse_date(dob) 
+            dom_date = parse_date(dom)
+            
+            if dob_date is None or dom_date is None:
+                raise ValueError("Format tanggal tidak valid (gunakan YYYY-MM-DD atau DD/MM/YYYY)")
+
+            if dom_date < dob_date:
+                return data_state, "⚠️ Tanggal pengukuran tidak boleh sebelum tanggal lahir", None, None, None, None
+            
+            # Hitung usia dalam bulan
+            age_days = (dom_date - dob_date).days
+            age_months = age_days / 30.4375
+        except Exception as e:
+            return data_state, f"⚠️ Error Tanggal: {e}", None, None, None, None
+    else:
+        if usia_manual is None or usia_manual < 0:
+            return data_state, "⚠️ Masukkan usia yang valid", None, None, None, None
+        age_months = usia_manual
+    
+    # Tambahkan data baru
+    new_data = {
+        'usia_bulan': round(age_months, 1),
+        'bb': round(bb, 2),
+        'tb': round(tb, 1)
+    }
+    
+    data_state.append(new_data)
+    
+    # Sort berdasarkan usia
+    data_state = sorted(data_state, key=lambda x: x['usia_bulan'])
+    
+    # Generate display HTML
+    display_html = "<div style='padding: 15px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 10px;'>"
+    display_html += f"<h4 style='margin-top: 0; color: #2c3e50;'>📊 Data Terinput: {len(data_state)} pengukuran</h4>"
+    display_html += "<table style='width: 100%; border-collapse: collapse;'>"
+    display_html += "<tr style='background: #3498db; color: white;'>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>No</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>Usia (bulan)</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>BB (kg)</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>TB (cm)</th>"
+    display_html += "</tr>"
+    
+    for i, data in enumerate(data_state):
+        bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+        display_html += f"<tr style='background: {bg_color};'>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{i+1}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['usia_bulan']}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['bb']}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['tb']}</td>"
+        display_html += "</tr>"
+    
+    display_html += "</table>"
+    display_html += "<p style='margin-top: 10px; color: #27ae60; font-weight: bold;'>✅ Data berhasil ditambahkan!</p>"
+    display_html += "</div>"
+    
+    # Return updated state, display, and clear input fields
+    return data_state, display_html, None, None, None, None
+
+
+def hitung_kejar_tumbuh(data_state):
+    """
+    Menghitung laju pertumbuhan dari data yang sudah diinput
+    
+    Args:
+        data_state: List data pengukuran
+    
+    Returns:
+        HTML report dengan analisis laju pertumbuhan
+    """
+    if not data_state or len(data_state) < 2:
+        return "<p style='color: #e74c3c; padding: 20px;'>⚠️ Minimal 2 data pengukuran diperlukan untuk menghitung laju pertumbuhan.</p>"
+    
+    # Hitung velocity
+    results = []
+    for i in range(len(data_state) - 1):
+        data1 = data_state[i]
+        data2 = data_state[i + 1]
+        
+        delta_months = data2['usia_bulan'] - data1['usia_bulan']
+        delta_bb = data2['bb'] - data1['bb']
+        delta_tb = data2['tb'] - data1['tb']
+        
+        if delta_months > 0:
+            velocity_bb = delta_bb / delta_months  # kg/bulan
+            velocity_tb = delta_tb / delta_months  # cm/bulan
+            
+            results.append({
+                'periode': f"{data1['usia_bulan']:.1f} - {data2['usia_bulan']:.1f} bulan",
+                'delta_months': delta_months,
+                'velocity_bb': velocity_bb,
+                'velocity_tb': velocity_tb,
+                'delta_bb': delta_bb,
+                'delta_tb': delta_tb
+            })
+    
+    if not results:
+        return "<p style='color: #e74c3c; padding: 20px;'>⚠️ Data tidak memadai untuk menghitung laju pertumbuhan (perlu interval waktu positif).</p>"
+
+    # Generate HTML report
+    html = "<div style='padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>"
+    html += "<h3 style='color: #2c3e50; margin-top: 0;'>📈 Analisis Laju Pertumbuhan (Growth Velocity)</h3>"
+    
+    html += "<table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>"
+    html += "<tr style='background: #3498db; color: white;'>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Periode</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Durasi</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Δ BB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Velocity BB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Δ TB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Velocity TB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Status</th>"
+    html += "</tr>"
+    
+    for i, result in enumerate(results):
+        bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+        
+        # Evaluasi velocity BB (rule of thumb: 0.5-1 kg/bulan untuk bayi)
+        if result['velocity_bb'] < 0:
+            bb_status = "⚠️ Penurunan"
+            bb_color = "#e74c3c"
+        elif result['velocity_bb'] < 0.3:
+            bb_status = "⚠️ Lambat"
+            bb_color = "#f39c12"
+        elif result['velocity_bb'] <= 1.5:
+            bb_status = "✅ Normal"
+            bb_color = "#27ae60"
+        else:
+            bb_status = "ℹ️ Cepat"
+            bb_color = "#3498db"
+        
+        # Evaluasi velocity TB (rule of thumb: 2-3 cm/bulan untuk bayi)
+        if result['velocity_tb'] < 0:
+            tb_status = "⚠️ Penurunan"
+            tb_color = "#e74c3c"
+        elif result['velocity_tb'] < 1:
+            tb_status = "⚠️ Lambat"
+            tb_color = "#f39c12"
+        elif result['velocity_tb'] <= 4:
+            tb_status = "✅ Normal"
+            tb_color = "#27ae60"
+        else:
+            tb_status = "ℹ️ Cepat"
+            tb_color = "#3498db"
+        
+        overall_status = "✅ Baik" if "✅" in bb_status and "✅" in tb_status else "⚠️ Perlu Perhatian"
+        overall_color = "#27ae60" if "✅" in overall_status else "#f39c12"
+        
+        html += f"<tr style='background: {bg_color};'>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd;'>{result['periode']}</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_months']:.1f} bln</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_bb']:+.2f} kg</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {bb_color}; font-weight: bold;'>{result['velocity_bb']:.2f} kg/bln<br><small>{bb_status}</small></td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_tb']:+.1f} cm</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {tb_color}; font-weight: bold;'>{result['velocity_tb']:.2f} cm/bln<br><small>{tb_status}</small></td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {overall_color}; font-weight: bold;'>{overall_status}</td>"
+        html += "</tr>"
+    
+    html += "</table>"
+    
+    # Summary statistics
+    avg_velocity_bb = sum(r['velocity_bb'] for r in results) / len(results)
+    avg_velocity_tb = sum(r['velocity_tb'] for r in results) / len(results)
+    
+    html += "<div style='background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;'>"
+    html += "<h4 style='color: #2c3e50; margin-top: 0;'>📊 Rata-rata Laju Pertumbuhan</h4>"
+    html += f"<p><strong>Berat Badan:</strong> {avg_velocity_bb:.2f} kg/bulan</p>"
+    html += f"<p><strong>Tinggi Badan:</strong> {avg_velocity_tb:.2f} cm/bulan</p>"
+    html += "</div>"
+    
+    html += "<div style='background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffc107;'>"
+    html += "<p style='margin: 0;'><strong>ℹ️ Catatan:</strong> Interpretasi ini bersifat umum. Konsultasikan dengan dokter anak untuk evaluasi yang lebih akurat.</p>"
+    html += "</div>"
+    
+    html += "</div>"
+    
+    return html
+
+
+def reset_kejar_tumbuh():
+    """Reset semua data dan input Kalkulator Kejar Tumbuh"""
+    return [], "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data. Silakan tambahkan data pengukuran.</p>", None, None, None, None, ""
+
+
+def hapus_data_terakhir(data_state):
+    """
+    Menghapus data pengukuran terakhir dari Kalkulator Kejar Tumbuh
+    
+    Args:
+        data_state: List data pengukuran
+    
+    Returns:
+        Tuple: (updated_data_state, updated_display_html)
+    """
+    if not data_state or len(data_state) == 0:
+        return [], "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data untuk dihapus.</p>"
+    
+    # Hapus data terakhir
+    data_state.pop()
+    
+    # Generate updated display
+    if len(data_state) == 0:
+        display_html = "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data. Silakan tambahkan data pengukuran.</p>"
+    else:
+        display_html = "<div style='padding: 15px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 10px;'>"
+        display_html += f"<h4 style='margin-top: 0; color: #2c3e50;'>📊 Data Terinput: {len(data_state)} pengukuran</h4>"
+        display_html += "<table style='width: 100%; border-collapse: collapse;'>"
+        display_html += "<tr style='background: #3498db; color: white;'>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>No</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>Usia (bulan)</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>BB (kg)</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>TB (cm)</th>"
+        display_html += "</tr>"
+        
+        for i, data in enumerate(data_state):
+            bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+            display_html += f"<tr style='background: {bg_color};'>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{i+1}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['usia_bulan']}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['bb']}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['tb']}</td>"
+            display_html += "</tr>"
+        
+        display_html += "</table>"
+        display_html += "<p style='margin-top: 10px; color: #e67e22; font-weight: bold;'>🗑️ Data terakhir berhasil dihapus!</p>"
+        display_html += "</div>"
+    
+    return data_state, display_html
+
+# =========================================
+# SECTION 10B – Extra
+# Plot Kejar Tumbuh (versi smooth)
+# =========================================
+
+def plot_kejar_tumbuh_trajectory(
+    data_list: List[Dict],
+    gender: str,
+    theme_name: str = "pink_pastel",
+) -> Optional[str]:
+    """
+    Versi baru plot Kejar Tumbuh:
+    - Tetap memakai kurva rujukan WHO (WFA & HFA).
+    - Trajectory anak digambar dengan garis SMOOTH (cubic spline)
+      sehingga bentuk kurva mendekati grafik referensi,
+      bukan garis patah-patah antar titik.
+    """
+    import numpy as np
+
+    if not data_list or len(data_list) < 2:
+        # Minimal 2 titik agar ada bentuk kurva
+        return None
+
+    theme = apply_matplotlib_theme(theme_name)
+    sex_code = "M" if gender.lower().startswith("l") else "F"
+
+    ages = np.array([float(d.get("usia_bulan", 0.0)) for d in data_list], dtype=float)
+    weights = np.array([float(d.get("bb", 0.0)) for d in data_list], dtype=float)
+    heights = np.array([float(d.get("tb", 0.0)) for d in data_list], dtype=float)
+
+    # Urutkan berdasarkan usia untuk mencegah garis bolak-balik
+    order = np.argsort(ages)
+    ages = ages[order]
+    weights = weights[order]
+    heights = heights[order]
+
+    # Batasi rentang usia agar tidak keluar jauh dari data anak
+    min_age = max(0.0, float(ages.min()) - 1.0)
+    max_age = min(60.0, float(ages.max()) + 1.0)
+    plot_age_grid = AGE_GRID[(AGE_GRID >= min_age) & (AGE_GRID <= max_age)]
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.8), sharex=True)
+    ax1, ax2 = axes
+
+    # --- Kurva rujukan WFA WHO ---
+    wfa_curves = {}
+    for sd in range(-3, 4):
+        x, y = generate_wfa_curve(sex_code, sd)
+        mask = (x >= min_age) & (x <= max_age)
+        wfa_curves[sd] = (x[mask], y[mask])
+
+    # --- Kurva rujukan HFA WHO ---
+    hfa_curves = {}
+    for sd in range(-3, 4):
+        x, y = generate_hfa_curve(sex_code, sd)
+        mask = (x >= min_age) & (x <= max_age)
+        hfa_curves[sd] = (x[mask], y[mask])
+
+    local_age_grid = plot_age_grid
+
+    # Zona WFA
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[-2][1], wfa_curves[-1][1],
+        "#FFEBEE", 0.55, "Sangat Kurus"
+    )
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[-1][1], wfa_curves[1][1],
+        "#E8F5E9", 0.35, "Normal"
+    )
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[1][1], wfa_curves[2][1],
+        "#FFF3CD", 0.35, "Risiko BB Lebih"
+    )
+
+    for sd, (x, y) in wfa_curves.items():
+        ax1.plot(
+            x, y,
+            linestyle="--" if abs(sd) == 2 else "-",
+            linewidth=1,
+            alpha=0.8,
+            label=f"BB z={sd}" if sd in (-2, 0, 2) else None,
+        )
+
+    # Zona HFA
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[-2][1], hfa_curves[-1][1],
+        "#FFEBEE", 0.55, "Sangat Pendek"
+    )
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[-1][1], hfa_curves[2][1],
+        "#E8F5E9", 0.45, "Normal"
+    )
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[2][1],  hfa_curves[3][1],
+        "#FFF3CD", 0.35, "Tinggi"
+    )
+
+    for sd, (x, y) in hfa_curves.items():
+        ax2.plot(
+            x, y,
+            linestyle="--" if abs(sd) == 2 else "-",
+            linewidth=1,
+            alpha=0.8,
+            label=f"TB z={sd}" if sd in (-2, 0, 2) else None,
+        )
+
+    # --- Trajectory anak: smoothing dengan cubic spline ---
+    try:
+        from scipy.interpolate import make_interp_spline
+
+        # Pilih derajat spline sesuai jumlah titik
+        if len(ages) >= 4:
+            k = 3
+        elif len(ages) == 3:
+            k = 2
+        else:
+            k = 1  # fallback hampir linear (mirip garis biasa)
+
+        age_smooth = np.linspace(float(ages.min()), float(ages.max()), 200)
+
+        w_spline = make_interp_spline(ages, weights, k=k)
+        w_smooth = w_spline(age_smooth)
+
+        h_spline = make_interp_spline(ages, heights, k=k)
+        h_smooth = h_spline(age_smooth)
+    except Exception:
+        # Kalau SciPy tidak tersedia atau ada error lain → pakai garis biasa
+        age_smooth = ages
+        w_smooth = weights
+        h_smooth = heights
+
+    primary = theme.get("primary", "#ff6b9d")
+
+    # BB vs usia: garis smooth + titik pengukuran
+    ax1.plot(
+        age_smooth, w_smooth,
+        color=primary,
+        linewidth=2.4,
+        label="Trajectory BB (smooth)",
+        zorder=10,
+    )
+    ax1.scatter(
+        ages, weights,
+        color="#111827",
+        s=28,
+        zorder=11,
+    )
+
+    # TB vs usia: garis smooth + titik pengukuran
+    ax2.plot(
+        age_smooth, h_smooth,
+        color=primary,
+        linewidth=2.4,
+        label="Trajectory TB (smooth)",
+        zorder=10,
+    )
+    ax2.scatter(
+        ages, heights,
+        color="#111827",
+        s=28,
+        zorder=11,
+    )
+
+    # Label & grid
+    ax1.set_title("Kejar Tumbuh BB vs Usia")
+    ax1.set_xlabel("Usia (bulan)")
+    ax1.set_ylabel("Berat Badan (kg)")
+    ax1.grid(True, which="both", linestyle=":", alpha=0.4)
+
+    ax2.set_title("Kejar Tumbuh TB vs Usia")
+    ax2.set_xlabel("Usia (bulan)")
+    ax2.set_ylabel("Tinggi/Panjang Badan (cm)")
+    ax2.grid(True, which="both", linestyle=":", alpha=0.4)
+
+    ax1.legend(fontsize=7, loc="upper left")
+    ax2.legend(fontsize=7, loc="upper left")
+
+    fig.suptitle(f"Trajectory Kejar Tumbuh — {gender}", fontsize=11, y=0.98)
+
+    # Simpan gambar ke OUTPUTS_DIR
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"kejar_tumbuh_{timestamp}.png"
+    filepath = os.path.join(OUTPUTS_DIR, filename)
+    os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.savefig(filepath, dpi=160)
+    cleanup_matplotlib_figures(fig)
+
+    return filepath
+
+
+def kalkulator_kejar_tumbuh_handler(data_list: List[Dict], gender: str) -> Tuple[str, Optional[str]]:
+    """
+    (BARU DITAMBAHKAN)
+    Handler utama untuk Kalkulator Kejar Tumbuh.
+    Menghasilkan HTML analisis dan path ke plot.
+    """
+    if not data_list or len(data_list) < 2:
+        html = "<p style='color: #e74c3c; padding: 20px;'>⚠️ Minimal 2 data pengukuran diperlukan untuk menghitung laju pertumbuhan dan membuat grafik.</p>"
+        return html, None
+    
+    try:
+        # 1. Hitung analisis velocity (HTML)
+        html_report = hitung_kejar_tumbuh(data_list)
+        
+        # 2. Buat plot trajectory (PNG)
+        plot_path = plot_kejar_tumbuh_trajectory(data_list, gender)
+        
+        return html_report, plot_path
+        
+    except Exception as e:
+        print(f"❌ Error in kalkulator_kejar_tumbuh_handler: {e}")
+        traceback.print_exc()
+        return f"<p style='color: #e74c3c; padding: 20px;'>Terjadi error saat analisis: {e}</p>", None
+
+print("✅ Section 10B-Extra loaded: Kejar Tumbuh functions defined")
 
 # Build Gradio Interface
 with gr.Blocks(
@@ -6214,7 +8154,7 @@ with gr.Blocks(
         primary_hue="pink",
         secondary_hue="teal",
         neutral_hue="slate",
-        # --- PERBAIKAN FONT (v3.2.5) ---
+        # --- PERBAIKAN DI BAWAH INI ---
         font=[gr.themes.GoogleFont("Inter"), "system-ui", "sans-serif"],
         font_mono=[gr.themes.GoogleFont("Fira Code"), "monospace"],
         # --- AKHIR PERBAIKAN ---
@@ -6224,17 +8164,18 @@ with gr.Blocks(
 ) as demo:
     
     # =======================================================================
-    # HEADER
+    # HEADER (MODIFIED FOR v3.2.2)
     # =======================================================================
     
     gr.Markdown(f"""
-    # 🏥 **{APP_TITLE} v{APP_VERSION}**
+    # 🏥 **{APP_TITLE} v3.2.2**
     ### 💕 Monitor Pertumbuhan Anak Profesional Berbasis WHO Standards
     
-    **Fitur Unggulan v3.2.5 (Revisi):**
+    **Fitur Unggulan v3.2.2 (Revisi):**
     - ✅ **Mode Mudah:** Referensi cepat rentang normal BB, TB, LK.
     - ✅ **Kalkulator Kejar Tumbuh:** Monitor laju pertumbuhan (velocity) anak Anda.
-    - ✅ **Perpustakaan Interaktif:** 40 artikel dengan UI modern, gambar, search & filter.
+    - ✅ **Perpustakaan Interaktif:** Fitur baru dengan 40 artikel, search, filter, dan UI profesional.
+    - ✅ Bug Fix & Peningkatan UI.
     - ✅ Standar WHO 2006 & Permenkes RI 2020.
     
     ---
@@ -6246,14 +8187,27 @@ with gr.Blocks(
     ---
     """)
     
-    # JavaScript for Browser Notifications
+    # JavaScript for Browser Notifications (from v3.1)
+    # DIGABUNG dengan JavaScript Perpustakaan Interaktif (v3.2.2)
+    
+    # JavaScript for Browser Notifications (from v3.1)
+    # DIGABUNG dengan JavaScript Perpustakaan Interaktif (v3.2.2)
+    
+    # Define notification_js
     notification_js = """
 <script>
+// Browser Notification System for AnthroHPK
 window.AnthroNotification = {
-    isSupported: function() { return ('Notification' in window); },
+    isSupported: function() {
+        return ('Notification' in window);
+    },
     requestPermission: async function() {
-        if (!this.isSupported()) return Promise.resolve(false);
-        if (Notification.permission === 'granted') return Promise.resolve(true);
+        if (!this.isSupported()) {
+            return Promise.resolve(false);
+        }
+        if (Notification.permission === 'granted') {
+            return Promise.resolve(true);
+        }
         if (Notification.permission !== 'denied') {
             const permission = await Notification.requestPermission();
             return permission === 'granted';
@@ -6261,38 +8215,56 @@ window.AnthroNotification = {
         return Promise.resolve(false);
     },
     send: function(title, options = {}) {
-        if (!this.isSupported() || Notification.permission !== 'granted') return null;
-        const defaultOptions = { icon: '/static/icon.png', badge: '/static/badge.png' };
+        if (!this.isSupported() || Notification.permission !== 'granted') {
+            return null;
+        }
+        const defaultOptions = {
+            icon: '/static/icon.png',
+            badge: '/static/badge.png',
+            requireInteraction: false,
+            silent: false
+        };
         const notificationOptions = { ...defaultOptions, ...options };
         try {
             return new Notification(title, notificationOptions);
-        } catch (error) { console.error('Notification error:', error); return null; }
+        } catch (error) {
+            console.error('Notification error:', error);
+            return null;
+        }
     },
     scheduleReminder: function(title, body, date) {
         const now = new Date();
         const scheduledTime = new Date(date);
         const delay = scheduledTime - now;
         if (delay > 0) {
-            setTimeout(() => { this.send(title, { body: body }); }, delay);
+            setTimeout(() => {
+                this.send(title, { body: body });
+            }, delay);
             return true;
         }
         return false;
     },
     getPermission: function() {
-        if (!this.isSupported()) return 'unsupported';
+        if (!this.isSupported()) {
+            return 'unsupported';
+        }
         return Notification.permission;
     }
 };
-document.addEventListener('DOMContentLoaded', () => console.log('AnthroNotification initialized'));
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('AnthroNotification initialized');
+});
 </script>
 """
-    gr.HTML(notification_js)
+    
+    combined_js = notification_js 
+    gr.HTML(combined_js)
     
     # State untuk menyimpan payload
     state_payload = gr.State({})
     
     # =======================================================================
-    # MAIN TABS
+    # MAIN TABS (MODIFIED FOR v3.2.2 - RE-ORDERED)
     # =======================================================================
     
     with gr.Tabs() as main_tabs:
@@ -6303,174 +8275,629 @@ document.addEventListener('DOMContentLoaded', () => console.log('AnthroNotificat
         
         with gr.TabItem("📊 Kalkulator Gizi WHO", id=0):
             gr.Markdown("## 🧮 Analisis Status Gizi Komprehensif")
+            
             with gr.Row():
+                # LEFT COLUMN: INPUTS
                 with gr.Column(scale=6):
                     gr.Markdown("### 📝 Data Anak")
+                    
                     with gr.Group():
-                        nama_anak = gr.Textbox(label="Nama Anak", placeholder="Contoh: Budi Santoso")
-                        nama_ortu = gr.Textbox(label="Nama Orang Tua/Wali", placeholder="Contoh: Ibu Siti Aminah")
-                        sex = gr.Radio(choices=["Laki-laki", "Perempuan"], label="Jenis Kelamin", value="Laki-laki")
+                        nama_anak = gr.Textbox(
+                            label="Nama Anak",
+                            placeholder="Contoh: Budi Santoso",
+                            info="Nama lengkap anak (opsional)"
+                        )
+                        
+                        nama_ortu = gr.Textbox(
+                            label="Nama Orang Tua/Wali",
+                            placeholder="Contoh: Ibu Siti Aminah",
+                            info="Opsional, untuk identifikasi laporan"
+                        )
+                        
+                        sex = gr.Radio(
+                            choices=["Laki-laki", "Perempuan"],
+                            label="Jenis Kelamin",
+                            value="Laki-laki",
+                            info="PENTING: Standar WHO berbeda untuk laki-laki dan perempuan"
+                        )
+                    
                     with gr.Group():
                         gr.Markdown("### 📅 Usia")
-                        age_mode = gr.Radio(choices=["Tanggal", "Usia (bulan)"], label="Cara Input Usia", value="Tanggal")
+                        
+                        age_mode = gr.Radio(
+                            choices=["Tanggal", "Usia (bulan)"],
+                            label="Cara Input Usia",
+                            value="Tanggal",
+                            info="Pilih metode input yang paling mudah"
+                        )
+                        
                         with gr.Column(visible=True) as date_inputs:
-                            dob = gr.Textbox(label="Tanggal Lahir", placeholder="YYYY-MM-DD atau DD/MM/YYYY")
-                            dom = gr.Textbox(label="Tanggal Pengukuran", value=datetime.now().strftime("%Y-%m-%d"))
+                            dob = gr.Textbox(
+                                label="Tanggal Lahir",
+                                placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                                info="Contoh: 2023-01-15 atau 15/01/2023"
+                            )
+                            
+                            dom = gr.Textbox(
+                                label="Tanggal Pengukuran",
+                                value=datetime.now().strftime("%Y-%m-%d"),
+                                info="Hari ini atau tanggal pengukuran aktual"
+                            )
+                        
                         with gr.Column(visible=False) as month_input:
-                            age_months = gr.Number(label="Usia (bulan)", value=6, minimum=0, maximum=60)
+                            age_months = gr.Number(
+                                label="Usia (bulan)",
+                                value=6,
+                                minimum=0,
+                                maximum=60,
+                                info="Masukkan usia dalam bulan (0-60)"
+                            )
+                    
                     with gr.Group():
                         gr.Markdown("### 📏 Pengukuran Antropometri")
-                        weight = gr.Number(label="Berat Badan (kg)", value=None, minimum=1, maximum=30)
-                        height = gr.Number(label="Panjang/Tinggi Badan (cm)", value=None, minimum=35, maximum=130)
-                        head_circ = gr.Number(label="Lingkar Kepala (cm) - Opsional", value=None, minimum=20, maximum=60)
+                        
+                        weight = gr.Number(
+                            label="Berat Badan (kg)",
+                            value=None,
+                            minimum=1,
+                            maximum=30,
+                            info="Gunakan timbangan digital (presisi 0.1 kg)"
+                        )
+                        
+                        height = gr.Number(
+                            label="Panjang/Tinggi Badan (cm)",
+                            value=None,
+                            minimum=35,
+                            maximum=130,
+                            info="Panjang badan (< 24 bln) atau Tinggi badan (≥ 24 bln)"
+                        )
+                        
+                        head_circ = gr.Number(
+                            label="Lingkar Kepala (cm) - Opsional",
+                            value=None,
+                            minimum=20,
+                            maximum=60,
+                            info="Ukur lingkar terbesar kepala dengan meteran fleksibel"
+                        )
+                    
                     with gr.Group():
                         gr.Markdown("### 🎨 Tema Grafik")
-                        theme_choice = gr.Radio(choices=["pink_pastel", "mint_pastel", "lavender_pastel"], value="pink_pastel", label="Pilih Tema")
-                    analyze_btn = gr.Button("🔬 Analisis Sekarang", variant="primary", size="lg", elem_classes=["big-button"])
+                        
+                        theme_choice = gr.Radio(
+                            choices=[
+                                "pink_pastel",
+                                "mint_pastel",
+                                "lavender_pastel"
+                            ],
+                            value="pink_pastel",
+                            label="Pilih Tema",
+                            info="Pilih warna grafik sesuai selera"
+                        )
+                    
+                    analyze_btn = gr.Button(
+                        "🔬 Analisis Sekarang",
+                        variant="primary",
+                        size="lg",
+                        elem_classes=["big-button"]
+                    )
                 
+                # RIGHT COLUMN: GUIDE
                 with gr.Column(scale=4):
                     gr.Markdown("### 💡 Panduan Pengukuran Akurat")
+                    
                     gr.HTML("""
-                    <div style='background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 25px; border-radius: 15px; border-left: 6px solid #4caf50;'>
-                        <h4 style='color: #1b5e20; margin-top: 0;'>📏 Tips Pengukuran Profesional</h4>
-                        <div style='margin: 20px 0;'><strong style='color: #2e7d32;'>⚖️ Berat Badan:</strong><ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'><li>Timbang pagi hari sebelum makan</li><li>Pakai timbangan digital (presisi 100g)</li><li>Anak tanpa sepatu & pakaian tebal</li></ul></div>
-                        <div style='margin: 20px 0;'><strong style='color: #2e7d32;'>📐 Panjang (0-24 bulan):</strong><ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'><li>Gunakan <strong>infantometer</strong></li><li>Bayi telentang, kepala menempel papan</li><li>Butuh 2 orang: 1 kepala, 1 kaki</li></ul></div>
-                        <div style='margin: 20px 0;'><strong style='color: #2e7d32;'>📏 Tinggi (>24 bulan):</strong><ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'><li>Gunakan <strong>stadiometer</strong></li><li>Anak berdiri tegak tanpa sepatu</li><li>Punggung menempel dinding</li></ul></div>
-                        <div style='background: #fff8e1; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #ffa000;'><strong style='color: #ff6f00;'>⚠️ Penting:</strong><p style='color: #e65100; margin: 8px 0 0 0;'>Akurasi pengukuran sangat menentukan hasil.</p></div>
+                    <div style='background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+                                padding: 25px; border-radius: 15px; 
+                                border-left: 6px solid #4caf50; 
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.1);'>
+                        
+                        <h4 style='color: #1b5e20; margin-top: 0; font-size: 18px;'>
+                            📏 Tips Pengukuran Profesional
+                        </h4>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>⚖️ Berat Badan:</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Timbang pagi hari sebelum makan</li>
+                                <li>Pakai timbangan digital (presisi 100g)</li>
+                                <li>Anak tanpa sepatu & pakaian tebal</li>
+                                <li>Bayi: timbangan bayi khusus</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>📐 Panjang (0-24 bulan):</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Gunakan <strong>infantometer</strong></li>
+                                <li>Bayi telentang, kepala menempel papan</li>
+                                <li>Butuh 2 orang: 1 kepala, 1 kaki</li>
+                                <li>Pastikan bayi rileks (tidak menangis)</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>📏 Tinggi (>24 bulan):</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Gunakan <strong>stadiometer</strong></li>
+                                <li>Anak berdiri tegak tanpa sepatu</li>
+                                <li>Punggung menempel dinding</li>
+                                <li>Pandangan lurus ke depan</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>⭕ Lingkar Kepala:</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Meteran <strong>fleksibel</strong> (non-stretch)</li>
+                                <li>Lingkar terbesar: atas alis & telinga</li>
+                                <li>Ulangi 3x, ambil rata-rata</li>
+                                <li>Penting untuk usia < 36 bulan</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='background: #fff8e1; padding: 15px; border-radius: 10px; 
+                                    margin-top: 20px; border-left: 4px solid #ffa000;'>
+                            <strong style='color: #ff6f00; font-size: 14px;'>⚠️ Penting:</strong>
+                            <p style='color: #e65100; margin: 8px 0 0 0; font-size: 13px;'>
+                                Kesalahan 0.5 cm pada tinggi = perbedaan Z-score signifikan!
+                                Akurasi pengukuran sangat menentukan hasil analisis.
+                            </p>
+                        </div>
                     </div>
                     """)
                     
+                    gr.Markdown("### 🎯 Interpretasi Z-Score")
+                    
+                    gr.HTML("""
+                    <table style='width: 100%; border-collapse: collapse; 
+                                  margin-top: 15px; background: white; 
+                                  border-radius: 12px; overflow: hidden; 
+                                  box-shadow: 0 3px 10px rgba(0,0,0,0.1);'>
+                        <thead>
+                            <tr style='background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%); 
+                                       color: white;'>
+                                <th style='padding: 15px; text-align: center; font-weight: 700;'>Z-Score</th>
+                                <th style='padding: 15px; font-weight: 700;'>Kategori</th>
+                                <th style='padding: 15px; text-align: center; font-weight: 700;'>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style='border-bottom: 1px solid #f0f0f0;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>&lt; -3</td>
+                                <td style='padding: 12px;'>Sangat Kurang/Gizi Buruk</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🔴</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fff5f5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>-3 to -2</td>
+                                <td style='padding: 12px;'>Kurang/Stunted/Wasted</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟠</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>-2 to +1</td>
+                                <td style='padding: 12px;'><strong>Normal/Baik</strong></td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟢</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fffef5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>+1 to +2</td>
+                                <td style='padding: 12px;'>Kemungkinan Risiko Lebih</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟡</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fff5f5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>+2 to +3</td>
+                                <td style='padding: 12px;'>Berisiko Gizi Lebih</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟠</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>&gt; +3</td>
+                                <td style='padding: 12px;'>Obesitas</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🔴</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    """)
+            
             gr.Markdown("---")
             gr.Markdown("## 📊 Hasil Analisis")
-            result_interpretation = gr.Markdown("*Hasil interpretasi akan tampil di sini...*", elem_classes=["status-success"])
+            
+            result_interpretation = gr.Markdown(
+                "*Hasil interpretasi akan tampil di sini setelah analisis...*",
+                elem_classes=["status-success"]
+            )
+            
             gr.Markdown("### 📈 Grafik Pertumbuhan")
+            
             with gr.Row():
                 plot_wfa = gr.Plot(label="Berat menurut Umur (BB/U)")
                 plot_hfa = gr.Plot(label="Tinggi menurut Umur (TB/U)")
+            
             with gr.Row():
                 plot_hcfa = gr.Plot(label="Lingkar Kepala (LK/U)")
                 plot_wfl = gr.Plot(label="Berat menurut Tinggi (BB/TB)")
+            
             plot_bars = gr.Plot(label="📊 Ringkasan Z-Score Semua Indeks")
+            
             gr.Markdown("### 💾 Export & Simpan Hasil")
+            
             with gr.Row():
                 pdf_btn = gr.Button("📄 Download PDF Lengkap", variant="primary", size="lg")
                 csv_btn = gr.Button("📊 Download CSV Data", variant="secondary", size="lg")
+            
             with gr.Row():
                 pdf_file = gr.File(label="PDF Report", visible=False)
                 csv_file = gr.File(label="CSV Data", visible=False)
             
-            age_mode.change(lambda mode: (gr.update(visible=(mode == "Tanggal")), gr.update(visible=(mode == "Usia (bulan)"))), inputs=[age_mode], outputs=[date_inputs, month_input])
-            analyze_btn.click(run_comprehensive_analysis, inputs=[nama_anak, nama_ortu, sex, age_mode, dob, dom, age_months, weight, height, head_circ, theme_choice], outputs=[result_interpretation, plot_wfa, plot_hfa, plot_hcfa, plot_wfl, plot_bars, pdf_file, csv_file, state_payload])
-            pdf_btn.click(lambda: gr.update(visible=True), outputs=[pdf_file])
-            csv_btn.click(lambda: gr.update(visible=True), outputs=[csv_file])
+            # Toggle age input visibility
+            def toggle_age_input(mode):
+                return (
+                    gr.update(visible=(mode == "Tanggal")),
+                    gr.update(visible=(mode == "Usia (bulan)"))
+                )
+            
+            age_mode.change(
+                toggle_age_input,
+                inputs=[age_mode],
+                outputs=[date_inputs, month_input]
+            )
+            
+            # Main analysis handler
+            analyze_btn.click(
+                run_comprehensive_analysis,
+                inputs=[
+                    nama_anak, nama_ortu, sex, age_mode,
+                    dob, dom, age_months,
+                    weight, height, head_circ,
+                    theme_choice
+                ],
+                outputs=[
+                    result_interpretation,
+                    plot_wfa, plot_hfa, plot_hcfa, plot_wfl, plot_bars,
+                    pdf_file, csv_file,
+                    state_payload
+                ]
+            )
+            
+            # PDF download (just update visibility)
+            pdf_btn.click(
+                lambda: gr.update(visible=True),
+                outputs=[pdf_file]
+            )
+            
+            # CSV download (just update visibility)
+            csv_btn.click(
+                lambda: gr.update(visible=True),
+                outputs=[csv_file]
+            )
         
         # ===================================================================
-        # TAB 2: MODE MUDAH
+        # TAB 2: MODE MUDAH (BARU v3.2)
         # ===================================================================
         
         with gr.TabItem("🎯 Mode Mudah", id=1):
-            gr.Markdown("### Mode Mudah - Referensi Cepat untuk Ibu")
+            gr.Markdown("""
+            ### Mode Mudah - Referensi Cepat untuk Ibu
+            
+            Tidak perlu menghitung z-score yang rumit! Cukup masukkan **usia** dan **jenis kelamin** anak, 
+            dan kami akan menampilkan **rentang normal** untuk berat badan, tinggi badan, dan lingkar kepala.
+            
+            Sangat cocok untuk:
+            - ✅ Screening cepat di rumah
+            - ✅ Evaluasi awal sebelum ke posyandu
+            - ✅ Memahami standar pertumbuhan dengan mudah
+            """)
+            
             with gr.Row():
                 with gr.Column(scale=1):
-                    mode_mudah_age = gr.Slider(minimum=0, maximum=60, step=1, value=12, label="Usia Anak (bulan)")
-                    mode_mudah_gender = gr.Radio(choices=["Laki-laki", "Perempuan"], value="Laki-laki", label="Jenis Kelamin")
-                    mode_mudah_btn = gr.Button("🔍 Lihat Rentang Normal", variant="primary", size="lg")
+                    mode_mudah_age = gr.Slider(
+                        minimum=0, maximum=60, step=1, value=12,
+                        label="Usia Anak (bulan)",
+                        info="Geser untuk memilih usia"
+                    )
+                    
+                    mode_mudah_gender = gr.Radio(
+                        choices=["Laki-laki", "Perempuan"],
+                        value="Laki-laki",
+                        label="Jenis Kelamin"
+                    )
+                    
+                    mode_mudah_btn = gr.Button(
+                        "🔍 Lihat Rentang Normal",
+                        variant="primary",
+                        size="lg"
+                    )
+                
                 with gr.Column(scale=2):
-                    mode_mudah_output = gr.HTML(label="Hasil Referensi Cepat", value="<p>...</p>")
-            mode_mudah_btn.click(fn=mode_mudah_handler, inputs=[mode_mudah_age, mode_mudah_gender], outputs=mode_mudah_output)
+                    mode_mudah_output = gr.HTML(
+                        label="Hasil Referensi Cepat",
+                        value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil akan tampil di sini...</p>"
+                    )
+            
+            # Connect handler
+            mode_mudah_btn.click(
+                fn=mode_mudah_handler,
+                inputs=[mode_mudah_age, mode_mudah_gender],
+                outputs=mode_mudah_output
+            )
 
         # ===================================================================
-        # TAB 3: CHECKLIST SEHAT BULANAN
+        # TAB 3: CHECKLIST SEHAT BULANAN (BUG FIX v3.2)
         # ===================================================================
         
         with gr.TabItem("📋 Checklist Sehat Bulanan", id=2):
-            gr.Markdown("## 🗓️ Panduan Checklist Bulanan (0-24 Bulan)")
+            gr.Markdown("""
+            ## 🗓️ Panduan Checklist Bulanan (0-24 Bulan)
+            
+            Dapatkan rekomendasi **perkembangan**, **gizi**, **imunisasi**, dan **KPSP** yang disesuaikan dengan usia dan status gizi anak.
+            
+            💡 **Cara Pakai:**
+            1. Lakukan analisis di tab "Kalkulator Gizi" terlebih dahulu
+            2. Pilih bulan checklist yang diinginkan
+            3. Lihat rekomendasi lengkap, KPSP, dan **Video Edukasi** yang relevan
+            """)
+            
             with gr.Row():
-                month_slider = gr.Slider(minimum=0, maximum=24, step=1, value=6, label="Pilih Bulan Checklist (0-24)")
-                generate_checklist_btn = gr.Button("📋 Generate Checklist", variant="primary", size="lg")
-            checklist_output = gr.HTML(value="<p>...</p>")
+                month_slider = gr.Slider(
+                    minimum=0,
+                    maximum=24,
+                    step=1,
+                    value=6,
+                    label="Pilih Bulan Checklist (0-24)",
+                    info="Geser untuk memilih bulan yang sesuai"
+                )
+                
+                generate_checklist_btn = gr.Button(
+                    "📋 Generate Checklist",
+                    variant="primary",
+                    size="lg"
+                )
+            
+            # --- BUG FIX (v3.2) ---
+            # Mengganti gr.Markdown menjadi gr.HTML untuk merender video card dengan benar
+            checklist_output = gr.HTML(
+                value="<p style='padding: 20px; text-align: center; color: #888;'>Pilih bulan dan klik tombol untuk melihat checklist...</p>"
+            )
             
             def generate_checklist_handler(month, payload):
-                if not payload: return "<h2> ⚠️ Data Belum Tersedia</h2><p>...</p>"
+                """Handler untuk generate checklist (UPDATED for v3.1)"""
+                if not payload:
+                    return """
+<h2> ⚠️ Data Belum Tersedia</h2>
+<p style='padding: 20px;'>
+Silakan lakukan analisis di tab <strong>Kalkulator Gizi</strong> terlebih dahulu untuk mendapatkan 
+checklist yang disesuaikan dengan status gizi anak.
+</p>
+"""
+                
                 try:
-                    return generate_checklist_with_videos(int(month), payload)
-                except Exception as e: return f"<h2> ❌ Error</h2><p>{str(e)}</p>"
+                    # Use the NEW function that includes videos
+                    recommendations_html = generate_checklist_with_videos(int(month), payload)
+                    return recommendations_html
+                except Exception as e:
+                    return f"<h2> ❌ Error</h2><p>Terjadi kesalahan: {str(e)}</p>"
             
-            generate_checklist_btn.click(generate_checklist_handler, inputs=[month_slider, state_payload], outputs=[checklist_output])
+            generate_checklist_btn.click(
+                generate_checklist_handler,
+                inputs=[month_slider, state_payload],
+                outputs=[checklist_output]
+            )
         
         # ===================================================================
-        # TAB 4: KALKULATOR TARGET KEJAR TUMBUH
+        # TAB 4: KALKULATOR TARGET KEJAR TUMBUH (BARU v3.2)
         # ===================================================================
         
         with gr.TabItem("📈 Kalkulator Target Kejar Tumbuh", id=3):
-            gr.Markdown("### Kalkulator Target Kejar Tumbuh (Growth Velocity)")
+            gr.Markdown("""
+            ### Kalkulator Target Kejar Tumbuh (Growth Velocity)
+            
+            Monitor **laju pertumbuhan** anak Anda dengan standar internasional WHO! 
+            Fitur ini membantu Anda:
+            
+            - 📈 Memantau **velocity pertumbuhan** (kenaikan BB & TB per bulan)
+            - 🎯 Mengetahui apakah anak **mengejar kurva** atau **melambat**
+            - 💡 Mendapat **rekomendasi nutrisi** berdasarkan trajectory pertumbuhan
+            
+            ---
+            
+            #### 📝 Cara Menggunakan:
+            
+            1.  Pilih **Jenis Kelamin** dan **Mode Input** (Tanggal atau Usia).
+            2.  Jika mode "Tanggal", isi **Tanggal Lahir** (cukup sekali).
+            3.  Isi formulir **"Input Data Pengukuran"** (Tanggal/Usia, BB, TB).
+            4.  Klik **"Tambah Data"**. Ulangi untuk setiap pengukuran (minimal 2 data).
+            5.  Data yang Anda tambahkan akan muncul di tabel **"Data Terinput"**.
+            6.  Jika salah, klik **"Hapus Data Terakhir"**.
+            7.  Setelah semua data terisi, klik **"Analisis Pertumbuhan"**.
+            """)
+            
+            # State untuk menyimpan list data
             kejar_tumbuh_data_state = gr.State([])
+            
             with gr.Row():
                 with gr.Column(scale=1):
                     gr.Markdown("#### 1. Informasi Dasar Anak")
-                    kejar_gender = gr.Radio(choices=["Laki-laki", "Perempuan"], value="Laki-laki", label="Jenis Kelamin Anak")
-                    kejar_tumbuh_mode = gr.Radio(choices=["Tanggal", "Usia (bulan)"], value="Tanggal", label="Mode Input Data")
-                    kejar_tumbuh_dob = gr.Textbox(label="Tanggal Lahir Anak (DOB)", placeholder="YYYY-MM-DD", visible=True)
+                    kejar_gender = gr.Radio(
+                        choices=["Laki-laki", "Perempuan"],
+                        value="Laki-laki",
+                        label="Jenis Kelamin Anak"
+                    )
+                    kejar_tumbuh_mode = gr.Radio(
+                        choices=["Tanggal", "Usia (bulan)"],
+                        value="Tanggal",
+                        label="Mode Input Data",
+                        info="Pilih cara Anda memasukkan data"
+                    )
+                    kejar_tumbuh_dob = gr.Textbox(
+                        label="Tanggal Lahir Anak (DOB)",
+                        placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                        info="Diperlukan jika mode 'Tanggal'",
+                        visible=True
+                    )
+                    
                     gr.Markdown("#### 2. Input Data Pengukuran")
                     with gr.Group():
-                        kejar_tumbuh_dom = gr.Textbox(label="Tanggal Pengukuran (DOM)", placeholder="YYYY-MM-DD", visible=True)
-                        kejar_tumbuh_usia = gr.Number(label="Usia (bulan)", visible=False)
-                        kejar_tumbuh_bb = gr.Number(label="Berat Badan (kg)")
-                        kejar_tumbuh_tb = gr.Number(label="Panjang/Tinggi Badan (cm)")
+                        kejar_tumbuh_dom = gr.Textbox(
+                            label="Tanggal Pengukuran (DOM)",
+                            placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                            info="Tanggal saat anak diukur",
+                            visible=True
+                        )
+                        kejar_tumbuh_usia = gr.Number(
+                            label="Usia (bulan)",
+                            info="Usia anak saat diukur",
+                            visible=False
+                        )
+                        kejar_tumbuh_bb = gr.Number(
+                            label="Berat Badan (kg)",
+                        )
+                        kejar_tumbuh_tb = gr.Number(
+                            label="Panjang/Tinggi Badan (cm)",
+                        )
+                    
                     with gr.Row():
                         tambah_data_btn = gr.Button("➕ Tambah Data", variant="secondary")
                         hapus_data_btn = gr.Button("🗑️ Hapus Data Terakhir")
+                    
                     gr.Markdown("#### 3. Analisis")
-                    kejar_btn = gr.Button("📊 Analisis Pertumbuhan", variant="primary", size="lg")
+                    kejar_btn = gr.Button(
+                        "📊 Analisis Pertumbuhan",
+                        variant="primary",
+                        size="lg"
+                    )
+
                 with gr.Column(scale=2):
                     gr.Markdown("#### Data Terinput")
-                    data_terinput_display = gr.HTML("<p>...</p>")
+                    data_terinput_display = gr.HTML(
+                        "<p style='text-align: center; color: #888; padding: 10px;'>Belum ada data yang ditambahkan.</p>"
+                    )
+                    
                     gr.Markdown("---")
                     gr.Markdown("#### Hasil Analisis")
-                    kejar_output_html = gr.HTML(label="Hasil Analisis Velocity", value="<p>...</p>")
-                    kejar_output_plot = gr.Image(label="Grafik Trajectory Pertumbuhan", type="filepath", visible=False)
+                    
+                    kejar_output_html = gr.HTML(
+                        label="Hasil Analisis Velocity",
+                        value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil analisis akan tampil di sini...</p>"
+                    )
+                    
+                    kejar_output_plot = gr.Image(
+                        label="Grafik Trajectory Pertumbuhan",
+                        type="filepath",
+                        visible=False
+                    )
+
+            # --- Handlers untuk UI Kejar Tumbuh ---
             
-            kejar_tumbuh_mode.change(fn=toggle_kejar_tumbuh_mode, inputs=[kejar_tumbuh_mode], outputs=[kejar_tumbuh_dob, kejar_tumbuh_dom, kejar_tumbuh_usia])
-            tambah_data_btn.click(fn=tambah_data_kejar_tumbuh, inputs=[kejar_tumbuh_data_state, kejar_tumbuh_mode, kejar_tumbuh_dob, kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb], outputs=[kejar_tumbuh_data_state, data_terinput_display, kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb])
-            hapus_data_btn.click(fn=hapus_data_terakhir, inputs=[kejar_tumbuh_data_state], outputs=[kejar_tumbuh_data_state, data_terinput_display])
+            # Toggle visibilitas input Tanggal vs Usia
+            def toggle_kejar_tumbuh_mode(mode):
+                is_tanggal_mode = (mode == "Tanggal")
+                return (
+                    gr.update(visible=is_tanggal_mode), # DOB
+                    gr.update(visible=is_tanggal_mode), # DOM
+                    gr.update(visible=not is_tanggal_mode) # Usia
+                )
             
+            kejar_tumbuh_mode.change(
+                fn=toggle_kejar_tumbuh_mode,
+                inputs=[kejar_tumbuh_mode],
+                outputs=[kejar_tumbuh_dob, kejar_tumbuh_dom, kejar_tumbuh_usia]
+            )
+            
+            # Handler Tombol "Tambah Data"
+            tambah_data_btn.click(
+                fn=tambah_data_kejar_tumbuh,
+                inputs=[
+                    kejar_tumbuh_data_state, kejar_tumbuh_mode, kejar_tumbuh_dob,
+                    kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
+                ],
+                outputs=[
+                    kejar_tumbuh_data_state, data_terinput_display,
+                    kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
+                ]
+            )
+            
+            # Handler Tombol "Hapus Data Terakhir"
+            hapus_data_btn.click(
+                fn=hapus_data_terakhir,
+                inputs=[kejar_tumbuh_data_state],
+                outputs=[kejar_tumbuh_data_state, data_terinput_display]
+            )
+            
+            # Handler Tombol "Analisis Pertumbuhan"
+            # Handler Tombol "Analisis Pertumbuhan"
             def kejar_tumbuh_wrapper_fixed(data_list, gender):
+                """
+                Wrapper baru untuk memanggil handler yang benar dan mengatur visibilitas plot.
+                """
+                # Ini memanggil fungsi baru yang Anda tambahkan di Langkah 2
                 html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender) 
-                if plot_path: return html, gr.update(value=plot_path, visible=True)
-                else: return html, gr.update(visible=False)
-            
-            kejar_btn.click(fn=kejar_tumbuh_wrapper_fixed, inputs=[kejar_tumbuh_data_state, kejar_gender], outputs=[kejar_output_html, kejar_output_plot])
+                
+                if plot_path:
+                    # Jika plot berhasil dibuat, kirim HTML dan buat plot terlihat
+                    return html, gr.update(value=plot_path, visible=True)
+                else:
+                    # Jika plot gagal (misal < 2 data), kirim HTML error dan sembunyikan plot
+                    return html, gr.update(visible=False)
+
+            kejar_btn.click(
+                fn=kejar_tumbuh_wrapper_fixed,  # <-- Pastikan menggunakan nama fungsi wrapper yang baru
+                inputs=[kejar_tumbuh_data_state, kejar_gender],
+                outputs=[kejar_output_html, kejar_output_plot]
+            )
             
         # ===================================================================
-        # TAB 5: PERPUSTAKAAN IBU BALITA (REVISI TOTAL v3.2.5)
+        # TAB 5: PERPUSTAKAAN IBU BALITA (REVISI TOTAL)
         # ===================================================================
        
-        with gr.TabItem("📚 Perpustakaan", id=4) as tab_perpustakaan:
-            gr.Markdown("## 📚 Perpustakaan Ibu Balita")
+        with gr.TabItem("📚 Perpustakaan", id=4) as tab_perpustakaan: # ID diubah ke 4
+            gr.Markdown("""
+            ## 📚 Perpustakaan Ibu Balita
+            Temukan 40+ artikel terkurasi mengenai nutrisi, tumbuh kembang, dan kesehatan anak.
+            Gunakan filter di bawah untuk mencari artikel yang Anda butuhkan.
+            """)
+            
             with gr.Row():
-                library_search = gr.Textbox(label="🔍 Cari Artikel", placeholder="Ketik kata kunci (misal: stunting, MPASI, demam)...")
-                library_category = gr.Dropdown(label="📁 Filter Kategori", choices=get_library_categories_list(), value="Semua Kategori")
+                # Filter 1: Pencarian
+                library_search = gr.Textbox(
+                    label="🔍 Cari Artikel",
+                    placeholder="Ketik kata kunci (misal: stunting, MPASI, demam)..."
+                )
+                
+                # Filter 2: Kategori
+                library_category = gr.Dropdown(
+                    label="📁 Filter Kategori",
+                    choices=get_library_categories_list(), # Memanggil fungsi baru dari Langkah 2
+                    value="Semua Kategori"
+                )
+            
+            # Tombol untuk memicu pencarian
             library_search_btn = gr.Button("Cari Artikel", variant="primary")
+            
             gr.Markdown("---")
             
-            # --- PERBAIKAN UI (v3.2.5) ---
-            # Gunakan gr.HTML biasa, BUKAN Markdown, dan TANPA 'sanitize_html=False'
+            # Area output untuk daftar artikel
+            # INI ADALAH PERBAIKAN DARI ERROR ANDA:
+            # Kita tidak bisa mengupdate 'children' dari 'gr.Column'
+            # Solusinya: Kita buat 'gr.Column' sebagai OUTPUT, dan fungsi Python
+            # akan mengembalikan 'gr.Column.update(...)'
+            
             library_output = gr.HTML(
-                value="<p style='text-align: center; color: #888; padding: 20px;'>Memuat artikel...</p>"
+                value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
+                sanitize_html=False # <-- TAMBAHKAN BARIS INI
             )
 
-            # Event Handlers
+            # --- Event Handlers untuk Tab Perpustakaan ---
+            
+            # 1. Memicu pencarian ketika tombol diklik
             library_search_btn.click(
-                fn=update_library_display,
+                fn=update_library_display, # Memanggil fungsi baru dari Langkah 2
                 inputs=[library_search, library_category],
                 outputs=[library_output]
             )
+            
+            # 2. (PENTING) Memuat semua artikel saat tab perpustakaan dipilih
             tab_perpustakaan.select(
-                fn=load_initial_articles,
+                fn=load_initial_articles, # Memanggil fungsi baru dari Langkah 2
                 inputs=None,
                 outputs=[library_output]
             )
-            # --- AKHIR PERBAIKAN UI ---
 
 
         # ===================================================================
@@ -6478,83 +8905,350 @@ document.addEventListener('DOMContentLoaded', () => console.log('AnthroNotificat
         # ===================================================================
         
         with gr.TabItem("⭐ Premium & Notifikasi", id=5):
-            gr.Markdown("## 🎁 Upgrade ke Premium")
+            gr.Markdown("""
+            ## 🎁 Upgrade ke Premium
+            
+            Nikmati fitur eksklusif untuk pemantauan pertumbuhan anak yang lebih optimal!
+            """)
+            
+            # PREMIUM PACKAGES
             with gr.Row():
+                # SILVER PACKAGE
                 with gr.Column():
-                    gr.HTML("""<div style='background: linear-gradient(135deg, #E8E8E8 0%, #F5F5F5 100%); padding: 30px; border-radius: 20px; border: 3px solid #C0C0C0; text-align: center;'>
-                        <h2 style='color: #555; margin-top: 0;'>🥈 Paket SILVER</h2>
-                        <div style='font-size: 48px; font-weight: bold; color: #333; margin: 20px 0;'>Rp 10.000</div>
-                        <div style='font-size: 14px; color: #666; margin-bottom: 20px;'>/bulan</div>
-                        <div style='text-align: left; background: white; padding: 20px; border-radius: 10px; margin: 20px 0;'>
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #E8E8E8 0%, #F5F5F5 100%); 
+                                padding: 30px; border-radius: 20px; 
+                                border: 3px solid #C0C0C0;
+                                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                                text-align: center;'>
+                        <h2 style='color: #555; margin-top: 0;'>
+                            🥈 Paket SILVER
+                        </h2>
+                        <div style='font-size: 48px; font-weight: bold; color: #333; margin: 20px 0;'>
+                            Rp 10.000
+                        </div>
+                        <div style='font-size: 14px; color: #666; margin-bottom: 20px;'>
+                            /bulan
+                        </div>
+                        <div style='text-align: left; background: white; padding: 20px; 
+                                    border-radius: 10px; margin: 20px 0;'>
                             <h4 style='color: #333; margin-top: 0;'>✨ Fitur Silver:</h4>
                             <ul style='list-style: none; padding: 0;'>
-                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>🚫 <strong>Bebas Iklan</strong></li>
-                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>📊 Semua fitur dasar</li>
-                                <li style='padding: 8px 0;'>💾 Export unlimited</li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🚫 <strong>Bebas Iklan</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    📊 Semua fitur dasar
+                                </li>
+                                <li style='padding: 8px 0;'>
+                                    💾 Export unlimited
+                                </li>
                             </ul>
                         </div>
-                    </div>""")
-                    silver_btn = gr.Button("💳 Upgrade ke Silver", variant="secondary", size="lg", elem_classes=["premium-silver", "big-button"])
+                    </div>
+                    """)
+                    
+                    silver_btn = gr.Button(
+                        "💳 Upgrade ke Silver",
+                        variant="secondary",
+                        size="lg",
+                        elem_classes=["premium-silver", "big-button"]
+                    )
+                
+                # GOLD PACKAGE (RECOMMENDED)
                 with gr.Column():
-                    gr.HTML("""<div style='background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); padding: 30px; border-radius: 20px; border: 3px solid #DAA520; box-shadow: 0 12px 30px rgba(255, 215, 0, 0.4); text-align: center; position: relative;'>
-                        <div style='position: absolute; top: -15px; right: 20px; background: #FF4444; color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 12px;'>🔥 REKOMENDASI</div>
-                        <h2 style='color: #000; margin-top: 0;'>🥇 Paket GOLD</h2>
-                        <div style='font-size: 48px; font-weight: bold; color: #000; margin: 20px 0;'>Rp 50.000</div>
-                        <div style='font-size: 14px; color: #333; margin-bottom: 20px;'>/bulan - Hemat 50%!</div>
-                        <div style='text-align: left; background: white; padding: 20px; border-radius: 10px; margin: 20px 0;'>
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
+                                padding: 30px; border-radius: 20px; 
+                                border: 3px solid #DAA520;
+                                box-shadow: 0 12px 30px rgba(255, 215, 0, 0.4);
+                                text-align: center;
+                                position: relative;'>
+                        <div style='position: absolute; top: -15px; right: 20px; 
+                                    background: #FF4444; color: white; 
+                                    padding: 8px 20px; border-radius: 20px;
+                                    font-weight: bold; font-size: 12px;'>
+                            🔥 REKOMENDASI
+                        </div>
+                        
+                        <h2 style='color: #000; margin-top: 0;'>
+                            🥇 Paket GOLD
+                        </h2>
+                        <div style='font-size: 48px; font-weight: bold; color: #000; margin: 20px 0;'>
+                            Rp 50.000
+                        </div>
+                        <div style='font-size: 14px; color: #333; margin-bottom: 20px;'>
+                            /bulan - Hemat 50%!
+                        </div>
+                        
+                        <div style='text-align: left; background: white; padding: 20px; 
+                                    border-radius: 10px; margin: 20px 0;'>
                             <h4 style='color: #333; margin-top: 0;'>⭐ Fitur Gold:</h4>
                             <ul style='list-style: none; padding: 0;'>
-                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>🚫 <strong>Bebas Iklan</strong></li>
-                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>🔔 <strong>Notifikasi Browser</strong></li>
-                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>💬 <strong>3x Konsultasi 30 menit</strong><br/><span style='font-size: 12px; color: #666;'>via WhatsApp dengan Ahli Gizi</span></li>
-                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>📊 Semua fitur dasar</li>
-                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>💾 Export unlimited</li>
-                                <li style='padding: 8px 0;'>⚡ Priority support</li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🚫 <strong>Bebas Iklan</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🔔 <strong>Notifikasi Browser Customizable</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    💬 <strong>3x Konsultasi 30 menit</strong><br/>
+                                    <span style='font-size: 12px; color: #666;'>
+                                    via WhatsApp dengan Ahli Gizi
+                                    </span>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    📊 Semua fitur dasar
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    💾 Export unlimited
+                                </li>
+                                <li style='padding: 8px 0;'>
+                                    ⚡ Priority support
+                                </li>
                             </ul>
                         </div>
-                    </div>""")
-                    gold_btn = gr.Button("👑 Upgrade ke Gold", variant="primary", size="lg", elem_classes=["premium-gold", "big-button"])
+                    </div>
+                    """)
+                    
+                    gold_btn = gr.Button(
+                        "👑 Upgrade ke Gold",
+                        variant="primary",
+                        size="lg",
+                        elem_classes=["premium-gold", "big-button"]
+                    )
             
             premium_status = gr.Markdown("", visible=False)
+            
             gr.Markdown("---")
             
-            gr.Markdown("## 🔔 Sistem Notifikasi Browser (Premium Gold)")
+            # NOTIFICATION SYSTEM (MODIFIED for v3.1 - HOUR slider)
+            gr.Markdown("""
+            ## 🔔 Sistem Notifikasi Browser (Premium Gold)
+            
+            Dapatkan pengingat otomatis untuk jadwal MPASI, imunisasi, atau pemeriksaan bulanan.
+            """)
+            
             with gr.Row():
                 with gr.Column(scale=6):
                     gr.Markdown("### 🔐 Aktifkan Notifikasi Browser")
-                    enable_notif_btn = gr.Button("🔔 Aktifkan Notifikasi", variant="primary", size="lg")
-                    notif_status = gr.HTML("<div id='notif-status' style='padding: 15px; background: #f0f0f0; border-radius: 10px; margin: 15px 0; text-align: center;'><p style='margin: 0; color: #666;'>ℹ️ Klik tombol di atas</p></div>")
+                    
+                    enable_notif_btn = gr.Button(
+                        "🔔 Aktifkan Notifikasi",
+                        variant="primary",
+                        size="lg"
+                    )
+                    
+                    notif_status = gr.HTML("""
+                    <div id='notif-status' style='padding: 15px; background: #f0f0f0; 
+                                                   border-radius: 10px; margin: 15px 0;
+                                                   text-align: center;'>
+                        <p style='margin: 0; color: #666;'>
+                            ℹ️ Klik tombol di atas untuk mengaktifkan notifikasi browser
+                        </p>
+                    </div>
+                    """)
+                    
                     gr.Markdown("### ⏰ Atur Reminder Custom")
+                    
                     with gr.Group():
-                        reminder_title = gr.Textbox(label="Judul Reminder", value="Reminder Gizi SiKecil")
-                        reminder_message = gr.Textbox(label="Pesan Reminder", placeholder="Contoh: Waktunya beri makan bubur bayi", lines=2)
-                        reminder_delay = gr.Slider(minimum=0.5, maximum=24, value=3, step=0.5, label="Delay (jam) ⏰")
-                        schedule_btn = gr.Button("⏰ Jadwalkan Reminder", variant="secondary", size="lg")
+                        reminder_title = gr.Textbox(
+                            label="Judul Reminder",
+                            placeholder="Contoh: Beri makan Si Kecil",
+                            value="Reminder Gizi SiKecil"
+                        )
+                        
+                        reminder_message = gr.Textbox(
+                            label="Pesan Reminder",
+                            placeholder="Contoh: Waktunya beri makan bubur bayi",
+                            lines=2
+                        )
+                        
+                        # --- MODIFIED SLIDER (v3.1) ---
+                        reminder_delay = gr.Slider(
+                            minimum=0.5,  # 30 menit minimum
+                            maximum=24,   # 24 jam maximum
+                            value=3,      # default 3 jam
+                            step=0.5,
+                            label="Delay (jam) ⏰",
+                            info="Notifikasi akan muncul setelah X jam"
+                        )
+                        # --- END MODIFIED SLIDER ---
+                        
+                        schedule_btn = gr.Button(
+                            "⏰ Jadwalkan Reminder",
+                            variant="secondary",
+                            size="lg"
+                        )
+                    
                     reminder_status = gr.Markdown("", visible=False)
+                
                 with gr.Column(scale=4):
                     gr.Markdown("### 💡 Panduan Notifikasi")
-                    gr.HTML("""<div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 15px; color: white; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);'>
-                        <h4 style='color: white; margin-top: 0;'>📱 Cara Mengaktifkan:</h4>
+                    
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                padding: 25px; border-radius: 15px; color: white;
+                                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);'>
+                        
+                        <h4 style='color: white; margin-top: 0;'>
+                            📱 Cara Mengaktifkan:
+                        </h4>
+                        
                         <ol style='margin: 15px 0; padding-left: 25px; line-height: 1.8;'>
                             <li>Klik tombol "Aktifkan Notifikasi"</li>
                             <li>Browser akan minta izin - klik <strong>Allow/Izinkan</strong></li>
                             <li>Setelah aktif, Anda bisa atur reminder custom</li>
+                            <li>Notifikasi akan muncul otomatis sesuai jadwal</li>
                         </ol>
-                        <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin-top: 20px;'>
+                        
+                        <div style='background: rgba(255,255,255,0.2); padding: 15px; 
+                                    border-radius: 10px; margin-top: 20px;'>
                             <strong>⚠️ Penting:</strong>
                             <ul style='margin: 10px 0; padding-left: 20px; font-size: 13px;'>
-                                <li>Browser harus support notifikasi</li>
-                                <li>Jangan tutup tab browser</li>
-                                <li>Pastikan notifikasi tidak di-block</li>
+                                <li>Browser harus support notifikasi (Chrome, Firefox, Edge)</li>
+                                <li>Jangan tutup tab browser jika ingin menerima notifikasi</li>
+                                <li>Pastikan notifikasi tidak di-block di pengaturan browser</li>
                             </ul>
                         </div>
-                    </div>""")
+                    </div>
+                    """)
                     
+                    gr.Markdown("### 🎁 Template Reminder")
+                    
+                    template_choice = gr.Dropdown(
+                        choices=[
+                            "Pemeriksaan Bulanan", "Jadwal Imunisasi",
+                            "Milestone Perkembangan", "Reminder Nutrisi", "Custom"
+                        ],
+                        value="Custom", label="Pilih Template", info="Pilih template untuk quick setup"
+                    )
+                    
+                    use_template_btn = gr.Button( "📋 Gunakan Template", variant="secondary")
+            
+            # JavaScript Handlers for Notifications
+            enable_notif_js = """
+            <script>
+            function enableNotifications() {
+                window.AnthroNotification.requestPermission().then(granted => {
+                    const statusDiv = document.getElementById('notif-status');
+                    if (granted) {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>✅ Notifikasi Berhasil Diaktifkan!</strong><br/>
+                                <span style='font-size: 13px;'>Anda akan menerima reminder sesuai jadwal</span>
+                            </div>
+                        `;
+                        setTimeout(() => {
+                            window.AnthroNotification.send(
+                                '🎉 Selamat!',
+                                'Notifikasi browser berhasil diaktifkan. Anda akan menerima reminder untuk tumbuh kembang anak.',
+                                '🔔'
+                            );
+                        }, 1000);
+                        return 'Notifikasi diaktifkan!';
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: #ff6b6b; 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>❌ Notifikasi Ditolak</strong><br/>
+                                <span style='font-size: 13px;'>
+                                    Mohon izinkan notifikasi di pengaturan browser Anda
+                                </span>
+                            </div>
+                        `;
+                        return 'Notifikasi ditolak.';
+                    }
+                });
+                return 'Memproses...';
+            }
+            </script>
+            """
             gr.HTML(enable_notif_js)
+            
+            # Event Handlers
+            def handle_enable_notification():
+                return gr.HTML.update(value="""
+                <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                           border-radius: 10px; color: white; text-align: center; margin: 15px 0;'>
+                    <strong>✅ Notifikasi Browser Diaktifkan!</strong><br/>
+                    <span style='font-size: 13px;'>Browser notification sudah aktif.</span>
+                </div>
+                <script>enableNotifications();</script>
+                """)
+            
+            def handle_schedule_reminder_hours(title, message, delay_hours):
+                if not title or not message:
+                    return "❌ Judul dan pesan tidak boleh kosong!"
+                delay_minutes = int(delay_hours * 60)
+                js_code = f"""
+                <script>
+                window.AnthroNotification.schedule('{title}', '{message}', {delay_minutes}, '⏰');
+                alert('✅ Reminder dijadwalkan! Akan muncul dalam {delay_hours} jam.');
+                </script>
+                """
+                return (f"✅ **Reminder Dijadwalkan!**\n\n**Judul:** {title}\n\n**Pesan:** {message}\n\n"
+                        f"**Waktu:** {delay_hours} jam dari sekarang\n\n" + js_code)
+            
+            def handle_use_template(template):
+                templates = {
+                    "Pemeriksaan Bulanan": ("🩺 Pemeriksaan Bulanan", "Sudah saatnya pemeriksaan bulanan! Ukur berat, tinggi, dan lingkar kepala anak.", 8),
+                    "Jadwal Imunisasi": ("💉 Jadwal Imunisasi", "Jangan lupa jadwal imunisasi hari ini! Cek jadwal lengkap di aplikasi.", 1),
+                    "Milestone Perkembangan": ("🎯 Cek Milestone", "Waktunya cek milestone perkembangan anak. Lihat checklist KPSP.", 12),
+                    "Reminder Nutrisi": ("🍽️ Waktu Makan", "Saatnya memberi makan anak. Pastikan menu 4 bintang!", 3)
+                }
+                if template in templates:
+                    title, message, delay = templates[template]
+                    return title, message, delay
+                return "", "", 3
+            
+            def handle_premium_upgrade(package):
+                pkg_info = PREMIUM_PACKAGES.get(package, {})
+                price = pkg_info.get('price', 0)
+                price_formatted = f"Rp {price:,}".replace(',', '.')
+                wa_message = f"Halo PeduliGiziBalita, saya ingin upgrade ke paket {package.upper()} ({price_formatted}/bulan)" # MODIFIED
+                wa_link = f"httpska://wa.me/{CONTACT_WA}?text={wa_message.replace(' ', '%20')}"
+                return gr.Markdown.update(
+                    value=f"""
+## 🎉 Terima kasih telah memilih paket {package.upper()}!
+**Harga:** {price_formatted}/bulan
+**Langkah selanjutnya:**
+1. Klik tombol WhatsApp di bawah
+2. Konfirmasi pembelian dengan admin
+3. Lakukan pembayaran
+4. Akun premium akan diaktifkan dalam 5 menit
+<div style='text-align: center; margin: 30px 0;'>
+    <a href='{wa_link}' target='_blank'
+       style='display: inline-block; padding: 20px 40px; 
+              background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+              color: white; text-decoration: none; border-radius: 15px;
+              font-size: 18px; font-weight: bold;
+              box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);'>
+        💬 Hubungi Admin via WhatsApp
+    </a>
+</div>
+**Metode Pembayaran:** Transfer Bank (BCA, Mandiri, BRI), E-Wallet (GoPay, OVO, DANA), QRIS
+""", visible=True)
+            
+            # Connect event handlers
             enable_notif_btn.click(fn=handle_enable_notification, outputs=[notif_status])
-            schedule_btn.click(fn=handle_schedule_reminder_hours, inputs=[reminder_title, reminder_message, reminder_delay], outputs=[reminder_status]).then(lambda: gr.update(visible=True), outputs=[reminder_status])
-            silver_btn.click(fn=lambda: handle_premium_upgrade("silver"), outputs=[premium_status]).then(lambda: gr.update(visible=True), outputs=[premium_status])
-            gold_btn.click(fn=lambda: handle_premium_upgrade("gold"), outputs=[premium_status]).then(lambda: gr.update(visible=True), outputs=[premium_status])
+            schedule_btn.click(
+                fn=handle_schedule_reminder_hours,
+                inputs=[reminder_title, reminder_message, reminder_delay],
+                outputs=[reminder_status]
+            ).then(lambda: gr.update(visible=True), outputs=[reminder_status])
+            use_template_btn.click(
+                fn=handle_use_template,
+                inputs=[template_choice],
+                outputs=[reminder_title, reminder_message, reminder_delay]
+            )
+            silver_btn.click(
+                fn=lambda: handle_premium_upgrade("silver"), outputs=[premium_status]
+            ).then(lambda: gr.update(visible=True), outputs=[premium_status])
+            gold_btn.click(
+                fn=lambda: handle_premium_upgrade("gold"), outputs=[premium_status]
+            ).then(lambda: gr.update(visible=True), outputs=[premium_status])
 
         # ===================================================================
         # TAB 7: TENTANG & BANTUAN
@@ -6563,30 +9257,71 @@ document.addEventListener('DOMContentLoaded', () => console.log('AnthroNotificat
         with gr.TabItem("ℹ️ Tentang & Bantuan", id=6):
             gr.Markdown(f"""
             ## 🏥 Tentang {APP_TITLE}
-            **Versi:** {APP_VERSION}
-            <p>{APP_DESCRIPTION}</p>
-            <p>Dikembangkan oleh <strong>Habib Arsy</strong> (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)</p>
+            
+            **{APP_TITLE}** adalah aplikasi pemantauan 
+            pertumbuhan anak berbasis standar WHO Child Growth Standards 2006 dan 
+            Permenkes RI No. 2 Tahun 2020.
+            
+            ### ✨ Fitur Utama (v3.2.2)
+            
+            1. **📊 Kalkulator Z-Score WHO**
+               - 5 indeks antropometri: WAZ, HAZ, WHZ, BAZ, HCZ
+               - Klasifikasi ganda: Permenkes & WHO
+            
+            2. **📈 Grafik Pertumbuhan Interaktif**
+               - Kurva WHO standar dengan zona warna
+               - Plot data anak dengan interpretasi visual
+            
+            3. **💾 Export Profesional**
+               - PDF laporan lengkap dengan QR code & CSV data
+            
+            4. **📋 Checklist Bulanan**
+               - Milestone perkembangan, KPSP, Gizi, Imunisasi
+               - Integrasi video edukasi
+            
+            5. **🎯 Fitur Baru (v3.2.2)**
+               - **Mode Mudah:** Referensi cepat rentang normal
+               - **Kalkulator Kejar Tumbuh:** Monitor laju/velocity pertumbuhan
+               - **Perpustakaan Interaktif:** 40 artikel dengan search & filter
             
             ### 📚 Referensi Ilmiah
+            
             - **WHO Child Growth Standards 2006**
             - **Permenkes RI No. 2 Tahun 2020**
             - **Rekomendasi Ikatan Dokter Anak Indonesia (IDAI)**
             
             ### ⚠️ Disclaimer
-            Aplikasi ini adalah <strong>alat skrining awal</strong>, BUKAN pengganti diagnosis medis.
-            Selalu konsultasikan hasil dengan dokter atau tenaga kesehatan profesional.
+            
+            Aplikasi ini adalah **alat skrining awal**, BUKAN pengganti konsultasi medis.
+            Hasil analisis harus dikonsultasikan dengan dokter spesialis anak, ahli gizi, atau tenaga kesehatan terlatih.
             
             ### 📱 Kontak & Dukungan
+            
             **WhatsApp:** [+{CONTACT_WA}](https://wa.me/{CONTACT_WA})  
-            **Website:** {BASE_URL}
+            **Website:** {BASE_URL}  
+            **Versi:** {APP_VERSION}
+            
+            ### 👨‍💻 Developer
+            
+            Dikembangkan oleh **Habib Arsy** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
             
             ---
+            
             © 2024-2025 {APP_TITLE}. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
             """)
+
+# === REVISI: PERBAIKAN LOGIKA INISIALISASI TAB ===
+    # (Handler perpustakaan (id=4) telah dipindahkan ke dalam
+    # definisi TabItem-nya sendiri menggunakan tab_perpustakaan.select()
+    # untuk logika yang lebih bersih dan terisolasi)
     
-# Footer
+# === AKHIR BLOK REVISI ===
+
+    
+# Footer (MODIFIED)
     gr.Markdown(f"""
     ---
+    
     <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
     border-top: 2px solid #ffdde5;'>
         <p style='margin: 0; color: #555; font-size: 14px;'>
@@ -6596,9 +9331,9 @@ document.addEventListener('DOMContentLoaded', () => console.log('AnthroNotificat
             Bukan pengganti konsultasi medis. Selalu konfirmasi dengan tenaga kesehatan.
         </p>
     </div>
-    """)
+    """) # <-- INI ADALAH PENUTUP YANG HILANG
 
-print("✅ Section 11 (Gradio UI) dimodifikasi: Perpustakaan Interaktif v3.2.5 terintegrasi.")
+print("✅ Section 11 (Gradio UI) dimodifikasi: Perpustakaan Interaktif v3.2.2 terintegrasi.")
 
 
 
@@ -6637,29 +9372,44 @@ def _filter_library_items_for_api(
 
     results: List[Dict[str, Any]] = []
 
-    # --- PERBAIKAN: Gunakan 40 artikel pertama ---
-    for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE[:40]):
+    for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE):
         title = str(art.get("title", ""))
         summary = str(art.get("summary", ""))
         full_content = str(art.get("full_content", ""))
         art_kategori = str(art.get("kategori", ""))
         art_source_raw = str(art.get("source", ""))
 
-        if kategori and art_kategori != kategori: continue
+        # Filter kategori (jika diminta)
+        if kategori and art_kategori != kategori:
+            continue
+
+        # Filter sumber (jika diminta)
         if sumber:
-            sources = [s.strip() for s in art_source_raw.split("|") if s.strip()]
-            if sumber not in sources: continue
+            sources = [
+                s.strip()
+                for s in art_source_raw.split("|")
+                if s.strip()
+            ]
+            if sumber not in sources:
+                continue
+
+        # Filter keyword (judul / summary / full)
         if q:
             combined = " ".join([title, summary, full_content]).lower()
-            if q not in combined: continue
+            if q not in combined:
+                continue
 
-        results.append({
+        # Untuk API list, kita tidak kirim full_content (biar ringkas)
+        results.append(
+            {
                 "id": idx,
                 "title": title,
                 "kategori": art_kategori,
                 "source": art_source_raw,
                 "summary": summary,
-            })
+            }
+        )
+
     return results
 
 
@@ -6693,7 +9443,7 @@ async def health_check():
     """API health check endpoint"""
     return {
         "status": "healthy",
-        "version": "3.2.5", # MODIFIED
+        "version": "3.2.2", # MODIFIED
         "timestamp": datetime.now().isoformat(),
         "calculator_status": "operational" if calc else "unavailable",
         "features": {
@@ -6706,8 +9456,13 @@ async def health_check():
             "video_integration": True,
             "mode_mudah": True, 
             "growth_velocity": True, 
-            "interactive_library_v3_2_5": True, # MODIFIED
+            "interactive_library_v3_2_2": True, # MODIFIED
         },
+        "endpoints": {
+            "main_app": "/",
+            "api_docs": "/api/docs",
+            "health": "/health",
+        }
     }
 
 # -------------------------------------------------------------------
@@ -6743,10 +9498,13 @@ async def library_meta():
         kategori_unik = sorted(set(kategori_list))
         sumber_unik = sorted(set(sumber_list))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gagal membaca metadata: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Gagal membaca metadata perpustakaan: {e}",
+        )
 
     return {
-        "jumlah_artikel": len(ARTIKEL_LOKAL_DATABASE[:40]), # Perbaikan: hitung 40
+        "jumlah_artikel": len(ARTIKEL_LOKAL_DATABASE),
         "kategori": kategori_unik,
         "sumber": sumber_unik,
     }
@@ -6754,29 +9512,48 @@ async def library_meta():
 
 @app_fastapi.get("/api/library")
 async def library_list(
-    q: str = Query("", alias="q", description="Kata kunci bebas"),
-    kategori: str = Query("", alias="kategori", description="Filter kategori"),
-    sumber: str = Query("", alias="sumber", description="Filter sumber"),
+    q: str = Query("", alias="q", description="Kata kunci bebas (judul, ringkasan, isi)"),
+    kategori: str = Query("", alias="kategori", description="Filter kategori (opsional)"),
+    sumber: str = Query("", alias="sumber", description="Filter sumber (opsional, persis teks sumber)"),
 ):
     """
-    Mengembalikan daftar artikel Perpustakaan Ibu Balita (JSON).
+    Mengembalikan daftar artikel Perpustakaan Ibu Balita dalam bentuk JSON.
+
+    Contoh:
+      - /api/library             -> semua artikel
+      - /api/library?q=stunting  -> semua artikel yang mengandung kata 'stunting'
+      - /api/library?kategori=Gizi
+      - /api/library?sumber=Kemenkes RI
     """
     try:
         items = _filter_library_items_for_api(q=q, kategori=kategori, sumber=sumber)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Gagal memproses filter: {e}")
-    return {"count": len(items), "items": items}
+        raise HTTPException(
+            status_code=500,
+            detail=f"Gagal memproses filter perpustakaan: {e}",
+        )
+
+    return {
+        "count": len(items),
+        "items": items,
+    }
 
 
 @app_fastapi.get("/api/library/{item_id}")
 async def library_detail(item_id: int):
     """
-Ambil detail satu artikel perpustakaan berdasarkan index (0-based).
+    Ambil detail satu artikel perpustakaan berdasarkan index (0-based).
+
+    Catatan:
+    - `item_id` di sini sama dengan index yang dipakai di front-end (kartu).
     """
     try:
         art = ARTIKEL_LOKAL_DATABASE[item_id]
     except (IndexError, TypeError):
-        raise HTTPException(status_code=404, detail="Artikel tidak ditemukan")
+        raise HTTPException(
+            status_code=404,
+            detail="Artikel perpustakaan tidak ditemukan",
+        )
 
     return {
         "id": item_id,
@@ -6785,7 +9562,6 @@ Ambil detail satu artikel perpustakaan berdasarkan index (0-based).
         "source": art.get("source", ""),
         "summary": art.get("summary", ""),
         "full_content": art.get("full_content", ""),
-        "image_url": art.get("image_url", "") # Tambahkan image_url ke API
     }
 
 # -------------------------------------------------------------------
@@ -6796,20 +9572,43 @@ Ambil detail satu artikel perpustakaan berdasarkan index (0-based).
 async def kejar_tumbuh_analyze(payload: KejarTumbuhRequest):
     """
     Analisis Kejar Tumbuh via API.
+    
+    Body (JSON) contoh:
+    {
+      "gender": "Laki-laki",
+      "theme": "pink_pastel",
+      "data": [
+        {"usia_bulan": 6.0, "bb": 7.2, "tb": 66.0},
+        {"usia_bulan": 9.0, "bb": 7.8, "tb": 70.0}
+      ]
+    }
     """
-    data_list = [p.dict() for p in payload.data]
+    # Konversi Pydantic → list dict seperti yang digunakan kalkulator
+    data_list = [
+        {
+            "usia_bulan": float(p.usia_bulan),
+            "bb": float(p.bb),
+            "tb": float(p.tb),
+        }
+        for p in payload.data
+    ]
+
     if len(data_list) < 2:
-        raise HTTPException(status_code=400, detail="Minimal 2 pengukuran diperlukan.")
+        raise HTTPException(
+            status_code=400,
+            detail="Minimal diperlukan 2 pengukuran untuk analisis Kejar Tumbuh."
+        )
 
     gender = payload.gender
+    # Handler UI sudah menggunakan gender dalam bahasa Indonesia ("Laki-laki"/"Perempuan")
     html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender)
 
     return {
         "gender": gender,
         "theme": payload.theme or "pink_pastel",
         "poin_pengukuran": len(data_list),
-        "html_report": html,
-        "plot_relative_path": plot_path,
+        "html": html,
+        "plot_path": plot_path,  # path relatif di server (jika ingin diakses via /outputs)
     }
 
 
@@ -6817,20 +9616,44 @@ async def kejar_tumbuh_analyze(payload: KejarTumbuhRequest):
 async def kejar_tumbuh_plot(payload: KejarTumbuhRequest):
     """
     Menghasilkan file PNG grafik Kejar Tumbuh via API.
+
+    Menggunakan fungsi plot_kejar_tumbuh_trajectory() yang sudah ada
+    (versi CURVE SMOOTH yang kamu pasang di Part 1).
     """
-    data_list = [p.dict() for p in payload.data]
+    data_list = [
+        {
+            "usia_bulan": float(p.usia_bulan),
+            "bb": float(p.bb),
+            "tb": float(p.tb),
+        }
+        for p in payload.data
+    ]
+
     if len(data_list) < 2:
-        raise HTTPException(status_code=400, detail="Minimal 2 pengukuran diperlukan.")
+        raise HTTPException(
+            status_code=400,
+            detail="Minimal diperlukan 2 pengukuran untuk membuat grafik Kejar Tumbuh."
+        )
 
     gender = payload.gender
     theme = payload.theme or "pink_pastel"
+
+    # Memakai fungsi plot yang sudah ada (tidak mengubah logic internal)
     plot_path = plot_kejar_tumbuh_trajectory(data_list, gender, theme_name=theme)
 
     if not plot_path or not os.path.exists(plot_path):
-        raise HTTPException(status_code=500, detail="Gagal menghasilkan grafik.")
+        raise HTTPException(
+            status_code=500,
+            detail="Gagal menghasilkan grafik Kejar Tumbuh."
+        )
 
     filename = os.path.basename(plot_path)
-    return FileResponse(plot_path, media_type="image/png", filename=filename)
+
+    return FileResponse(
+        plot_path,
+        media_type="image/png",
+        filename=filename,
+    )
 
 
 # API info endpoint
@@ -6839,24 +9662,29 @@ async def api_info():
     """Get API information"""
     return {
         "app_name": APP_TITLE,
-        "version": "3.2.5", # MODIFIED
+        "version": "3.2.2", # MODIFIED
         "description": APP_DESCRIPTION,
         "author": "Habib Arsy - FKIK Universitas Jambi",
         "contact": f"+{CONTACT_WA}",
         "base_url": BASE_URL,
-        "standards": { "who": "WHO-CGS 2006", "permenkes": "No. 2/2020" },
+        "standards": {
+            "who": "Child Growth Standards 2006",
+            "permenkes": "No. 2 Tahun 2020"
+        },
         "supported_indices": ["WAZ", "HAZ", "WHZ", "BAZ", "HCZ"],
         "age_range": "0-60 months",
         "features": [
             "WHO z-score calculation",
             "Permenkes 2020 classification",
             "Growth charts visualization",
-            "PDF/CSV export",
+            "PDF report export",
+            "CSV data export",
             "KPSP screening",
             "Monthly checklist recommendations",
-            "Mode Mudah",
-            "Kalkulator Kejar Tumbuh",
-            "Perpustakaan Artikel Interaktif (v3.2.5)" # MODIFIED
+            "YouTube Video Integration",
+            "Mode Mudah (v3.2)",
+            "Kalkulator Kejar Tumbuh (v3.2)",
+            "Perpustakaan Artikel Interaktif (v3.2.2)" # MODIFIED
         ]
     }
 
@@ -6866,13 +9694,13 @@ async def api_root():
     """API root endpoint"""
     return {
         "message": f"Selamat datang di {APP_TITLE} API",
-        "version": "3.2.5", # MODIFIED
+        "version": "3.2.2", # MODIFIED
         "docs": "/api/docs",
         "health": "/health",
         "main_app": "/"
     }
 
-print("✅ Section 12 (FastAPI) dimodifikasi: API info v3.2.5 terkonfigurasi.")
+print("✅ Section 12 (FastAPI) dimodifikasi: API info v3.2.2 terkonfigurasi.")
 
 
 # ===============================================================================
@@ -6894,7 +9722,7 @@ except Exception as e:
 # Print startup banner (MODIFIED)
 print("")
 print("=" * 80)
-print(f"🚀 {APP_TITLE} v3.2.5 - READY FOR DEPLOYMENT".center(80))
+print(f"🚀 {APP_TITLE} v3.2.2 - READY FOR DEPLOYMENT".center(80))
 print("=" * 80)
 print(f"📊 WHO Calculator: {'✅ Operational' if calc else '❌ Unavailable'}")
 print(f"🌐 Base URL: {BASE_URL}")
@@ -6902,7 +9730,7 @@ print(f"📱 Contact: +{CONTACT_WA}")
 print(f"🎨 Themes: {len(UI_THEMES)} available")
 print(f"💉 Immunization: {len(IMMUNIZATION_SCHEDULE)} schedules")
 print(f"🧠 KPSP: {len(KPSP_QUESTIONS)} question sets")
-print(f"📚 Perpustakaan Ibu Balita: {len(ARTIKEL_LOKAL_DATABASE[:40])} artikel lokal")  # MODIFIED
+print(f"📚 Perpustakaan Ibu Balita: {len(ARTIKEL_LOKAL_DATABASE)} artikel lokal")  # MODIFIED
 print(f"🎥 Videos: {len(KPSP_YOUTUBE_VIDEOS) + sum(len(v) for v in MPASI_YOUTUBE_VIDEOS.values())} video links (v3.1)")
 print("=" * 80)
 print("▶️  Run Command: uvicorn app:app --host 0.0.0.0 --port $PORT")
@@ -6923,6 +9751,4 @@ if __name__ == "__main__":
         log_level="info",
         access_log=True
     )
-
-
 
