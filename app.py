@@ -8154,10 +8154,12 @@ with gr.Blocks(
         primary_hue="pink",
         secondary_hue="teal",
         neutral_hue="slate",
-        font=["Inter", "Segoe UI", "Arial", "sans-serif"],
-        font_mono=["Fira Code", "Consolas", "monospace"],
+        # --- PERBAIKAN DI BAWAH INI ---
+        font=[gr.themes.GoogleFont("Inter"), "system-ui", "sans-serif"],
+        font_mono=[gr.themes.GoogleFont("Fira Code"), "monospace"],
+        # --- AKHIR PERBAIKAN ---
     ),
-    css=CUSTOM_CSS, # Gunakan CUSTOM_CSS yang sudah di-update
+    css=CUSTOM_CSS, 
     analytics_enabled=False,
 ) as demo:
     
@@ -8878,6 +8880,7 @@ checklist yang disesuaikan dengan status gizi anak.
             
             library_output = gr.HTML(
                 value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
+                sanitize_html=False # <-- TAMBAHKAN BARIS INI
             )
 
             # --- Event Handlers untuk Tab Perpustakaan ---
