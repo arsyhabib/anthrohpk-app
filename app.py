@@ -8562,6 +8562,7 @@ with gr.Blocks(
     ),
     css=CUSTOM_CSS, # Gunakan CUSTOM_CSS yang sudah di-update
     analytics_enabled=False,
+    queue=False, # <--- TAMBAHKAN BARIS INI
 ) as demo:
     
     # =======================================================================
@@ -9667,27 +9668,7 @@ checklist yang disesuaikan dengan status gizi anak.
     
     # === BLOK REVISI: handler seleksi tab (disederhanakan) ===
 
-    def on_tab_select(tab_index: int):
-        """
-        Handler ketika tab utama dipilih.
-
-        Versi baru:
-        - Tidak lagi memanggil JS khusus 'AnthroHPK_Library'.
-        - Perpustakaan Ibu Balita sudah inisialisasi penuh via
-          HTML + <script> di `tampilkan_perpustakaan_lokal_interaktif()`.
-        """
-        # Tidak perlu mengirim script apa pun → kembalikan nilai kosong
-        return gr.update(value=None)
-
-    # Komponen HTML tersembunyi untuk menerima output on_tab_select
-    js_init_trigger = gr.HTML(visible=False, value="")
-
-    # Tetap hubungkan event select (aman, no-op untuk sisi JS)
-    main_tabs.select(
-        fn=on_tab_select,
-        inputs=[main_tabs],
-        outputs=[js_init_trigger],
-    )
+    
 
     # === AKHIR BLOK REVISI ===
 
