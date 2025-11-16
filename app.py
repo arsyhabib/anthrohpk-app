@@ -6888,11 +6888,17 @@ def get_library_categories_list():
     categories, _ = get_local_library_filters()
     return ["Semua Kategori"] + categories
 
+# ===================================================================
+# GANTI FUNGSI LAMA DI SECTION 10B DENGAN YANG INI
+# ===================================================================
+
 def update_library_display(search_term: str, category: str):
     """
-    (FUNGSI BARU - LOGIKA UTAMA PERPUSTAKAAN)
+    (VERSI PERBAIKAN - 16 Nov 2025)
     Fungsi Python murni untuk memfilter dan menampilkan artikel
     sebagai komponen Gradio Accordion.
+    
+    PERBAIKAN: Menggunakan gr.Column.update() BUKAN gr.update()
     """
     search_term = search_term.lower().strip()
     
@@ -6915,7 +6921,8 @@ def update_library_display(search_term: str, category: str):
 
     # Buat komponen UI
     if not filtered_articles:
-        return gr.update(
+        # --- INI ADALAH PERBAIKANNYA ---
+        return gr.Column.update(
             children=[
                 gr.Markdown("### 🔍 Tidak ada artikel ditemukan\n\nCoba ganti kata kunci pencarian atau filter kategori Anda.")
             ],
@@ -6925,10 +6932,10 @@ def update_library_display(search_term: str, category: str):
     # Ubah hasil filter menjadi komponen Accordion
     ui_components = []
     for art in filtered_articles:
+        # Label Accordion: Judul (Bold) dan Summary (Italic)
         label = f"📚 **{art.get('title')}**\n_{art.get('summary')}_"
         
         # Format isi artikel sebagai Markdown
-        # Kita tambahkan info Kategori dan Sumber di atasnya
         content_md = f"**Kategori:** {art.get('kategori', 'N/A')}  \n"
         content_md += f"**Sumber:** {art.get('source', 'N/A')}  \n"
         content_md += "---\n"
@@ -6941,7 +6948,8 @@ def update_library_display(search_term: str, category: str):
         ui_components.append(accordion)
 
     # Kembalikan daftar komponen untuk diperbarui
-    return gr.update(children=ui_components, visible=True)
+    # --- INI JUGA PERBAIKANNYA ---
+    return gr.Column.update(children=ui_components, visible=True)
 
 def load_initial_articles():
     """ (FUNGSI BARU) Memuat semua artikel saat tab pertama kali dibuka """
