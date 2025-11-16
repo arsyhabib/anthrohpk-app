@@ -6987,11 +6987,11 @@ print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunaka
 
 # ===============================================================================
 # ===============================================================================
-# SECTION 11: GRADIO UI (Fully Updated for v3.2.2 - Interactive Library)
+# SECTION 11: GRADIO UI (REVISI TOTAL - Perbaikan Perpustakaan)
 # ===============================================================================
 
-# UPDATED Custom CSS (v3.2.2)
-# CSS dari v3.1 (dark mode, etc.) digabung dengan CSS v3.2.2 (library)
+# UPDATED Custom CSS (v3.2.3)
+# CSS Perpustakaan lama (penyebab error) telah dihapus.
 CUSTOM_CSS = """
 /* ===================================================================
    GLOBAL STYLES
@@ -7017,7 +7017,12 @@ CUSTOM_CSS = """
     .gr-button:hover { background-color: #505050 !important; border-color: #707070 !important; }
     .gr-button-primary { background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
     .gr-button-secondary { background: linear-gradient(135deg, #4ecdc4 0%, #6de0d9 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
+    
+    /* Perbaikan Dark Mode untuk Accordion (Perpustakaan Baru) */
     .gr-panel, .gr-box, .gr-accordion { background-color: #2a2a2a !important; border-color: #505050 !important; color: #e8e8e8 !important; }
+    .gr-accordion .label-wrap { background-color: #3a3a3a !important; }
+    .gr-accordion .label-wrap:hover { background-color: #4a4a4a !important; }
+    
     .gr-tab { background-color: #333333 !important; color: #ffffff !important; border-color: #505050 !important; }
     .gr-tab.selected { background-color: #ff6b9d !important; color: #ffffff !important; font-weight: 600 !important; }
     .markdown-body { color: #e8e8e8 !important; }
@@ -7035,11 +7040,7 @@ CUSTOM_CSS = """
     .article-title { color: #ffffff !important; }
     .article-meta { color: #b0b0b0 !important; }
     
-    /* !! PERPUSTAKAAN CSS (v3.2.2) TELAH DIHAPUS !!
-    Semua styling .library-filter-bar, .article-card-v3, .article-modal-backdrop, dll.
-    telah dihapus dari sini untuk mencegah browser crash.
-    Styling sekarang menggunakan komponen Gradio murni.
-    */
+    /* CSS Perpustakaan lama (penyebab error) telah dihapus */
 }
 
 /* ===================================================================
@@ -7071,7 +7072,7 @@ CUSTOM_CSS = """
 .premium-gold:hover { transform: scale(1.05) !important; box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important; }
 
 /* ===================================================================
-   VIDEO CARDS (v3.1) - (Dipertahankan)
+   VIDEO CARDS (v3.1)
    =================================================================== */
 
 .video-card {
@@ -7083,9 +7084,14 @@ CUSTOM_CSS = """
 .video-description { font-size: 13px; color: #666; margin-bottom: 10px; }
 .video-duration { font-size: 12px; color: #999; font-style: italic; }
 
+/* ===================================================================
+   PERPUSTAKAAN INTERAKTIF (BARU v3.2.3) - DIHAPUS
+   =================================================================== */
+/* Semua CSS .library-filter-bar, .article-card-v3, dll. telah dihapus */
+
 
 /* ===================================================================
-   OTHER COMPONENTS (Dipertahankan)
+   OTHER COMPONENTS
    =================================================================== */
 
 .gr-input, .gr-textbox {
@@ -7122,7 +7128,7 @@ blockquote {
 }
 """
 
-print("✅ Custom CSS (v3.2.2) loaded: Dark mode, light mode, and new interactive library styles.")
+print("✅ Custom CSS (v3.2.3) loaded: CSS Perpustakaan lama (penyebab error) telah dihapus.")
 
 # ===============================================================================
 # SECTION 10B-EXTRA: MISSING FUNCTIONS FOR KEJAR TUMBUH
@@ -7265,6 +7271,9 @@ def hitung_kejar_tumbuh(data_state):
                 'delta_tb': delta_tb
             })
     
+    if not results:
+        return "<p style='color: #e74c3c; padding: 20px;'>⚠️ Data tidak memadai untuk menghitung laju pertumbuhan (perlu interval waktu positif).</p>"
+
     # Generate HTML report
     html = "<div style='padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>"
     html += "<h3 style='color: #2c3e50; margin-top: 0;'>📈 Analisis Laju Pertumbuhan (Growth Velocity)</h3>"
@@ -8311,12 +8320,12 @@ checklist yang disesuaikan dengan status gizi anak.
                 inputs=[kejar_tumbuh_data_state, kejar_gender],
                 outputs=[kejar_output_html, kejar_output_plot]
             )
-
+            
         # ===================================================================
         # TAB 5: PERPUSTAKAAN IBU BALITA (REVISI TOTAL)
         # ===================================================================
        
-        with gr.TabItem("📚 Perpustakaan", id=4) as tab_perpustakaan: # ID diubah ke 4 (jika 3 sudah dipakai)
+        with gr.TabItem("📚 Perpustakaan", id=4) as tab_perpustakaan: # ID diubah ke 4
             gr.Markdown("""
             ## 📚 Perpustakaan Ibu Balita
             Temukan 40+ artikel terkurasi mengenai nutrisi, tumbuh kembang, dan kesehatan anak.
@@ -8343,6 +8352,11 @@ checklist yang disesuaikan dengan status gizi anak.
             gr.Markdown("---")
             
             # Area output untuk daftar artikel
+            # INI ADALAH PERBAIKAN DARI ERROR ANDA:
+            # Kita tidak bisa mengupdate 'children' dari 'gr.Column'
+            # Solusinya: Kita buat 'gr.Column' sebagai OUTPUT, dan fungsi Python
+            # akan mengembalikan 'gr.Column.update(...)'
+            
             library_output = gr.Column(
                 visible=False # Awalnya disembunyikan, ditampilkan setelah load
             )
@@ -8672,7 +8686,7 @@ checklist yang disesuaikan dengan status gizi anak.
                 price = pkg_info.get('price', 0)
                 price_formatted = f"Rp {price:,}".replace(',', '.')
                 wa_message = f"Halo PeduliGiziBalita, saya ingin upgrade ke paket {package.upper()} ({price_formatted}/bulan)" # MODIFIED
-                wa_link = f"https://wa.me/{CONTACT_WA}?text={wa_message.replace(' ', '%20')}"
+                wa_link = f"httpska://wa.me/{CONTACT_WA}?text={wa_message.replace(' ', '%20')}"
                 return gr.Markdown.update(
                     value=f"""
 ## 🎉 Terima kasih telah memilih paket {package.upper()}!
@@ -8775,16 +8789,11 @@ checklist yang disesuaikan dengan status gizi anak.
             """)
 
 # === REVISI: PERBAIKAN LOGIKA INISIALISASI TAB ===
-    # Handler ini akan berjalan SETIAP KALI tab diganti.
-    
-    # === BLOK REVISI: handler seleksi tab (disederhanakan) ===
-    #
-    # (Handler perpustakaan (id=3/id=4) telah dipindahkan ke dalam
+    # (Handler perpustakaan (id=4) telah dipindahkan ke dalam
     # definisi TabItem-nya sendiri menggunakan tab_perpustakaan.select()
     # untuk logika yang lebih bersih dan terisolasi)
-    #
     
-    # === AKHIR BLOK REVISI ===
+# === AKHIR BLOK REVISI ===
 
     
 # Footer (MODIFIED)
