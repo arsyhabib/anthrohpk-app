@@ -8370,7 +8370,8 @@ checklist yang disesuaikan dengan status gizi anak.
             # akan mengembalikan 'gr.Column.update(...)'
             
             library_output = gr.Column(
-                visible=True # Dibuat terlihat dari awal            )
+                visible=True # Dibuat terlihat dari awal
+            )
 
             # --- Event Handlers untuk Tab Perpustakaan ---
             
