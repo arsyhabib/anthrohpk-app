@@ -3188,8 +3188,20 @@ def mode_mudah_handler(age_months: int, gender: str) -> str:
     
     return html_output
 
+# ===============================================================================
+# SECTION 10B: NEW FEATURES v3.2 (Termasuk Modifikasi Perpustakaan Lokal v3.2.2)
+# ===============================================================================
+
+# --- FITUR 1: MODE MUDAH (Dipertahankan dari v3.2) ---
+# ... (Semua kode Mode Mudah dan Kejar Tumbuh Anda tetap di sini) ...
+# ... (Fungsi get_normal_ranges_by_age, mode_mudah_handler, dll. TIDAK BERUBAH) ...
+
+
 # --- FITUR 2: PERPUSTAKAAN LOKAL (PENGGANTI v3.2) ---
 # Database artikel lokal baru dengan total 40 artikel
+# ================================================================
+# MULAI REVISI DI SINI
+# ================================================================
 
 ARTIKEL_LOKAL_DATABASE = [
     # Kategori: Nutrisi & MPASI (10 Artikel)
@@ -3198,6 +3210,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Panduan MPASI Menu Lengkap (WHO & Kemenkes)",
         "summary": "Panduan MPASI perdana 6 bulan sesuai standar WHO dan Kemenkes, fokus pada Protein Hewani.",
         "source": "Kemenkes RI | WHO",
+        "image_url": "https://images.unsplash.com/photo-1600857592429-06388147aa0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Panduan MPASI Menu Lengkap (WHO & Kemenkes)
         
@@ -3261,6 +3274,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Apa itu Stunting dan 1000 Hari Pertama Kehidupan (HPK)",
         "summary": "Memahami Stunting dan pentingnya 1000 HPK sebagai jendela emas pencegahan.",
         "source": "Kemenkes RI | UNICEF",
+        "image_url": "https://images.unsplash.com/photo-1544385191-a8d83c0c0910?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Apa itu Stunting dan 1000 Hari Pertama Kehidupan (HPK)
         
@@ -3329,6 +3343,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mengatasi Gerakan Tutup Mulut (GTM) pada Anak",
         "summary": "Strategi menghadapi anak yang GTM atau menjadi *picky eater*.",
         "source": "IDAI",
+        "image_url": "https://images.unsplash.com/photo-1519733224424-a78932641e1c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mengatasi Gerakan Tutup Mulut (GTM) pada Anak
         
@@ -3382,6 +3397,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Peran Lemak dalam MPASI",
         "summary": "Mengapa lemak sangat penting untuk bayi dan sering dilupakan dalam MPASI.",
         "source": "WHO | IDAI",
+        "image_url": "https://images.unsplash.com/photo-1591160623347-0622c71a3a2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Peran Penting Lemak dalam MPASI
         
@@ -3432,6 +3448,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "ASI Eksklusif dan Manajemen Laktasi",
         "summary": "Panduan sukses ASI eksklusif 6 bulan dan cara mengatasi masalah menyusui.",
         "source": "Kemenkes RI | IDAI",
+        "image_url": "https://images.unsplash.com/photo-1606823354313-a4f1232c4533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Panduan Sukses ASI Eksklusif dan Manajemen Laktasi
         
@@ -3478,6 +3495,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mitos dan Fakta Seputar MPASI",
         "summary": "Meluruskan miskonsepsi umum tentang pemberian makan bayi.",
         "source": "IDAI | AAP",
+        "image_url": "https://images.unsplash.com/photo-1589139121857-a5735161394a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mitos dan Fakta Seputar MPASI
         
@@ -3517,6 +3535,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Bahaya Anemia Defisiensi Besi (ADB) pada Bayi",
         "summary": "Mengenali bahaya kekurangan zat besi dan mengapa MPASI harus kaya zat besi.",
         "source": "IDAI | WHO",
+        "image_url": "https://images.unsplash.com/photo-1598993685548-e0420d75765d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Bahaya Anemia Defisiensi Besi (ADB) pada Bayi
         
@@ -3563,6 +3582,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mengenal Alergi Makanan pada Bayi",
         "summary": "Membedakan alergi dan intoleransi, serta cara mengenalkan makanan alergen.",
         "source": "IDAI | AAP",
+        "image_url": "https://images.unsplash.com/photo-1582235880501-f2e519c636ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mengenal Alergi Makanan pada Bayi
         
@@ -3623,6 +3643,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Keamanan Pangan MPASI (Food Safety)",
         "summary": "Cara menyimpan dan mengolah MPASI agar terhindar dari bakteri berbahaya.",
         "source": "WHO (Five Keys to Safer Food)",
+        "image_url": "https://images.unsplash.com/photo-1604719212028-a3d1d236369c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # 5 Kunci Keamanan Pangan (Food Safety) untuk MPASI
         
@@ -3676,6 +3697,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Bahaya Pemberian Madu pada Bayi di Bawah 1 Tahun",
         "summary": "Peringatan serius mengapa madu bisa berakibat fatal bagi bayi.",
         "source": "IDAI | CDC",
+        "image_url": "https://images.unsplash.com/photo-1558220938-f91d0a3311c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Bahaya Pemberian Madu pada Bayi di Bawah 1 Tahun
         
@@ -3722,6 +3744,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Milestone (Tonggak) Perkembangan Anak 0-12 Bulan",
         "summary": "Panduan memantau tonggak perkembangan penting anak di tahun pertama kehidupannya.",
         "source": "CDC | IDAI (KPSP)",
+        "image_url": "https://images.unsplash.com/photo-1518610368143-69091b3ab806?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Milestone (Tonggak) Perkembangan Anak 0-12 Bulan
         
@@ -3780,11 +3803,17 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
+    # ... (Sisa artikel akan dilanjutkan di Bagian 3 dan 4) ...
+    
+    # ... (Artikel 1-10 dari Bagian 2 ada di sini) ...
+
+    # Lanjutan Kategori: Tumbuh Kembang (8 Artikel)
     {
         "kategori": "Tumbuh Kembang",
         "title": "Pentingnya Stimulasi untuk Perkembangan Otak",
         "summary": "Perkembangan anak tidak otomatis, perlu stimulasi (rangsangan) yang tepat dari orang tua.",
         "source": "Kemenkes RI | AAP",
+        "image_url": "https://images.unsplash.com/photo-1546015026-6132b138026d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Pentingnya Stimulasi untuk Perkembangan Otak
         
@@ -3842,6 +3871,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Milestone (Tonggak) Perkembangan Anak 1-2 Tahun",
         "summary": "Memantau perkembangan anak usia 12-24 bulan, dari berjalan hingga berbicara.",
         "source": "CDC | IDAI (KPSP)",
+        "image_url": "https://images.unsplash.com/photo-1519062136015-659f0f633d3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Milestone (Tonggak) Perkembangan Anak 1-2 Tahun (12-24 Bulan)
         
@@ -3911,6 +3941,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Red Flags Keterlambatan Bicara (Speech Delay)",
         "summary": "Mengenali tanda bahaya keterlambatan bicara dan kapan harus intervensi.",
         "source": "IDAI | AAP",
+        "image_url": "https://images.unsplash.com/photo-1518717758339-39B3c607eb42?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Red Flags Keterlambatan Bicara (Speech Delay)
         
@@ -3969,6 +4000,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Pentingnya Tummy Time untuk Bayi",
         "summary": "Apa itu tummy time, mengapa sangat penting, dan bagaimana cara melakukannya dengan aman.",
         "source": "AAP",
+        "image_url": "https://images.unsplash.com/photo-1546820389-0822369cbf34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Pentingnya Tummy Time untuk Bayi
         
@@ -4020,6 +4052,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Manfaat Membacakan Buku Sejak Dini",
         "summary": "Mengapa membacakan buku (read aloud) adalah salah satu stimulasi terbaik untuk otak.",
         "source": "AAP | Kemenkes RI",
+        "image_url": "https://images.unsplash.com/photo-1519362351240-d69b552f5071?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Manfaat Ajaib Membacakan Buku Sejak Dini (Read Aloud)
         
@@ -4070,6 +4103,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Perkembangan Penglihatan Bayi dari Lahir hingga 1 Tahun",
         "summary": "Bagaimana penglihatan bayi berkembang, dari buram hingga fokus.",
         "source": "American Academy of Ophthalmology (AAO)",
+        "image_url": "https://images.unsplash.com/photo-1557941733-27d6dbb8b209?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Perkembangan Penglihatan Bayi dari Lahir hingga 1 Tahun
         
@@ -4123,6 +4157,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Bahaya 'Baby Walker' dan Mengapa Dilarang",
         "summary": "Mengapa baby walker tidak membantu anak berjalan dan justru berbahaya.",
         "source": "IDAI | AAP",
+        "image_url": "https://plus.unsplash.com/premium_photo-1664301530062-83b33375b426?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Bahaya 'Baby Walker' dan Mengapa Dilarang
         
@@ -4164,6 +4199,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Pentingnya Imunisasi Dasar Lengkap",
         "summary": "Mengapa imunisasi sangat penting dan daftar vaksin yang wajib diterima anak Indonesia.",
         "source": "IDAI | Kemenkes RI",
+        "image_url": "https://images.unsplash.com/photo-1605681145151-c0b3d6c7104b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Pentingnya Imunisasi Dasar Lengkap
         
@@ -4219,6 +4255,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Panduan Tepat Mengatasi Demam pada Anak",
         "summary": "Kapan harus khawatir saat anak demam, dan pertolongan pertama yang benar (bukan kompres dingin!).",
         "source": "IDAI | AAP",
+        "image_url": "https://images.unsplash.com/photo-1599599933544-672e4798c807?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Panduan Tepat Mengatasi Demam pada Anak
         
@@ -4279,11 +4316,16 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
+    # ... (Sisa artikel akan dilanjutkan di Bagian 4) ...
+    # ... (Artikel 1-20 dari Bagian 2 & 3 ada di sini) ...
+
+    # Lanjutan Kategori: Kesehatan & Imunisasi (8 Artikel)
     {
         "kategori": "Kesehatan & Imunisasi",
         "title": "Mengenal Batuk Pilek (ISPA) pada Anak",
         "summary": "Membedakan batuk pilek biasa (virus) dan kapan harus waspada infeksi bakteri.",
         "source": "IDAI | CDC",
+        "image_url": "https://images.unsplash.com/photo-1620336214302-1a4c38d4c1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mengenal Batuk Pilek (ISPA) pada Anak
         
@@ -4341,6 +4383,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mengatasi Diare Akut pada Balita",
         "summary": "Kunci utama mengatasi diare adalah rehidrasi (cairan) untuk mencegah dehidrasi.",
         "source": "WHO | Kemenkes RI",
+        "image_url": "https://images.unsplash.com/photo-1554734867-bf3c00a49371?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mengatasi Diare Akut pada Balita
         
@@ -4400,6 +4443,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Jadwal Imunisasi Rekomendasi IDAI 2023",
         "summary": "Jadwal imunisasi lengkap yang direkomendasikan Ikatan Dokter Anak Indonesia (IDAI).",
         "source": "IDAI",
+        "image_url": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
         "full_content": """
         # Jadwal Imunisasi Anak Rekomendasi IDAI 2023
         
@@ -4461,6 +4505,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mengenal Kejang Demam (Step)",
         "summary": "Apa yang harus dilakukan dan apa yang TIDAK boleh dilakukan saat anak kejang demam.",
         "source": "IDAI | AAP",
+        "image_url": "https://plus.unsplash.com/premium_photo-1661766820235-3c96bc13f938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mengenal Kejang Demam (Step)
         
@@ -4521,6 +4566,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Perawatan Gigi Pertama Bayi (Karies Botol)",
         "summary": "Merawat gigi bayi sejak gigi pertama tumbuh untuk mencegah karies (gigi berlubang).",
         "source": "IDAI | AAPD",
+        "image_url": "https://images.unsplash.com/photo-1606838837238-57688313508c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Perawatan Gigi Pertama Bayi (Mencegah Karies Botol)
         
@@ -4572,7 +4618,7 @@ ARTIKEL_LOKAL_DATABASE = [
         1.  Ikatan Dokter Anak Indonesia (IDAI). *Merawat Gigi Anak Sejak Dini.*
         2.  American Academy of Pediatric Dentistry (AAPD). *Dental Home.*
         
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy)
         """
     },
     {
@@ -4580,6 +4626,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Sanitasi & Cuci Tangan: Kunci Cegah Stunting",
         "summary": "Hubungan tak terduga antara toilet bersih, cuci tangan, dan stunting.",
         "source": "Kemenkes RI | WHO",
+        "image_url": "https://images.unsplash.com/photo-1584610356248-81d3d66b596f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Sanitasi & Cuci Tangan: Kunci Tersembunyi Pencegahan Stunting
         
@@ -4634,6 +4681,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Bahaya 'Screen Time' Berlebihan pada Balita",
         "summary": "Rekomendasi IDAI dan AAP mengenai batasan penggunaan gadget/TV untuk anak.",
         "source": "IDAI | AAP",
+        "image_url": "https://images.unsplash.com/photo-1522889639-6B4912BA542A?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Bahaya 'Screen Time' Berlebihan pada Balita
         
@@ -4689,11 +4737,16 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
+    # ... (Sisa artikel akan dilanjutkan di Bagian 4b) ...
+    # ... (Artikel 1-27 dari Bagian 2, 3, & 4a ada di sini) ...
+
+    # Lanjutan Kategori: Pola Asuh & Psikologi (8 Artikel)
     {
         "kategori": "Pola Asuh & Psikologi",
         "title": "Memahami 'Tantrum' pada Toddler (1-3 Tahun)",
         "summary": "Mengapa anak tantrum dan bagaimana cara orang tua meresponsnya dengan tepat.",
         "source": "CDC | AAP",
+        "image_url": "https://images.unsplash.com/photo-1566004100631-35d015d6a491?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Memahami 'Tantrum' pada Toddler (1-3 Tahun)
         
@@ -4742,6 +4795,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Pentingnya Ayah dalam Pengasuhan (Father's Role)",
         "summary": "Peran ayah bukan hanya mencari nafkah, tapi esensial untuk perkembangan anak.",
         "source": "AAP | UNICEF",
+        "image_url": "https://images.unsplash.com/photo-1484665754824-1d8e1469956e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Pentingnya Ayah dalam Pengasuhan (Father's Role)
         
@@ -4798,6 +4852,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Melatih Tidur Mandiri (Sleep Training)",
         "summary": "Membantu bayi belajar tidur nyenyak sepanjang malam tanpa bantuan.",
         "source": "AAP",
+        "image_url": "https://images.unsplash.com/photo-1472090278799-d7c2a7156d68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80",
         "full_content": """
         # Melatih Tidur Mandiri (Sleep Training)
         
@@ -4861,6 +4916,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Membesarkan Anak di Era Digital",
         "summary": "Tantangan dan strategi pengasuhan modern di tengah gempuran teknologi.",
         "source": "AAP",
+        "image_url": "https://images.unsplash.com/photo-1499781350138-d0f31a207612?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mengasuh Anak di Era Digital
         
@@ -4911,6 +4967,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Disiplin Positif: Menghargai Sambil Mengarahkan",
         "summary": "Cara mendisiplinkan anak tanpa perlu membentak, mengancam, atau memukul.",
         "source": "AAP | UNICEF",
+        "image_url": "https://images.unsplash.com/photo-1506869639733-11215c54f5c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Disiplin Positif: Menghargai Sambil Mengarahkan
         
@@ -4965,6 +5022,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Kapan Anak Siap 'Toilet Training'?",
         "summary": "Tanda-tanda kesiapan anak untuk belajar buang air di toilet.",
         "source": "AAP",
+        "image_url": "https://images.unsplash.com/photo-1599522190924-d5f2a1d2112a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80",
         "full_content": """
         # Kapan Anak Siap 'Toilet Training'?
         
@@ -5021,6 +5079,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mencegah Sindrom Kematian Bayi Mendadak (SIDS)",
         "summary": "Panduan 'Back to Sleep' dan praktik tidur aman untuk bayi.",
         "source": "AAP | CDC",
+        "image_url": "https://images.unsplash.com/photo-1596707849382-e56d4001150f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mencegah Sindrom Kematian Bayi Mendadak (SIDS)
         
@@ -5070,11 +5129,16 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
+    # ... (Sisa artikel akan dilanjutkan di Bagian 4c) ...
+    # ... (Artikel 1-34 dari Bagian 2, 3, 4a, & 4b ada di sini) ...
+
+    # Lanjutan Kategori: Keamanan & Pencegahan Kecelakaan
     {
         "kategori": "Keamanan & Pencegahan",
         "title": "Keamanan Rumah: Mencegah Anak Terjatuh",
         "summary": "Cara membuat rumah aman dari risiko jatuh (tangga, jendela, furnitur).",
         "source": "CDC | AAP",
+        "image_url": "https://images.unsplash.com/photo-1574023240294-f2549f8a816a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Keamanan Rumah: Mencegah Anak Terjatuh
         
@@ -5121,6 +5185,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mencegah Keracunan pada Anak",
         "summary": "Cara menyimpan obat, produk pembersih, dan zat berbahaya lainnya.",
         "source": "CDC | Kemenkes RI",
+        "image_url": "https://images.unsplash.com/photo-1600813160814-1f3f615306e6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Keamanan Rumah: Mencegah Keracunan pada Anak
         
@@ -5167,6 +5232,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mencegah Anak Tenggelam (Drowning)",
         "summary": "Bahaya tenggelam di bak mandi, ember, dan kolam renang.",
         "source": "WHO | AAP",
+        "image_url": "https://images.unsplash.com/photo-1610481977931-36f73357b10a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mencegah Anak Tenggelam (Drowning)
         
@@ -5215,6 +5281,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mencegah Luka Bakar pada Anak",
         "summary": "Menjaga keamanan di dapur, bahaya air panas, dan stopkontak.",
         "source": "WHO | IDAI",
+        "image_url": "https://images.unsplash.com/photo-1590240472421-5a50e932fe40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Mencegah Luka Bakar pada Anak
         
@@ -5260,6 +5327,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Keamanan di Mobil (Car Seat)",
         "summary": "Pentingnya penggunaan 'car seat' yang benar sesuai usia.",
         "source": "AAP | WHO",
+        "image_url": "https://images.unsplash.com/photo-1570228062259-e36c6c5188c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=871&q=80",
         "full_content": """
         # Keamanan di Mobil (Car Seat)
         
@@ -5277,7 +5345,7 @@ ARTIKEL_LOKAL_DATABASE = [
         ## Tahap 2: Forward-Facing (Menghadap Depan)
         
         * **Siapa:** Setelah anak melebihi batas *rear-facing*.
-        * **Aturan:** Gunakan *car seat* menghadap depan dengan 5-point harness (sabuk 5 titik) sampai anak mencapai batas berat atau tinggi maksimal *car seat* (biasanya sekitar 25-30 kg).
+        * **Aturan:** Gunakan *car seat* menghadap depan dengan 5-point harness (sabuk 5 titik) sampai anak mencapai batas berat atau tinggi *car seat* (biasanya sekitar 25-30 kg).
         
         ## Tahap 3: Booster Seat
         
@@ -5300,14 +5368,14 @@ ARTIKEL_LOKAL_DATABASE = [
         """
     },
     
-    # ================================================
     # Kategori: Nutrisi & MPASI (8 Artikel BARU)
-    # ================================================
+    # INI ADALAH ARTIKEL 36
     {
         "kategori": "Nutrisi & MPASI",
         "title": "Kebutuhan Cairan (Air Putih) pada Bayi dan Balita",
         "summary": "Kapan bayi boleh minum air putih dan berapa kebutuhannya.",
         "source": "WHO | IDAI",
+        "image_url": "https://images.unsplash.com/photo-1543083326-14c049e3a348?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
         "full_content": """
         # Kebutuhan Cairan (Air Putih) pada Bayi dan Balita
         
@@ -5348,6 +5416,224 @@ ARTIKEL_LOKAL_DATABASE = [
         **Sumber (Acuan):**
         1.  World Health Organization (WHO). *Water, sanitation, hygiene, and health.*
         2.  Ikatan Dokter Anak Indonesia (IDAI). *Pemberian Air Putih pada Bayi.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Mengenal 'Junk Food' untuk Balita",
+        "summary": "Apa itu makanan HFSS (High Fat, Salt, Sugar) dan dampaknya.",
+        "source": "WHO | Kemenkes RI",
+        "image_url": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=872&q=80",
+        "full_content": """
+        # Mengenal 'Junk Food' untuk Balita (Makanan HFSS)
+        
+        Istilah "Junk Food" sering merujuk pada makanan yang Tinggi Lemak, Garam, dan Gula (HFSS - High Fat, Salt, Sugar) serta rendah nutrisi penting (vitamin, mineral, serat).
+        
+        ## Apa Saja Makanan HFSS?
+        
+        Contoh makanan HFSS yang sering diberikan pada balita:
+        
+        * **Minuman Manis:** Soda, jus buah kemasan, teh manis kemasan, susu kental manis (SKM).
+        * **Camilan Kemasan:** Keripik kentang, biskuit manis, wafer, cokelat, permen.
+        * **Makanan Cepat Saji (Fast Food):** Kentang goreng, nugget, sosis.
+        * **Makanan Instan:** Mi instan (terlalu tinggi natrium).
+        * **Kue dan Roti:** Donat, kue bolu manis, roti tawar putih (rendah serat).
+        
+        **Catat:** Susu Kental Manis (SKM) **BUKANLAH** susu pertumbuhan. SKM adalah produk tinggi gula dan tidak boleh diberikan sebagai minuman susu untuk balita.
+        
+        ## Dampak Negatif pada Balita
+        
+        Pemberian makanan HFSS terlalu sering pada 1000 Hari Pertama Kehidupan (HPK) berdampak serius:
+        
+        1.  **Membentuk Selera Makan yang Buruk:** Lidah anak menjadi terbiasa dengan rasa yang sangat kuat (terlalu manis, asin, gurih). Ini membuat mereka menolak makanan sehat alami (sayur, buah, lauk pauk) yang rasanya "hambar".
+        2.  **Menggeser Makanan Bergizi:** Perut balita kecil. Jika sudah kenyang dengan keripik atau biskuit (kalori kosong), mereka tidak akan mau makan makanan utama yang kaya protein dan zat besi.
+        3.  **Risiko 'Hidden Hunger':** Anak mungkin terlihat kenyang atau bahkan gemuk (overweight), tetapi sebenarnya kekurangan zat gizi mikro penting (seperti zat besi, zinc, vitamin A).
+        4.  **Risiko Jangka Panjang:** Membangun fondasi untuk obesitas, diabetes tipe 2, dan penyakit jantung di kemudian hari.
+        
+        ## Tips Mengurangi HFSS
+        
+        * **Jadikan Makanan Sehat sebagai Pilihan Utama:** Selalu sediakan buah potong, sayuran rebus, atau yogurt tawar sebagai camilan.
+        * **Baca Label:** Perhatikan kandungan gula, garam (natrium), dan lemak jenuh pada label makanan kemasan.
+        * **Jadilah Teladan:** Anak meniru apa yang orang tuanya makan.
+        * **Jangan Jadikan Hadiah:** Hindari menggunakan cokelat atau es krim sebagai "hadiah" (reward) karena membuat makanan itu terlihat lebih istimewa.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  World Health Organization (WHO). *Reducing salt intake.*
+        2.  Kementerian Kesehatan RI. *Pedoman Gizi Seimbang.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Peran Protein Hewani vs Nabati dalam MPASI",
+        "summary": "Mengapa protein hewani lebih superior untuk cegah stunting.",
+        "source": "WHO | IDAI | Kemenkes RI",
+        "image_url": "https://images.unsplash.com/photo-1627907228175-2bf846a303b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        "full_content": """
+        # Peran Protein Hewani vs Nabati dalam MPASI
+        
+        Semua protein penting, tetapi untuk pencegahan stunting pada bayi 6-24 bulan, **protein hewani** memiliki peran yang tidak tergantikan.
+        
+        ## Mengapa Protein Hewani Diutamakan?
+        
+        Protein hewani (daging, ayam, ikan, telur, susu) disebut "superior" dibandingkan protein nabati (tahu, tempe, kacang) karena tiga alasan utama:
+        
+        1.  **Kelengkapan Asam Amino Esensial:**
+            * Protein hewani mengandung **9 asam amino esensial** dalam komposisi yang lengkap dan seimbang, yang sangat dibutuhkan tubuh untuk membangun sel-sel baru (pertumbuhan).
+            * Protein nabati seringkali kekurangan satu atau lebih asam amino esensial (misal: lisin pada biji-bijian).
+        
+        2.  **Ketersediaan Bio (Bioavailability) Zat Gizi Mikro:**
+            * Ini adalah faktor kunci. Bukan hanya soal *kandungan*, tapi seberapa baik zat gizi itu *diserap* tubuh.
+            * **Zat Besi (Fe):** Protein hewani mengandung **zat besi Heme**, yang tingkat penyerapannya oleh tubuh sangat tinggi (15-40%). Protein nabati mengandung zat besi **Non-Heme**, yang penyerapannya jauh lebih rendah (<10%) dan mudah terhambat oleh zat lain (seperti fitat pada sayuran).
+            * **Zinc (Seng):** Zinc dari sumber hewani juga diserap jauh lebih baik daripada dari sumber nabati.
+            * **Vitamin B12:** Vitamin ini **hanya** ditemukan secara alami di produk hewani. Vitamin B12 krusial untuk perkembangan saraf dan otak.
+        
+        3.  **Faktor Pertumbuhan (IGF-1):** Konsumsi protein hewani terbukti lebih kuat merangsang produksi *Insulin-like Growth Factor 1* (IGF-1), hormon yang sangat penting untuk pertumbuhan linear (tinggi badan).
+        
+        ## Apakah Protein Nabati Tidak Penting?
+        
+        **Sangat Penting!** Tahu, tempe, dan kacang-kacangan tetap harus diberikan. Mereka adalah sumber protein, lemak baik, dan serat yang sangat baik.
+        
+        Namun, mereka **tidak bisa** dijadikan sumber protein *utama* untuk menggantikan protein hewani dalam konteks pencegahan stunting.
+        
+        ## Rekomendasi Praktis
+        
+        * **Prioritaskan:** Pastikan ada **protein hewani** dalam **setiap menu makan utama** (pagi, siang, malam) bayi Anda sejak usia 6 bulan.
+        * **Kombinasikan:** Kombinasikan sumber protein hewani dan nabati dalam satu menu.
+        * **Contoh Menu Lengkap:** Nasi (Karbo) + Sup Ikan (Hewani) + Tahu Kukus (Nabati) + Brokoli (Sayur) + Sedikit Minyak (Lemak).
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  World Health Organization (WHO). (2023). *Guideline for complementary feeding.*
+        2.  Kementerian Kesehatan RI. *Strategi Pencegahan Stunting.*
+        3.  Ikatan Dokter Anak Indonesia (IDAI). *Pentingnya Protein Hewani untuk Tumbuh Kembang Optimal.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Konstipasi (Sembelit) Saat Awal MPASI",
+        "summary": "Penyebab dan cara mengatasi sembelit yang umum terjadi saat transisi MPASI.",
+        "source": "IDAI | AAP",
+        "image_url": "https://images.unsplash.com/photo-1605660443301-3366c8cd39e3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        "full_content": """
+        # Konstipasi (Sembelit) Saat Awal MPASI
+        
+        Sangat umum terjadi sembelit (susah BAB atau feses keras) saat bayi memulai MPASI. Ini adalah fase adaptasi sistem pencernaan bayi dari makanan cair (ASI) ke makanan padat.
+        
+        ## Tanda-tanda Konstipasi
+        
+        * Frekuensi BAB lebih jarang dari biasanya (misal: 3 hari tidak BAB).
+        * Feses tampak keras, kering, atau seperti kerikil kecil.
+        * Bayi tampak mengejan berlebihan, kesakitan, atau menangis saat BAB.
+        * Kadang disertai sedikit bercak darah di feses (akibat lecet di anus).
+        
+        ## Penyebab Umum
+        
+        1.  **Transisi Usus:** Usus bayi sedang belajar memproses makanan padat yang lebih kompleks.
+        2.  **Kurang Cairan:** Bayi mungkin kurang minum (ASI atau air putih) setelah MPASI dimulai.
+        3.  **Kurang Serat:** Menu MPASI kurang mengandung serat.
+        4.  **Terlalu Banyak Serat:** Anehnya, terlalu banyak serat (terutama dari sereal beras) tanpa diimbangi cairan yang cukup justru bisa memperparah sembelit.
+        5.  **Makanan Pemicu:** Beberapa makanan dikenal sebagai pemicu sembelit pada beberapa bayi, seperti pisang, apel (saus apel), sereal beras, dan produk susu (jika berlebihan).
+        
+        ## Cara Mengatasi di Rumah
+        
+        1.  **Cairan:** Pastikan bayi cukup terhidrasi.
+            * Tawarkan ASI/Susu Formula lebih sering.
+            * Tawarkan air putih matang di sela-sela makan MPASI (untuk bayi >6 bulan).
+        
+        2.  **Makanan "P" (Pelancar):** Berikan makanan yang dikenal membantu melancarkan pencernaan:
+            * **P**runes (Plum kering, dibuat puree)
+            * **P**ears (Pir, dibuat puree)
+            * **P**eaches (Persik, dibuat puree)
+            * **P**apaya (Pepaya)
+        
+        3.  **Hindari Pemicu:** Kurangi sementara makanan pemicu (pisang, apel, sereal beras) dan ganti dengan variasi lain (misal: oatmeal, ubi).
+        
+        4.  **Gerakan:** Lakukan "pijat I-L-U" pada perut bayi searah jarum jam. Gerakkan kaki bayi seperti mengayuh sepeda untuk membantu merangsang pergerakan usus.
+        
+        5.  **Mandi Air Hangat:** Merendam bayi di air hangat bisa membantu merelakskan otot perutnya.
+        
+        ## Kapan Harus ke Dokter?
+        
+        Segera konsultasi ke dokter jika:
+        * Sembelit berlangsung lebih dari 1-2 minggu.
+        * Bayi tampak sangat kesakitan.
+        * Ada darah dalam jumlah banyak di feses.
+        * Perut bayi tampak kembung dan keras.
+        * Bayi menolak makan sama sekali.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Konstipasi pada Anak.*
+        2.  American Academy of Pediatrics (AAP). *Constipation in Children.*
+        
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
+        """
+    },
+    {
+        "kategori": "Nutrisi & MPASI",
+        "title": "Mitos vs Fakta: Makanan Pemicu Alergi",
+        "summary": "Revisi panduan alergi: mengapa menunda telur dan seafood justru salah.",
+        "source": "IDAI | AAP | ASCIA",
+        "image_url": "https://images.unsplash.com/photo-1606756794270-d8d42d65b161?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        "full_content": """
+        # Mitos vs Fakta: Makanan Pemicu Alergi (Panduan Baru)
+        
+        Panduan mengenai pengenalan makanan pemicu alergi (seperti telur, kacang, seafood) telah berubah drastis dalam beberapa tahun terakhir.
+        
+        ## MITOS: Menunda Makanan Alergen Mencegah Alergi
+        
+        **PANDUAN LAMA (SALAH):** "Jangan berikan telur sebelum 1 tahun, atau kacang sebelum 3 tahun, untuk mencegah alergi."
+        
+        **FAKTA (PANDUAN BARU):**
+        
+        Penelitian besar (seperti LEAP study) membuktikan bahwa **menunda** pengenalan makanan alergen justru dapat **MENINGKATKAN** risiko alergi makanan.
+        
+        > **Panduan baru merekomendasikan: Kenalkan makanan pemicu alergi (termasuk telur, kacang, ikan) segera setelah bayi mulai MPASI (sekitar usia 6 bulan).**
+        
+        Jendela waktu antara 6-12 bulan dianggap sebagai "jendela emas" untuk melatih sistem imun tubuh agar *mentoleransi* makanan tersebut, bukan melawannya.
+        
+        ## Makanan Alergen Utama
+        
+        Kelompok makanan yang paling sering menyebabkan alergi adalah:
+        * Telur
+        * Susu Sapi (dalam olahan, misal: yogurt)
+        * Kacang Tanah
+        * Kacang Pohon (Mede, Almond)
+        * Gandum
+        * Kedelai
+        * Ikan
+        * Kerang-kerangan (Udang, Kepiting)
+        
+        ## Cara Mengenalkan Makanan Alergen (Aturan 4 Hari)
+        
+        1.  **Mulai dengan Makanan Non-Alergen:** Pastikan bayi sudah terbiasa dengan 1-2 makanan pertamanya (misal: bubur nasi, labu).
+        2.  **Satu per Satu:** Kenalkan makanan alergen **satu jenis** dalam satu waktu.
+        3.  **Mulai dari Jumlah Kecil:** Berikan sedikit saja di hari pertama (misal: seujung sendok teh telur rebus yang dilumatkan).
+        4.  **Tunggu dan Amati (Aturan 4 Hari):** Tunggu 3-4 hari sebelum mengenalkan makanan alergen baru lainnya. Amati tanda-tanda alergi (ruam kulit, bengkak, muntah, diare, sesak napas).
+        5.  **Berikan di Pagi/Siang Hari:** Agar Anda mudah mengamati reaksinya.
+        6.  **Masak Hingga Matang:** Pastikan telur dan ikan dimasak hingga matang sempurna.
+        7.  **Format yang Aman:** Untuk kacang, berikan dalam bentuk selai kacang murni (tanpa gula/garam) yang diencerkan dengan air, atau bubuk kacang yang dicampur ke bubur. **JANGAN** berikan kacang utuh (bahaya tersedak).
+        
+        ## Pengecualian
+        
+        * Jika bayi sudah memiliki **eksim (dermatitis atopik) yang parah** atau **riwayat alergi makanan lain**, konsultasikan terlebih dahulu dengan dokter anak atau ahli alergi sebelum mengenalkan makanan alergen.
+        
+        ---
+        
+        **Sumber (Acuan):**
+        1.  Ikatan Dokter Anak Indonesia (IDAI). *Rekomendasi Pencegahan Alergi.*
+        2.  American Academy of Pediatrics (AAP). *Preventing Food Allergies.*
+        3.  ASCIA (Australasian Society of Clinical Immunology and Allergy). *Introducing Solid Foods and Allergy Prevention.*
         
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
@@ -6901,11 +7187,15 @@ def get_library_categories_list():
 # DI SECTION 10B DENGAN KODE BARU INI
 # ===================================================================
 
+# ===================================================================
+# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
+# DI SECTION 10B DENGAN KODE BARU INI
+# ===================================================================
+
 def update_library_display(search_term: str, category: str):
     """
-    (VERSI PERBAIKAN #3 - KOMPATIBILITAS GRADI V3)
+    (REVISI UI v3.2.3 - Tampilan Kartu Modern dengan Gambar)
     Fungsi ini mengembalikan STRING HTML, bukan komponen Gradio.
-    Ini untuk kompatibilitas dengan Gradio v3.
     """
     search_term = search_term.lower().strip()
     
@@ -6930,42 +7220,69 @@ def update_library_display(search_term: str, category: str):
     # Bangun string HTML
     html_output_list = []
     html_output_list.append(f"<p style='text-align:center; font-weight:bold; color:#333;'>Menampilkan {len(filtered_articles)} artikel:</p>")
+    # Buka grid container
+    html_output_list.append("<div class='library-grid-container'>")
     
     for art in filtered_articles:
-        # Menggunakan <details> dan <summary> untuk efek accordion
-        # Ini 100% HTML murni dan sangat stabil
         
         # Amankan teks dari karakter HTML
         title_safe = art.get('title', 'Tanpa Judul').replace('<', '&lt;').replace('>', '&gt;')
         summary_safe = art.get('summary', '').replace('<', '&lt;').replace('>', '&gt;')
+        kategori_safe = art.get('kategori', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
+        source_safe = art.get('source', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         
-        # Konversi Markdown dasar ke HTML
+        # Ambil URL gambar, gunakan placeholder jika tidak ada
+        image_url = art.get('image_url', 'https://via.placeholder.com/600x400/E0E0E0/909090?text=Gambar+Tidak+Tersedia')
+
+        # Konversi Markdown dasar ke HTML (tetap diperlukan untuk full_content)
         content_html = art.get('full_content', 'Konten tidak tersedia.')
         content_html = content_html.replace('\n\n', '</p><p>')
-        content_html = content_html.replace('---', '<hr>')
+        content_html = content_html.replace('---', '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">')
         content_html = content_html.replace('\n', '<br>')
+        
+        # Ubah #, ##, ### menjadi tag h
         content_html = content_html.replace('# ', '<h2>')
         content_html = content_html.replace('## ', '<h3>')
         content_html = content_html.replace('### ', '<h4>')
-        content_html = content_html.replace('**', '<strong>')
+        
+        # Ubah **...** menjadi <strong>...</strong>
+        # Gunakan regex sederhana untuk menangani bold
+        import re
+        content_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content_html)
+        
+        # Ubah * ... (list) menjadi <li>...</li>
+        content_html = re.sub(r'\* (.*?)(<br>|$)', r'<li>\1</li>', content_html)
+        content_html = content_html.replace('</li><li>', '</li><li>') # Bersihkan
+        content_html = content_html.replace('<ul><br>', '<ul>')
+        content_html = content_html.replace('</ul><br>', '</ul>')
+
         
         html_output_list.append(f"""
-        <details style="border: 1px solid #e0e0e0; border-radius: 12px; margin-bottom: 12px; background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <summary style="padding: 16px; cursor: pointer; font-size: 16px; font-weight: 600; list-style: inside; color: #2c3e50;">
-                📚 {title_safe}
-                <br>
-                <em style="font-size: 14px; font-weight: 400; color: #555;">{summary_safe}</em>
-            </summary>
-            <div style="padding: 0 20px 20px 20px; border-top: 1px solid #eee; line-height: 1.7; color: #333;">
-                <p style="font-size: 13px; color: #666; background: #f9f9f9; padding: 10px; border-radius: 8px;">
-                    <strong>Kategori:</strong> {art.get('kategori', 'N/A')} | 
-                    <strong>Sumber:</strong> {art.get('source', 'N/A')}
-                </p>
-                <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-                {content_html}
+        <div class="article-card-v3-2-3">
+            
+            <img src="{image_url}" alt="{title_safe}" class="article-image">
+            
+            <div class="article-summary-content">
+                <span class="article-category">{kategori_safe}</span>
+                <h3 class="article-title">{title_safe}</h3>
+                <p class="article-summary">{summary_safe}</p>
             </div>
-        </details>
+            
+            <details class="article-details-dropdown">
+                <summary class="article-details-toggle">Baca Selengkapnya</summary>
+                <div class="article-full-content-wrapper">
+                    
+                    {content_html}
+                    
+                    <span class="article-source">Sumber: {source_safe}</span>
+                </div>
+            </details>
+            
+        </div>
         """)
+
+    # Tutup grid container
+    html_output_list.append("</div>")
 
     # Gabungkan semua string HTML menjadi satu
     return "".join(html_output_list)
@@ -6973,7 +7290,11 @@ def update_library_display(search_term: str, category: str):
 
 def load_initial_articles():
     """ (PERBAIKAN #3) Memuat semua artikel sebagai string HTML """
+    # Fungsi ini tidak perlu diubah, karena sudah memanggil update_library_display
     return update_library_display(search_term="", category="Semua Kategori")
+
+
+
 
 print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
 
@@ -7153,7 +7474,178 @@ blockquote {
     padding: 15px; border-radius: 10px; color: white;
     text-align: center; font-weight: bold; margin: 10px 0;
 }
+# ===============================================================================
+# SECTION 11: GRADIO UI (REVISI TOTAL - Perbaikan Perpustakaan)
+# ===============================================================================
+
+# ... (Pastikan semua CSS Anda yang ada sebelumnya tetap di sini) ...
+# ... (Termasuk .gradio-container, DARK MODE, .video-card, dll.) ...
+
+# TAMBAHKAN BLOK CSS BARU INI
+# ===================================================================
+# PERPUSTAKAAN v3.2.3 (MODERN UI REVISION - DENGAN GAMBAR)
+# ===================================================================
+.library-grid-container {
+    /* Ini adalah wrapper yang akan dibuat oleh fungsi Python */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    padding: 10px 0;
+}
+
+.article-card-v3-2-3 {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e8e8e8;
+    margin-bottom: 0; /* Diatur oleh grid-gap */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden; /* Penting untuk image border-radius */
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column; /* Mengatur layout card */
+    height: 100%; /* Membuat kartu sama tinggi di grid */
+}
+.article-card-v3-2-3:hover {
+    box-shadow: 0 7px 20px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+}
+.article-image {
+    width: 100%;
+    height: 180px; /* Ukuran pas untuk card */
+    object-fit: cover; /* Agar gambar tidak gepeng */
+    border-bottom: 1px solid #eee;
+}
+.article-summary-content {
+    padding: 20px;
+    flex-grow: 1; /* Mendorong dropdown ke bawah */
+}
+.article-category {
+    display: inline-block;
+    background: #fff5f8;
+    color: #ff6b9d;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    border: 1px solid #ffdde5;
+}
+.article-title {
+    font-size: 18px; /* Ukuran pas untuk card mobile */
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+    line-height: 1.4; /* Keterbacaan */
+}
+.article-summary {
+    font-size: 14px; /* Font mobile-friendly */
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+.article-details-dropdown {
+    border-top: 1px solid #f0f0f0;
+    margin-top: auto; /* Mendorong ke bagian bawah card */
+}
+.article-details-toggle {
+    padding: 16px 20px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: #3498db;
+    list-style: none; /* Hapus panah default */
+    transition: background 0.2s ease;
+    display: block; /* Agar full width */
+    text-align: center;
+}
+.article-details-toggle:hover {
+    background: #f9f9f9;
+}
+/* Style panah custom (mudah dilihat) */
+.article-details-toggle::before {
+    content: '▼';
+    margin-right: 10px;
+    font-size: 12px;
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+.article-details-toggle {
+    list-style-type: none; /* Menghilangkan panah default di semua browser */
+}
+details[open] > .article-details-toggle::before {
+    transform: rotate(-180deg);
+}
+.article-full-content-wrapper {
+    padding: 0 20px 20px 20px;
+    line-height: 1.7; /* Font mudah dibaca */
+    color: #333;
+    font-size: 15px; /* Font mobile-friendly */
+    background: #fafafa;
+}
+.article-full-content-wrapper h2,
+.article-full-content-wrapper h3,
+.article-full-content-wrapper h4 {
+    color: #2c3e50;
+    margin-top: 20px;
+}
+.article-full-content-wrapper ul,
+.article-full-content-wrapper ol {
+    padding-left: 25px;
+}
+.article-full-content-wrapper li {
+    margin-bottom: 10px;
+}
+.article-full-content-wrapper strong {
+    color: #ff6b9d; /* Highlight poin penting */
+}
+.article-source {
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
+    display: block;
+    margin-top: 15px;
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 8px;
+}
+/* Dark Mode overrides for new card */
+@media (prefers-color-scheme: dark) {
+    .article-card-v3-2-3 {
+        background: #2d2d2d;
+        border-color: #505050;
+    }
+    .article-image { border-bottom-color: #505050; }
+    .article-category {
+        background: #4a3a41;
+        color: #ff9ac9;
+        border-color: #5c4a52;
+    }
+    .article-title { color: #ffffff; }
+    .article-summary { color: #e0e0e0; }
+    .article-details-dropdown { border-top-color: #505050; }
+    .article-details-toggle { color: #6db4ff; }
+    .article-details-toggle:hover { background: #3a3a3a; }
+    
+    .article-full-content-wrapper {
+        color: #e8e8e8;
+        background: #252525;
+    }
+    .article-full-content-wrapper h2,
+    .article-full-content-wrapper h3,
+    .article-full-content-wrapper h4 {
+        color: #ffffff;
+    }
+    .article-full-content-wrapper strong {
+        color: #ff9ac9; /* Highlight dark mode */
+    }
+    .article-source {
+        color: #b0b0b0;
+        background: #333333;
+    }
+}
 """
+# ... (CUSTOM_CSS Anda berlanjut) ...
+
 
 print("✅ Custom CSS (v3.2.3) loaded: CSS Perpustakaan lama (penyebab error) telah dihapus.")
 
