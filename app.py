@@ -6860,6 +6860,92 @@ ARTIKEL_LOKAL_DATABASE = [
 
 ]
 
+# ================================================
+# FUNGSI HELPER BARU UNTUK PERPUSTAKAAN & API
+# (Tambahkan ini di SECTION 10B, setelah database artikel)
+# ================================================
+
+def get_local_library_filters():
+    """
+    (FUNGSI BARU - MEMPERBAIKI BUG API)
+    Helper untuk mengambil kategori & sumber unik dari DB lokal.
+    """
+    categories = set()
+    sources = set()
+    for art in ARTIKEL_LOKAL_DATABASE:
+        if art.get("kategori"):
+            categories.add(art.get("kategori"))
+        if art.get("source"):
+            for s in art.get("source").split("|"):
+                s = s.strip()
+                if s:
+                    sources.add(s)
+    # Mengembalikan list kategori yang unik dan sudah diurutkan
+    return sorted(list(categories)), sorted(list(sources))
+
+def get_library_categories_list():
+    """ (FUNGSI BARU) Mengambil daftar kategori untuk dropdown Gradio """
+    categories, _ = get_local_library_filters()
+    return ["Semua Kategori"] + categories
+
+def update_library_display(search_term: str, category: str):
+    """
+    (FUNGSI BARU - LOGIKA UTAMA PERPUSTAKAAN)
+    Fungsi Python murni untuk memfilter dan menampilkan artikel
+    sebagai komponen Gradio Accordion.
+    """
+    search_term = search_term.lower().strip()
+    
+    # Filter database
+    filtered_articles = []
+    for art in ARTIKEL_LOKAL_DATABASE:
+        # Filter Kategori
+        if category != "Semua Kategori" and art.get("kategori") != category:
+            continue
+            
+        # Filter Pencarian (mencari di judul, summary, dan isi)
+        title = art.get("title", "").lower()
+        summary = art.get("summary", "").lower()
+        content = art.get("full_content", "").lower()
+        
+        if search_term and not (search_term in title or search_term in summary or search_term in content):
+            continue
+            
+        filtered_articles.append(art)
+
+    # Buat komponen UI
+    if not filtered_articles:
+        return gr.update(
+            children=[
+                gr.Markdown("### 🔍 Tidak ada artikel ditemukan\n\nCoba ganti kata kunci pencarian atau filter kategori Anda.")
+            ],
+            visible=True
+        )
+
+    # Ubah hasil filter menjadi komponen Accordion
+    ui_components = []
+    for art in filtered_articles:
+        label = f"📚 **{art.get('title')}**\n_{art.get('summary')}_"
+        
+        # Format isi artikel sebagai Markdown
+        # Kita tambahkan info Kategori dan Sumber di atasnya
+        content_md = f"**Kategori:** {art.get('kategori', 'N/A')}  \n"
+        content_md += f"**Sumber:** {art.get('source', 'N/A')}  \n"
+        content_md += "---\n"
+        content_md += art.get('full_content', 'Konten tidak tersedia.')
+        
+        accordion = gr.Accordion(label=label, open=False)
+        with accordion:
+            gr.Markdown(content_md)
+            
+        ui_components.append(accordion)
+
+    # Kembalikan daftar komponen untuk diperbarui
+    return gr.update(children=ui_components, visible=True)
+
+def load_initial_articles():
+    """ (FUNGSI BARU) Memuat semua artikel saat tab pertama kali dibuka """
+    return update_library_display(search_term="", category="Semua Kategori")
 # --- AKHIR DARI DATABASE ARTIKEL LOKAL ---
 
 print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
@@ -6949,25 +7035,11 @@ CUSTOM_CSS = """
     .article-title { color: #ffffff !important; }
     .article-meta { color: #b0b0b0 !important; }
     
-    /* Dark Mode Perpustakaan v3.2.2 */
-    .library-filter-bar { background-color: #2d2d2d; border-color: #505050; }
-    .library-filter-bar label { color: #e0e0e0; }
-    .library-filter-bar input[type='text'],
-    .library-filter-bar select { background-color: #3a3a3a; border-color: #505050; color: #ffffff; }
-    .article-card-v3 { background: #2a2a2a; border-color: #505050; }
-    .article-card-v3:hover { border-color: #ff9a9e; }
-    .article-card-title { color: #ffffff; }
-    .article-card-summary { color: #e0e0e0; }
-    .article-card-footer { background-color: #303030; border-top-color: #505050; }
-    .category-badge { background-color: #3a3a3a; color: #e0e0e0; border-color: #505050; }
-    .article-modal-content { background: #2d2d2d; color: #e0e0e0; }
-    .article-modal-header { border-bottom-color: #505050; }
-    .article-modal-close { background: #4a4a4a; color: #e0e0e0; }
-    .article-modal-close:hover { background: #ff6b9d; }
-    .article-modal-body { color: #e0e0e0; }
-    .article-modal-body h1, .article-modal-body h2, .article-modal-body h3 { color: #8a9cff; border-bottom-color: #505050; }
-    .article-modal-body blockquote { background: #3a3a3a; border-left-color: #8a9cff; }
-    .article-modal-body strong { color: #ff9a9e; }
+    /* !! PERPUSTAKAAN CSS (v3.2.2) TELAH DIHAPUS !!
+    Semua styling .library-filter-bar, .article-card-v3, .article-modal-backdrop, dll.
+    telah dihapus dari sini untuk mencegah browser crash.
+    Styling sekarang menggunakan komponen Gradio murni.
+    */
 }
 
 /* ===================================================================
@@ -6999,7 +7071,7 @@ CUSTOM_CSS = """
 .premium-gold:hover { transform: scale(1.05) !important; box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important; }
 
 /* ===================================================================
-   VIDEO CARDS (v3.1)
+   VIDEO CARDS (v3.1) - (Dipertahankan)
    =================================================================== */
 
 .video-card {
@@ -7011,149 +7083,9 @@ CUSTOM_CSS = """
 .video-description { font-size: 13px; color: #666; margin-bottom: 10px; }
 .video-duration { font-size: 12px; color: #999; font-style: italic; }
 
-/* ===================================================================
-   PERPUSTAKAAN INTERAKTIF (BARU v3.2.2)
-   =================================================================== */
-
-.library-filter-bar {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
-    gap: 15px;
-    padding: 20px;
-    background-color: #f8f9fa;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    border: 1px solid #e9ecef;
-}
-@media (max-width: 768px) {
-    .library-filter-bar { grid-template-columns: 1fr; }
-}
-.library-filter-bar .filter-group { display: flex; flex-direction: column; }
-.library-filter-bar label { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px; }
-.library-filter-bar input[type='text'],
-.library-filter-bar select {
-    width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: 8px;
-    font-size: 14px; transition: all 0.3s ease; -webkit-appearance: none;
-    moz-appearance: none; appearance: none; background-color: white;
-}
-.library-filter-bar select {
-    background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23555" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>');
-    background-repeat: no-repeat; background-position: right 15px center;
-    background-size: 16px; padding-right: 40px;
-}
-.library-filter-bar input[type='text']:focus,
-.library-filter-bar select:focus {
-    border-color: #ff6b9d; box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15); outline: none;
-}
-.library-filter-bar input[type='text'] {
-    background: white url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23999" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>') no-repeat 97% 50%;
-    background-size: 16px; padding-right: 40px;
-}
-#library-counter {
-    margin-top: 15px; font-size: 14px; color: #667eea;
-    font-weight: 500; grid-column: 1 / -1; text-align: center;
-}
-#library-counter .count { font-weight: 700; font-size: 16px; }
-
-.article-grid-v3 {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
-}
-.article-card-v3 {
-    background: #ffffff; border-radius: 15px; border: 1px solid #e9ecef;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; flex-direction: column;
-    overflow: hidden; transition: all 0.3s ease;
-}
-.article-card-v3[style*="display: none"] { display: none !important; }
-.article-card-v3:hover {
-    transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: #ff9a9e;
-}
-.article-card-header { padding: 15px 20px 10px; }
-.article-card-title {
-    font-size: 18px; font-weight: 700; color: #2c3e50; margin: 0 0 10px 0;
-    padding: 0 20px; line-height: 1.4;
-}
-.article-card-summary {
-    font-size: 14px; color: #555; line-height: 1.6; margin: 0;
-    padding: 0 20px 15px; flex-grow: 1;
-}
-.article-card-tags { padding: 0 20px 15px; display: flex; flex-wrap: wrap; gap: 8px; }
-.article-card-tag {
-    padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.5px;
-}
-.category-badge { background-color: #f0f0f0; color: #555; border: 1px solid #ddd; }
-.source-badge { color: white; }
-.article-card-footer {
-    padding: 15px 20px; background-color: #fcfdff;
-    border-top: 1px solid #f0f0f0; margin-top: auto;
-}
-.article-card-button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;
-    border: none; padding: 10px 18px; border-radius: 8px; font-size: 13px;
-    font-weight: 600; cursor: pointer; transition: all 0.3s ease;
-}
-.article-card-button:hover {
-    transform: scale(1.05); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-.article-modal-backdrop {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); display: none; justify-content: center;
-    align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
-    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
-}
-.article-modal-backdrop.visible { display: flex; opacity: 1; }
-.article-modal-content {
-    background: white; border-radius: 15px; width: 90%; max-width: 800px;
-    height: 90vh; display: flex; flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: scale(0.95);
-    transition: transform 0.3s ease; overflow: hidden;
-}
-.article-modal-backdrop.visible .article-modal-content { transform: scale(1); }
-.article-modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 15px 25px; border-bottom: 1px solid #eee; flex-shrink: 0;
-}
-.article-modal-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.article-modal-close {
-    background: #f0f0f0; border: none; border-radius: 50%; width: 30px;
-    height: 30px; font-size: 20px; font-weight: bold; color: #888;
-    cursor: pointer; line-height: 30px; text-align: center;
-    transition: all 0.2s ease; flex-shrink: 0;
-}
-.article-modal-close:hover { background: #ff6b9d; color: white; }
-.article-modal-body {
-    padding: 25px; overflow-y: auto; line-height: 1.7;
-    color: #333; flex-grow: 1;
-}
-.article-modal-body h1, .article-modal-body h2, .article-modal-body h3 {
-    color: #667eea; margin-top: 20px; margin-bottom: 10px;
-    border-bottom: 2px solid #f0f0f0; padding-bottom: 5px;
-}
-.article-modal-body h1 { font-size: 26px; }
-.article-modal-body h2 { font-size: 22px; }
-.article-modal-body h3 { font-size: 18px; }
-.article-modal-body p { margin-bottom: 15px; }
-.article-modal-body ul, .article-modal-body ol { padding-left: 25px; margin-bottom: 15px; }
-.article-modal-body li { margin-bottom: 8px; }
-.article-modal-body blockquote {
-    background: #f8f9fa; border-left: 5px solid #667eea; padding: 15px;
-    margin: 20px 0; border-radius: 8px; font-style: italic;
-}
-.article-modal-body strong { color: #d94680; }
-.article-modal-body .loading-spinner {
-    display: flex; justify-content: center; align-items: center;
-    min-height: 200px; font-size: 18px; color: #888;
-}
-.category-nutrisi-mpasi { background-color: #e3f2fd; color: #1565c0; border-color: #1565c0 !important; }
-.category-tumbuh-kembang { background-color: #e8f5e9; color: #2e7d32; border-color: #2e7d32 !important; }
-.category-kesehatan-imunisasi { background-color: #fce4ec; color: #c2185b; border-color: #c2185b !important; }
-.category-pola-asuh-psikologi { background-color: #f3e5f5; color: #7b1fa2; border-color: #7b1fa2 !important; }
-.category-keamanan-pencegahan { background-color: #fff3e0; color: #e65100; border-color: #e65100 !important; }
 
 /* ===================================================================
-   OTHER COMPONENTS
+   OTHER COMPONENTS (Dipertahankan)
    =================================================================== */
 
 .gr-input, .gr-textbox {
@@ -7194,6 +7126,7 @@ print("✅ Custom CSS (v3.2.2) loaded: Dark mode, light mode, and new interactiv
 
 # ===============================================================================
 # SECTION 10B-EXTRA: MISSING FUNCTIONS FOR KEJAR TUMBUH
+# (Ini adalah bagian dari SECTION 10B, tapi di file Anda diletakkan di sini)
 # ===============================================================================
 
 def toggle_kejar_tumbuh_mode(mode: str):
@@ -8379,13 +8312,56 @@ checklist yang disesuaikan dengan status gizi anak.
                 outputs=[kejar_output_html, kejar_output_plot]
             )
 
-# =========================================
-# Tab 5 – Perpustakaan Ibu Balita (versi baru)
-# =========================================
+        # ===================================================================
+        # TAB 5: PERPUSTAKAAN IBU BALITA (REVISI TOTAL)
+        # ===================================================================
        
-        
-        with gr.TabItem("📚 Perpustakaan", id=3):
-            gr.HTML(generate_perpustakaan_html_revised())
+        with gr.TabItem("📚 Perpustakaan", id=4) as tab_perpustakaan: # ID diubah ke 4 (jika 3 sudah dipakai)
+            gr.Markdown("""
+            ## 📚 Perpustakaan Ibu Balita
+            Temukan 40+ artikel terkurasi mengenai nutrisi, tumbuh kembang, dan kesehatan anak.
+            Gunakan filter di bawah untuk mencari artikel yang Anda butuhkan.
+            """)
+            
+            with gr.Row():
+                # Filter 1: Pencarian
+                library_search = gr.Textbox(
+                    label="🔍 Cari Artikel",
+                    placeholder="Ketik kata kunci (misal: stunting, MPASI, demam)..."
+                )
+                
+                # Filter 2: Kategori
+                library_category = gr.Dropdown(
+                    label="📁 Filter Kategori",
+                    choices=get_library_categories_list(), # Memanggil fungsi baru dari Langkah 2
+                    value="Semua Kategori"
+                )
+            
+            # Tombol untuk memicu pencarian
+            library_search_btn = gr.Button("Cari Artikel", variant="primary")
+            
+            gr.Markdown("---")
+            
+            # Area output untuk daftar artikel
+            library_output = gr.Column(
+                visible=False # Awalnya disembunyikan, ditampilkan setelah load
+            )
+
+            # --- Event Handlers untuk Tab Perpustakaan ---
+            
+            # 1. Memicu pencarian ketika tombol diklik
+            library_search_btn.click(
+                fn=update_library_display, # Memanggil fungsi baru dari Langkah 2
+                inputs=[library_search, library_category],
+                outputs=[library_output]
+            )
+            
+            # 2. (PENTING) Memuat semua artikel saat tab perpustakaan dipilih
+            tab_perpustakaan.select(
+                fn=load_initial_articles, # Memanggil fungsi baru dari Langkah 2
+                inputs=None,
+                outputs=[library_output]
+            )
 
 
         # ===================================================================
@@ -8802,9 +8778,12 @@ checklist yang disesuaikan dengan status gizi anak.
     # Handler ini akan berjalan SETIAP KALI tab diganti.
     
     # === BLOK REVISI: handler seleksi tab (disederhanakan) ===
-
+    #
+    # (Handler perpustakaan (id=3/id=4) telah dipindahkan ke dalam
+    # definisi TabItem-nya sendiri menggunakan tab_perpustakaan.select()
+    # untuk logika yang lebih bersih dan terisolasi)
+    #
     
-
     # === AKHIR BLOK REVISI ===
 
     
