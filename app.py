@@ -191,6 +191,88 @@ PYGROWUP_DIR = "pygrowup"
 for directory in [STATIC_DIR, OUTPUTS_DIR]:
     os.makedirs(directory, exist_ok=True)
     print(f"✅ Directory ensured: {directory}")
+# === Helper Functions: Premium & Browser Notification (Tab 6) ===
+
+def handle_enable_notification():
+    """
+    Backend handler untuk tombol "Aktifkan Notifikasi".
+    Karena backend tidak bisa langsung memanggil Web Notification API,
+    fungsi ini hanya mengembalikan HTML status agar pengguna mendapat feedback.
+    """
+    return """
+    <div style="padding: 12px 16px; border-radius: 10px;
+                background: #e6ffed; color: #046b4c;
+                border: 1px solid #b7eb8f; font-size: 14px;">
+        <strong>✅ Notifikasi siap diaktifkan.</strong>
+        <p style="margin: 6px 0 0;">
+            Jika browser mendukung, silakan izinkan notifikasi di pop-up yang muncul
+            atau cek pengaturan notifikasi browser Anda.
+        </p>
+    </div>
+    """
+
+
+def handle_schedule_reminder_hours(title: str, message: str, delay_hours: float):
+    """
+    Helper sederhana untuk "menjadwalkan" reminder.
+    Di sisi backend, kita hanya mengembalikan teks konfirmasi.
+    """
+    title = (title or "Reminder Gizi SiKecil").strip()
+    message = (message or "Saatnya memantau pertumbuhan dan asupan gizi anak.").strip()
+
+    try:
+        delay_val = float(delay_hours)
+    except (TypeError, ValueError):
+        delay_val = 1.0
+
+    if delay_val <= 0:
+        delay_text = "segera (kurang dari 1 jam)"
+    else:
+        # gunakan :g agar 3.0 -> "3"
+        delay_text = f"dalam {delay_val:g} jam"
+
+    return f"""
+    ### ⏰ Reminder dijadwalkan
+
+    **Judul:** {title}  
+    **Pesan:** {message}  
+    **Waktu:** {delay_text}
+
+    > Catatan: Ini adalah simulasi server-side.  
+    > Untuk alarm nyata, aktifkan notifikasi browser atau atur pengingat di ponsel Anda.
+    """
+
+
+def handle_premium_upgrade(tier: str):
+    """
+    Helper untuk menampilkan informasi paket premium.
+    Ini hanya simulasi, belum terhubung ke pembayaran sungguhan.
+    """
+    tier_key = (tier or "").lower()
+    pkg = PREMIUM_PACKAGES.get(tier_key)
+
+    if not pkg:
+        return "⚠️ Paket premium tidak dikenali."
+
+    features_html = "".join(f"<li>{feat}</li>" for feat in pkg["features"])
+
+    return f"""
+    <div style="padding: 16px 18px; border-radius: 12px;
+                background: linear-gradient(135deg, #fff7e6 0%, #fff 100%);
+                border: 1px solid #ffe58f; font-size: 14px;">
+        <h3 style="margin-top: 0;">Terima kasih telah memilih Paket {pkg['name']} ⭐</h3>
+        <p style="margin: 4px 0 10px;">
+            Ini adalah simulasi upgrade.  
+            Integrasi pembayaran online belum diaktifkan pada versi demo ini.
+        </p>
+        <ul style="margin: 0 0 10px 18px; padding: 0;">
+            {features_html}
+        </ul>
+        <p style="margin: 0; font-size: 12px; color: #555;">
+            Untuk versi produksi, hubungi admin ({CONTACT_WA}) untuk aktivasi manual.
+        </p>
+    </div>
+    """
 
 # WHO Calculator Configuration
 CALC_CONFIG = {
@@ -6114,6 +6196,13 @@ blockquote {
         background: #333333;
     }
 }
+"""
+# Placeholder JS untuk Tab "Premium & Notifikasi".
+# Saat ini tidak ada JavaScript khusus yang dijalankan; string ini hanya
+# disisipkan ke dalam gr.HTML agar mudah dikembangkan di masa depan.
+enable_notif_js = """
+<!-- JS notifikasi browser dapat ditambahkan di sini.
+     Versi v3.2.6 masih menggunakan simulasi backend saja. -->
 """
 
 print("✅ Custom CSS (v3.2.5) loaded: CSS Perpustakaan v3.2.5 siap.")
