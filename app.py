@@ -6943,32 +6943,42 @@ def generate_article_card_html(article: Dict[str, Any], index: int) -> str:
 
     return html
     
-# Pastikan ARTIKEL_LOKAL_DATABASE dan get_local_library_filters()
-# tetap ada di atas section ini (tidak dihapus).
-
 def tampilkan_perpustakaan_lokal_interaktif() -> str:
     """
-    Versi final "Perpustakaan Ibu Balita":
-    - HTML murni (filter bar + container kartu + modal).
-    - Payload artikel disimpan sebagai JSON di <textarea id="pib-library-data">
-      dan diproses oleh JS global dari get_interactive_library_js_css().
+    REVISI BESAR-BESARAN v3.2.3 - Perpustakaan Ibu Balita Fully Functional
+    
+    Perubahan utama:
+    - CSS & JavaScript langsung inline di HTML (self-contained)
+    - Scoped initialization - script berjalan setelah HTML di-render
+    - Zero dependency pada JavaScript global
+    - Event listeners yang lebih robust
+    - Semua fitur fully functional: pencarian, filter kategori, filter sumber, baca artikel
+    
+    Returns:
+        HTML string yang berisi perpustakaan interaktif lengkap dengan CSS & JS
     """
     if not ARTIKEL_LOKAL_DATABASE:
         return "<p>Tidak ada artikel perpustakaan yang tersedia.</p>"
 
+    # Ambil data filter
     kategori_list, sumber_list = get_local_library_filters()
     kategori_list = sorted(set(kategori_list))
     sumber_list = sorted(set(sumber_list))
 
+    # Helper functions
     def _esc(s: str) -> str:
+        """Escape HTML special characters"""
         return (
             s.replace("&", "&amp;")
              .replace("<", "&lt;")
              .replace(">", "&gt;")
+             .replace('"', "&quot;")
+             .replace("'", "&#39;")
         )
 
     def _build_options(values):
-        return "\\n".join(
+        """Build HTML option elements"""
+        return "\n".join(
             f'<option value="{_esc(v)}">{_esc(v)}</option>'
             for v in values
         )
@@ -6976,6 +6986,7 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
     kategori_options = _build_options(kategori_list)
     sumber_options = _build_options(sumber_list)
 
+    # Prepare article data as JSON
     payload = []
     for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE):
         payload.append({
@@ -6987,68 +6998,599 @@ def tampilkan_perpustakaan_lokal_interaktif() -> str:
             "full_content": art.get("full_content", ""),
         })
 
-    dataset_json = json.dumps(payload, ensure_ascii=False)
+    # Escape JSON untuk inline script
+    import json
+    dataset_json = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")
 
-    template = """
-<div id="perpustakaan-ibu-balita-wrapper">
-  <div class="pib-section-title">Perpustakaan Ibu Balita</div>
-  <div class="pib-section-subtitle">
-    Kumpulan artikel terkurasi dari IDAI, Kemenkes, WHO, dan sumber terpercaya lain.
-    Gunakan pencarian &amp; filter untuk menemukan topik yang Ibu butuhkan.
+    # HTML Template dengan CSS & JavaScript inline
+    html_template = """
+<div id="perpustakaan-ibu-balita-wrapper-v3">
+  
+  <!-- ======= INLINE STYLES ======= -->
+  <style>
+    /* Container utama */
+    #perpustakaan-ibu-balita-wrapper-v3 {
+      margin-top: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* Judul & subjudul */
+    .pib-v3-section-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      color: #1a202c;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .pib-v3-section-subtitle {
+      font-size: 0.95rem;
+      color: #4a5568;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      max-width: 800px;
+    }
+
+    /* Filter bar */
+    .pib-v3-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.2rem 1.4rem;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      margin-bottom: 1.2rem;
+      border: 1px solid #e2e8f0;
+    }
+    .pib-v3-filter-group {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 220px;
+      min-width: 200px;
+    }
+    .pib-v3-filter-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .pib-v3-filter-group input,
+    .pib-v3-filter-group select {
+      border-radius: 10px;
+      border: 2px solid #cbd5e0;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      outline: none;
+      background: white;
+      transition: all 0.2s ease;
+    }
+    .pib-v3-filter-group input:focus,
+    .pib-v3-filter-group select:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    /* Counter */
+    .pib-v3-counter {
+      font-size: 0.88rem;
+      color: #718096;
+      margin: 8px 0 12px 4px;
+      font-weight: 500;
+    }
+
+    /* Grid kartu artikel */
+    .pib-v3-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    /* Kartu artikel */
+    .pib-v3-article-card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    .pib-v3-article-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+      border-color: #667eea;
+    }
+    
+    .pib-v3-card-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #fbb6ce 0%, #d6bcfa 100%);
+      color: #702459;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      align-self: flex-start;
+    }
+    
+    .pib-v3-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    
+    .pib-v3-card-meta {
+      font-size: 0.8rem;
+      color: #718096;
+      margin-bottom: 10px;
+    }
+    
+    .pib-v3-card-summary {
+      font-size: 0.88rem;
+      color: #4a5568;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      flex-grow: 1;
+    }
+    
+    .pib-v3-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .pib-v3-btn-read {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    .pib-v3-btn-read:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .pib-v3-btn-read:active {
+      transform: translateY(0);
+    }
+
+    .pib-v3-source-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: #edf2f7;
+      color: #2d3748;
+    }
+    .pib-v3-source-who {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+    .pib-v3-source-kemenkes {
+      background: #c6f6d5;
+      color: #22543d;
+    }
+    .pib-v3-source-idai {
+      background: #fef5e7;
+      color: #975a16;
+    }
+
+    /* Modal */
+    .pib-v3-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .pib-v3-modal.active {
+      display: flex;
+    }
+    
+    .pib-v3-modal-content {
+      background: white;
+      max-width: 800px;
+      max-height: 85vh;
+      width: 100%;
+      border-radius: 20px;
+      padding: 0;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .pib-v3-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 1.5rem 1.8rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .pib-v3-modal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      line-height: 1.3;
+      padding-right: 20px;
+    }
+    
+    .pib-v3-modal-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.4rem;
+      color: white;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .pib-v3-modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+    
+    .pib-v3-modal-body {
+      padding: 1.8rem;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+    
+    .pib-v3-modal-body p {
+      margin: 0 0 1rem 0;
+      line-height: 1.7;
+      color: #2d3748;
+      font-size: 0.95rem;
+    }
+    
+    .pib-v3-modal-body h3 {
+      color: #1a202c;
+      margin: 1.5rem 0 0.8rem 0;
+      font-size: 1.1rem;
+    }
+
+    /* Empty state */
+    .pib-v3-empty {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: #718096;
+    }
+    .pib-v3-empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .pib-v3-filter-bar {
+        padding: 1rem;
+      }
+      .pib-v3-cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .pib-v3-modal-content {
+        max-height: 90vh;
+      }
+      .pib-v3-section-title {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+
+  <!-- ======= HEADER ======= -->
+  <div class="pib-v3-section-title">📚 Perpustakaan Ibu Balita</div>
+  <div class="pib-v3-section-subtitle">
+    Kumpulan artikel terkurasi dari IDAI, Kemenkes RI, WHO, dan sumber terpercaya lainnya. 
+    Gunakan pencarian dan filter untuk menemukan topik yang Ibu butuhkan.
   </div>
 
-  <div class="library-filter-bar">
-    <div class="filter-group">
-      <label for="pib-search">Cari Judul / Kata Kunci</label>
-      <input id="pib-search" type="text" placeholder="Contoh: stunting, MPASI, ASI eksklusif"/>
+  <!-- ======= FILTER BAR ======= -->
+  <div class="pib-v3-filter-bar">
+    <div class="pib-v3-filter-group">
+      <label for="pib-v3-search">🔍 Cari Artikel</label>
+      <input 
+        id="pib-v3-search" 
+        type="text" 
+        placeholder="Ketik kata kunci: stunting, MPASI, ASI..."
+      />
     </div>
-    <div class="filter-group">
-      <label for="pib-filter-category">Kategori</label>
-      <select id="pib-filter-category">
-        <option value="all">Semua kategori</option>
+    <div class="pib-v3-filter-group">
+      <label for="pib-v3-category">📂 Kategori</label>
+      <select id="pib-v3-category">
+        <option value="all">Semua Kategori</option>
         __KATEGORI_OPTIONS__
       </select>
     </div>
-    <div class="filter-group">
-      <label for="pib-filter-source">Sumber</label>
-      <select id="pib-filter-source">
-        <option value="all">Semua sumber</option>
+    <div class="pib-v3-filter-group">
+      <label for="pib-v3-source">🏛️ Sumber</label>
+      <select id="pib-v3-source">
+        <option value="all">Semua Sumber</option>
         __SUMBER_OPTIONS__
       </select>
     </div>
   </div>
 
-  <div id="pib-counter" class="library-counter">
-    <span id="pib-counter-span">Memuat artikel perpustakaan...</span>
+  <!-- ======= COUNTER ======= -->
+  <div class="pib-v3-counter">
+    <span id="pib-v3-counter-text">Memuat artikel...</span>
   </div>
 
-  <div id="pib-cards" class="article-card-grid"></div>
+  <!-- ======= CARDS CONTAINER ======= -->
+  <div id="pib-v3-cards" class="pib-v3-cards-grid"></div>
 
-  <div id="pib-modal" class="pib-modal" aria-hidden="true">
-    <div class="pib-modal-content">
-      <div class="pib-modal-header">
-        <div class="pib-modal-title" id="pib-modal-title">Judul artikel</div>
-        <button type="button" class="pib-modal-close" id="pib-modal-close" aria-label="Tutup">
-          ✕
-        </button>
+  <!-- ======= MODAL ======= -->
+  <div id="pib-v3-modal" class="pib-v3-modal">
+    <div class="pib-v3-modal-content">
+      <div class="pib-v3-modal-header">
+        <div id="pib-v3-modal-title" class="pib-v3-modal-title">Judul Artikel</div>
+        <button id="pib-v3-modal-close" class="pib-v3-modal-close">×</button>
       </div>
-      <div class="pib-modal-body" id="pib-modal-body">
-        Konten artikel akan tampil di sini.
+      <div id="pib-v3-modal-body" class="pib-v3-modal-body">
+        <p>Konten artikel akan tampil di sini...</p>
       </div>
     </div>
   </div>
 
-  <!-- Payload JSON untuk diproses JS global -->
-  <textarea id="pib-library-data" style="display:none;">__DATASET_JSON__</textarea>
+  <!-- ======= INLINE JAVASCRIPT ======= -->
+  <script>
+  (function() {
+    // Data artikel (dari Python)
+    var articlesData = __DATASET_JSON__;
+    
+    // Preprocess data
+    articlesData = articlesData.map(function(article) {
+      var sources = (article.source || '').split('|').map(function(s) { 
+        return s.trim(); 
+      }).filter(Boolean);
+      
+      return {
+        id: article.id,
+        title: article.title || '',
+        kategori: article.kategori || '',
+        source: article.source || '',
+        source_list: sources,
+        summary: article.summary || '',
+        full_content: article.full_content || '',
+        // Untuk searching (lowercase)
+        _title_lower: (article.title || '').toLowerCase(),
+        _summary_lower: (article.summary || '').toLowerCase(),
+        _content_lower: (article.full_content || '').toLowerCase()
+      };
+    });
+
+    // DOM elements
+    var searchInput = document.getElementById('pib-v3-search');
+    var categorySelect = document.getElementById('pib-v3-category');
+    var sourceSelect = document.getElementById('pib-v3-source');
+    var counterText = document.getElementById('pib-v3-counter-text');
+    var cardsContainer = document.getElementById('pib-v3-cards');
+    var modal = document.getElementById('pib-v3-modal');
+    var modalTitle = document.getElementById('pib-v3-modal-title');
+    var modalBody = document.getElementById('pib-v3-modal-body');
+    var modalClose = document.getElementById('pib-v3-modal-close');
+
+    // Helper: Determine source badge class
+    function getSourceBadge(sources) {
+      if (!sources || sources.length === 0) {
+        return { label: 'Lokal', className: 'pib-v3-source-badge' };
+      }
+      var joined = sources.join(' ').toLowerCase();
+      if (joined.indexOf('who') !== -1) {
+        return { label: 'WHO', className: 'pib-v3-source-badge pib-v3-source-who' };
+      }
+      if (joined.indexOf('kemenkes') !== -1 || joined.indexOf('kementerian kesehatan') !== -1) {
+        return { label: 'Kemenkes RI', className: 'pib-v3-source-badge pib-v3-source-kemenkes' };
+      }
+      if (joined.indexOf('idai') !== -1) {
+        return { label: 'IDAI', className: 'pib-v3-source-badge pib-v3-source-idai' };
+      }
+      return { label: 'Terpercaya', className: 'pib-v3-source-badge' };
+    }
+
+    // Helper: Escape HTML
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Filter articles based on current input values
+    function filterArticles() {
+      var query = (searchInput.value || '').toLowerCase().trim();
+      var category = categorySelect.value;
+      var source = sourceSelect.value;
+
+      return articlesData.filter(function(article) {
+        // Filter by category
+        if (category !== 'all' && article.kategori !== category) {
+          return false;
+        }
+        
+        // Filter by source
+        if (source !== 'all') {
+          var hasSource = article.source_list.some(function(s) {
+            return s === source;
+          });
+          if (!hasSource) return false;
+        }
+        
+        // Filter by search query
+        if (query) {
+          var matchTitle = article._title_lower.indexOf(query) !== -1;
+          var matchSummary = article._summary_lower.indexOf(query) !== -1;
+          var matchContent = article._content_lower.indexOf(query) !== -1;
+          
+          if (!matchTitle && !matchSummary && !matchContent) {
+            return false;
+          }
+        }
+        
+        return true;
+      });
+    }
+
+    // Render article cards
+    function renderCards() {
+      var filtered = filterArticles();
+      
+      // Update counter
+      if (filtered.length === 0) {
+        counterText.textContent = 'Tidak ada artikel yang cocok';
+      } else if (filtered.length === 1) {
+        counterText.textContent = '1 artikel ditemukan';
+      } else {
+        counterText.textContent = filtered.length + ' artikel ditemukan';
+      }
+
+      // Clear container
+      cardsContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        // Show empty state
+        cardsContainer.innerHTML = 
+          '<div class="pib-v3-empty">' +
+            '<div class="pib-v3-empty-icon">📚</div>' +
+            '<p>Tidak ada artikel yang sesuai dengan pencarian Anda.</p>' +
+            '<p style="font-size: 0.85rem;">Coba gunakan kata kunci lain atau ubah filter.</p>' +
+          '</div>';
+        return;
+      }
+
+      // Render each article card
+      filtered.forEach(function(article) {
+        var card = document.createElement('div');
+        card.className = 'pib-v3-article-card';
+        
+        var sourceBadge = getSourceBadge(article.source_list);
+        var sourceDisplay = article.source.replace(/\|/g, ' • ');
+        
+        card.innerHTML = 
+          '<div class="pib-v3-card-badge">📖 ' + escapeHtml(article.kategori) + '</div>' +
+          '<div class="pib-v3-card-title">' + escapeHtml(article.title) + '</div>' +
+          '<div class="pib-v3-card-meta">' + 
+            (sourceDisplay ? 'Sumber: ' + escapeHtml(sourceDisplay) : '') + 
+          '</div>' +
+          '<div class="pib-v3-card-summary">' + escapeHtml(article.summary) + '</div>' +
+          '<div class="pib-v3-card-footer">' +
+            '<button class="pib-v3-btn-read" data-article-id="' + article.id + '">' +
+              '📖 Baca Selengkapnya' +
+            '</button>' +
+            '<span class="' + sourceBadge.className + '">' + sourceBadge.label + '</span>' +
+          '</div>';
+        
+        // Add click event to read button
+        var readBtn = card.querySelector('.pib-v3-btn-read');
+        readBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          openModal(article);
+        });
+        
+        // Make entire card clickable
+        card.addEventListener('click', function() {
+          openModal(article);
+        });
+        
+        cardsContainer.appendChild(card);
+      });
+    }
+
+    // Open modal with article content
+    function openModal(article) {
+      modalTitle.textContent = article.title;
+      
+      var content = article.full_content.trim();
+      if (!content) {
+        modalBody.innerHTML = '<p style="color: #718096; text-align: center; padding: 2rem;">Konten artikel belum tersedia.</p>';
+      } else {
+        // Split by double newlines to create paragraphs
+        var paragraphs = content.split(/\n\s*\n/);
+        var html = paragraphs.map(function(para) {
+          // Replace single newlines with <br>
+          var formatted = escapeHtml(para.trim()).replace(/\n/g, '<br>');
+          return '<p>' + formatted + '</p>';
+        }).join('');
+        
+        modalBody.innerHTML = html;
+      }
+      
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    // Close modal
+    function closeModal() {
+      modal.classList.remove('active');
+      document.body.style.overflow = ''; // Restore scrolling
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', renderCards);
+    categorySelect.addEventListener('change', renderCards);
+    sourceSelect.addEventListener('change', renderCards);
+    modalClose.addEventListener('click', closeModal);
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        closeModal();
+      }
+    });
+
+    // Initial render
+    renderCards();
+    
+    console.log('✅ Perpustakaan Ibu Balita v3.2.3 initialized - ' + articlesData.length + ' articles loaded');
+  })();
+  </script>
 </div>
 """
-    html = (
-        template
+
+    # Replace placeholders
+    html_output = (
+        html_template
         .replace("__KATEGORI_OPTIONS__", kategori_options)
         .replace("__SUMBER_OPTIONS__", sumber_options)
         .replace("__DATASET_JSON__", dataset_json)
     )
-    return html
+    
+    return html_output
 
 
 
@@ -7218,437 +7760,23 @@ def render_perpustakaan_updated() -> str:
 
 def get_interactive_library_js_css() -> str:
     """
-    CSS + JS global untuk fitur "Perpustakaan Ibu Balita".
-
-    Dipanggil di awal layout melalui:
-        combined_js = notification_js + get_interactive_library_js_css()
-        gr.HTML(combined_js)
+    REVISI v3.2.3 - Simplified JavaScript Global
+    
+    Karena perpustakaan sekarang self-contained (CSS & JS inline di HTML),
+    fungsi ini hanya mengembalikan string kosong atau minimal CSS global jika diperlukan.
+    
+    CATATAN: Jika Anda masih menggunakan fungsi ini di tempat lain, 
+    Anda bisa mengembalikan string kosong atau minimal styling.
     """
     return """
 <style>
-#perpustakaan-ibu-balita-wrapper {
-  margin-top: 10px;
-}
-
-/* Judul & subjudul */
-.pib-section-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 0.2rem;
-  color: #1f2933;
-}
-.pib-section-subtitle {
-  font-size: 0.92rem;
-  color: #52606d;
-  max-width: 760px;
-  line-height: 1.5;
-  margin-bottom: 1.2rem;
-}
-
-/* Filter bar */
-.library-filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 14px 18px;
-  border-radius: 16px;
-  background: #f9fafb;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
-  margin-bottom: 1rem;
-}
-.library-filter-bar .filter-group {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 220px;
-  min-width: 0;
-}
-.library-filter-bar label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #4b5563;
-  margin-bottom: 4px;
-}
-.library-filter-bar input,
-.library-filter-bar select {
-  border-radius: 999px;
-  border: 1px solid #e5e7eb;
-  padding: 8px 14px;
-  font-size: 0.9rem;
-  outline: none;
-  background: white;
-  box-shadow: 0 0 0 1px transparent;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-.library-filter-bar input:focus,
-.library-filter-bar select:focus {
-  border-color: #fb7185;
-  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.4);
-  background: #fff;
-}
-
-/* Counter & grid */
-.library-counter {
-  font-size: 0.82rem;
-  color: #6b7280;
-  margin: 6px 4px 10px 4px;
-}
-.article-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-/* Kartu artikel */
-.article-card-v3 {
-  background: white;
-  border-radius: 18px;
-  padding: 14px 16px;
-  box-shadow: 0 10px 26px rgba(148, 163, 184, 0.18);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-.article-card-badge span {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #fee2e2, #eef2ff);
-  color: #7f1d1d;
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-.article-card-title {
-  margin-top: 8px;
-  font-size: 1.02rem;
-  font-weight: 700;
-  color: #111827;
-}
-.article-card-meta {
-  font-size: 0.78rem;
-  color: #6b7280;
-  margin: 2px 0 6px 0;
-}
-.article-card-summary {
-  font-size: 0.86rem;
-  color: #374151;
-  line-height: 1.45;
-}
-.article-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-.article-card-footer button {
-  border-radius: 999px;
-  border: none;
-  padding: 7px 13px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, #fb7185, #f97316);
-  color: white;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.35);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.article-card-footer button:hover {
-  opacity: 0.95;
-  transform: translateY(-0.5px);
-}
-
-/* Badge sumber */
-.badge-pill-source {
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  background: #e5e7eb;
-  color: #374151;
-}
-.badge-source-who {
-  background: #e0f2fe;
-  color: #0369a1;
-}
-.badge-source-kemenkes {
-  background: #dcfce7;
-  color: #166534;
-}
-.badge-source-idai {
-  background: #fef9c3;
-  color: #92400e;
-}
-
-/* Modal */
-.pib-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 60;
-}
-.pib-modal[aria-hidden="false"] {
-  display: flex;
-}
-.pib-modal-content {
-  background: white;
-  max-width: min(780px, 92vw);
-  max-height: 84vh;
-  border-radius: 18px;
-  padding: 18px 20px;
-  box-shadow: 0 25px 60px rgba(15, 23, 42, 0.45);
-  display: flex;
-  flex-direction: column;
-}
-.pib-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.pib-modal-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #111827;
-  padding-right: 10px;
-}
-.pib-modal-close {
-  border: none;
-  border-radius: 999px;
-  width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f4f6;
-  cursor: pointer;
-}
-.pib-modal-close:hover {
-  background: #e5e7eb;
-}
-.pib-modal-body {
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1px solid #e5e7eb;
-  font-size: 0.9rem;
-  color: #111827;
-  line-height: 1.5;
-  overflow-y: auto;
-}
-
-/* Responsif */
-@media (max-width: 640px) {
-  .library-filter-bar {
-    padding: 12px 14px;
-  }
+/* Global styling minimal untuk perpustakaan */
+#perpustakaan-ibu-balita-wrapper-v3 * {
+  box-sizing: border-box;
 }
 </style>
-<script>
-(function() {
-  if (window.PIBLibraryGlobalInit) return;
-  window.PIBLibraryGlobalInit = true;
-
-  function initPerpustakaan() {
-    var root = document.getElementById('perpustakaan-ibu-balita-wrapper');
-    if (!root) return false;
-    if (root.dataset && root.dataset.initialized === '1') return true;
-    if (root.dataset) root.dataset.initialized = '1';
-
-    var dataHolder = root.querySelector('#pib-library-data');
-    var jsonText = dataHolder ? (dataHolder.value || dataHolder.textContent || '[]') : '[]';
-    var raw;
-    try {
-      raw = JSON.parse(jsonText);
-    } catch (e) {
-      console.error('Gagal parse data Perpustakaan Ibu Balita:', e);
-      raw = [];
-    }
-
-    var data = raw.map(function(a) {
-      var sources = (a.source || '').split('|').map(function(s) { return s.trim(); }).filter(Boolean);
-      return Object.assign({}, a, {
-        source_list: sources,
-        title_lower: (a.title || '').toLowerCase(),
-        summary_lower: (a.summary || '').toLowerCase(),
-        full_lower: (a.full_content || '').toLowerCase()
-      });
-    });
-
-    var cardsContainer = root.querySelector('#pib-cards');
-    var searchInput = root.querySelector('#pib-search');
-    var categorySelect = root.querySelector('#pib-filter-category');
-    var sourceSelect = root.querySelector('#pib-filter-source');
-    var counterSpan = root.querySelector('#pib-counter-span');
-
-    var modal = root.querySelector('#pib-modal');
-    var modalTitle = root.querySelector('#pib-modal-title');
-    var modalBody = root.querySelector('#pib-modal-body');
-    var modalClose = root.querySelector('#pib-modal-close');
-
-    function pickSourceBadge(sources) {
-      if (!sources || !sources.length) {
-        return { label: 'Artikel Lokal', cls: 'badge-pill-source' };
-      }
-      var joined = sources.join(' ').toLowerCase();
-      if (joined.indexOf('who') !== -1) {
-        return { label: 'WHO', cls: 'badge-pill-source badge-source-who' };
-      }
-      if (joined.indexOf('kemenkes') !== -1 || joined.indexOf('kementerian kesehatan') !== -1) {
-        return { label: 'Kemenkes RI', cls: 'badge-pill-source badge-source-kemenkes' };
-      }
-      if (joined.indexOf('idai') !== -1 || joined.indexOf('dokter anak indonesia') !== -1) {
-        return { label: 'IDAI', cls: 'badge-pill-source badge-source-idai' };
-      }
-      return { label: 'Sumber tepercaya', cls: 'badge-pill-source' };
-    }
-
-    function openModal(article) {
-      if (!modal) return;
-      if (modalTitle) modalTitle.textContent = article.title || 'Artikel';
-      if (modalBody) {
-        var raw = (article.full_content || '').trim();
-        if (!raw) {
-          modalBody.innerHTML = '<p>Konten artikel belum tersedia.</p>';
-        } else {
-          var escaped = raw
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-          var paras = escaped.split(/\\n\\s*\\n/);
-          var html = paras.map(function(p) {
-            return '<p style="margin:0 0 8px 0; line-height:1.5;">' + p.replace(/\\n/g, '<br/>') + '</p>';
-          }).join('');
-          modalBody.innerHTML = html;
-        }
-      }
-      modal.setAttribute('aria-hidden', 'false');
-    }
-
-    function closeModal() {
-      if (!modal) return;
-      modal.setAttribute('aria-hidden', 'true');
-    }
-
-    function filterData() {
-      var q = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
-      var cat = categorySelect ? categorySelect.value : 'all';
-      var src = sourceSelect ? sourceSelect.value : 'all';
-
-      return data.filter(function(a) {
-        if (cat !== 'all' && a.kategori !== cat) return false;
-        if (src !== 'all' && a.source_list.indexOf(src) === -1) return false;
-        if (!q) return true;
-        return (
-          a.title_lower.indexOf(q) !== -1 ||
-          a.summary_lower.indexOf(q) !== -1 ||
-          a.full_lower.indexOf(q) !== -1
-        );
-      });
-    }
-
-    function renderCards() {
-      var filtered = filterData();
-      if (counterSpan) {
-        counterSpan.textContent = filtered.length + ' artikel ditemukan';
-      }
-      if (!cardsContainer) return;
-      cardsContainer.innerHTML = '';
-
-      filtered.forEach(function(a) {
-        var card = document.createElement('div');
-        card.className = 'article-card-v3';
-        var sumberStr = (a.source || '').replace(/\\|/g, ' • ');
-        var badge = pickSourceBadge(a.source_list || []);
-
-        card.innerHTML =
-          '<div class="article-card-badge">' +
-            '<span>📚 ' + (a.kategori || 'Umum') + '</span>' +
-          '</div>' +
-          '<div class="article-card-title">' + (a.title || 'Tanpa judul') + '</div>' +
-          '<div class="article-card-meta">' + (sumberStr ? 'Sumber: ' + sumberStr : '') + '</div>' +
-          '<div class="article-card-summary">' + (a.summary || '') + '</div>' +
-          '<div class="article-card-footer">' +
-            '<button type="button" data-article-id="' + a.id + '">Baca ringkasan lengkap</button>' +
-            '<span class="' + badge.cls + '">' + badge.label + '</span>' +
-          '</div>';
-
-        var btn = card.querySelector('button[data-article-id]');
-        if (btn) {
-          btn.addEventListener('click', function() {
-            openModal(a);
-          });
-        }
-        cardsContainer.appendChild(card);
-      });
-
-      if (filtered.length === 0) {
-        cardsContainer.innerHTML =
-          '<p style="font-size:0.85rem;color:#6b7280;">Tidak ada artikel yang cocok dengan filter saat ini.</p>';
-      }
-    }
-
-    if (modalClose) {
-      modalClose.addEventListener('click', function() {
-        closeModal();
-      });
-    }
-    if (modal) {
-      modal.addEventListener('click', function(ev) {
-        if (ev.target === modal) {
-          closeModal();
-        }
-      });
-    }
-
-    if (searchInput) {
-      searchInput.addEventListener('input', renderCards);
-    }
-    if (categorySelect) {
-      categorySelect.addEventListener('change', renderCards);
-    }
-    if (sourceSelect) {
-      sourceSelect.addEventListener('change', renderCards);
-    }
-
-    renderCards();
-    return true;
-  }
-
-  function tryInitNow() {
-    try {
-      return initPerpustakaan();
-    } catch (e) {
-      console.error('Error init Perpustakaan Ibu Balita:', e);
-      return false;
-    }
-  }
-
-  function setupObserver() {
-    if (tryInitNow()) return;
-    var observer = new MutationObserver(function() {
-      if (tryInitNow()) {
-        observer.disconnect();
-      }
-    });
-    observer.observe(document.body || document.documentElement, {
-      childList: true,
-      subtree: true
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setupObserver);
-  } else {
-    setupObserver();
-  }
-})();
-</script>
 """
+
 
 
 
