@@ -120,7 +120,7 @@ print("✅ All imports successful")
 # ===============================================================================
 
 # Application Metadata
-APP_VERSION = "3.2.3" # MODIFIED (Perpustakaan Fix)
+APP_VERSION = "3.2.6" # GRADIENT FIX (Perpustakaan - No External Images)
 APP_TITLE = "PeduliGiziBalita - Monitor Pertumbuhan Anak Profesional" # MODIFIED
 APP_DESCRIPTION = "Aplikasi berbasis WHO Child Growth Standards untuk pemantauan antropometri anak 0-60 bulan" # MODIFIED
 CONTACT_WA = "6285888858160"
@@ -5473,22 +5473,37 @@ def get_library_categories_list():
 
 def update_library_display(search_term: str, category: str):
     """
-    (REVISI UI v3.2.5 - MEMPERBAIKI INDEKS CSS)
-    Fungsi ini sekarang menggunakan 'idx' ASLI dari database.
+    (REVISI v3.2.6 - GRADIENT FIX - NO EXTERNAL IMAGES)
+    Menggunakan gradient CSS murni untuk visual yang menarik tanpa ketergantungan external URLs
     """
     search_term = search_term.lower().strip()
     
-    # --- PERBAIKAN DATABASE DUPLIKAT ---
-    # Kita hanya ambil 40 artikel pertama untuk menghindari duplikat
-    # Dan kita enumerate DATABASE ASLI
+    # Mapping kategori ke gradient warna yang menarik
+    CATEGORY_GRADIENTS = {
+        "Nutrisi & MPASI": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        "Tumbuh Kembang": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        "Kesehatan Anak": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        "Tips Orang Tua": "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
+        "Imunisasi & Vitamin": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+    }
+    
+    # Icon emoji untuk setiap kategori
+    CATEGORY_ICONS = {
+        "Nutrisi & MPASI": "🍽️",
+        "Tumbuh Kembang": "👶",
+        "Kesehatan Anak": "⚕️",
+        "Tips Orang Tua": "👨‍👩‍👧",
+        "Imunisasi & Vitamin": "💉",
+    }
+    
+    # Ambil 40 artikel pertama untuk menghindari duplikat
     articles_to_process = ARTIKEL_LOKAL_DATABASE[:40] 
     
     filtered_articles = []
     
-    # Gunakan enumerate PADA DATABASE ASLI
+    # Filter artikel
     for idx, art in enumerate(articles_to_process): 
         
-        # --- MULAI FILTER ---
         if category != "Semua Kategori" and art.get("kategori") != category:
             continue
         
@@ -5498,9 +5513,7 @@ def update_library_display(search_term: str, category: str):
         
         if search_term and not (search_term in title or search_term in summary or search_term in content):
             continue
-        # --- AKHIR FILTER ---
             
-        # Simpan artikel DAN INDEKS ASLINYA
         filtered_articles.append((idx, art)) 
 
     if not filtered_articles:
@@ -5510,8 +5523,6 @@ def update_library_display(search_term: str, category: str):
     html_output_list.append(f"<p style='text-align:center; font-weight:bold; color:#333;'>Menampilkan {len(filtered_articles)} artikel:</p>")
     html_output_list.append("<div class='library-grid-container'>")
     
-    # Loop melalui artikel yang sudah difilter
-    # 'idx' di sini adalah INDEKS ASLI (0-39)
     for idx, art in filtered_articles:
         
         title_safe = art.get('title', 'Tanpa Judul').replace('<', '&lt;').replace('>', '&gt;')
@@ -5519,7 +5530,11 @@ def update_library_display(search_term: str, category: str):
         kategori_safe = art.get('kategori', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         source_safe = art.get('source', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         
-        # --- PERBAIKAN KONTEN HTML (REGEX FIX) ---
+        # Tentukan gradient dan icon berdasarkan kategori
+        gradient = CATEGORY_GRADIENTS.get(art.get('kategori'), "linear-gradient(135deg, #667eea 0%, #764ba2 100%)")
+        icon = CATEGORY_ICONS.get(art.get('kategori'), "📚")
+        
+        # Format konten HTML
         content_html = art.get('full_content', 'Konten tidak tersedia.')
         content_html = content_html.replace('\n\n', '</p><p>')
         content_html = content_html.replace('---', '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">')
@@ -5529,12 +5544,10 @@ def update_library_display(search_term: str, category: str):
         content_html = content_html.replace('### ', '<h4>')
         
         content_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content_html)
-        
-        # Perbaikan regex list (lebih kuat)
         content_html = re.sub(r'(<br>|^)\* (.*?)(<br>|$)', r'\1<li>\2</li>', content_html)
         content_html = content_html.replace('</li><br><li>', '</li><li>') 
         
-        # Bungkus grup <li> dengan <ul>
+        # Bungkus list dengan <ul>
         content_html_list = content_html.split('<li>')
         if len(content_html_list) > 1:
             processed_html = content_html_list[0]
@@ -5553,12 +5566,13 @@ def update_library_display(search_term: str, category: str):
                 processed_html += '</ul>'
             content_html = processed_html.replace('<ul><br>', '<ul>').replace('</ul><br>', '</ul>')
         
-
-        
+        # Generate card HTML dengan gradient dan icon
         html_output_list.append(f"""
         <div class="article-card-v3-2-3">
             
-            <div class="article-image article-img-{idx}"></div>
+            <div class="article-image-gradient" style="background: {gradient};">
+                <div class="article-icon">{icon}</div>
+            </div>
             
             <div class="article-summary-content">
                 <span class="article-category">{kategori_safe}</span>
@@ -5885,152 +5899,184 @@ blockquote {
     box-shadow: 0 7px 20px rgba(0,0,0,0.08);
     transform: translateY(-3px);
 }
-.article-image {
+/* =================================================================== */
+/* PERPUSTAKAAN v3.2.6 - GRADIENT VERSION (NO EXTERNAL IMAGES) */
+/* =================================================================== */
+
+.article-image-gradient {
     width: 100%;
-    height: 180px;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
     border-bottom: 1px solid #eee;
 }
+
+.article-icon {
+    font-size: 72px;
+    opacity: 0.9;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
 .article-summary-content {
     padding: 20px;
     flex-grow: 1;
 }
+
 .article-category {
     display: inline-block;
-    background: #fff5f8;
-    color: #ff6b9d;
-    padding: 5px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     margin-bottom: 12px;
-    border: 1px solid #ffdde5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
+
 .article-title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    color: #2c3e50;
-    margin: 0 0 8px 0;
+    color: #1a202c;
+    margin: 0 0 12px 0;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
+
 .article-summary {
-    font-size: 14px;
-    color: #555;
+    font-size: 15px;
+    color: #4a5568;
     line-height: 1.6;
     margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
+
 .article-details-dropdown {
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid #e2e8f0;
+    background: #f7fafc;
     margin-top: auto;
 }
+
 .article-details-toggle {
     padding: 16px 20px;
     cursor: pointer;
-    font-size: 15px;
     font-weight: 600;
-    color: #3498db;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s;
+    user-select: none;
     list-style: none;
-    transition: background 0.2s ease;
-    display: block;
-    text-align: center;
 }
+
 .article-details-toggle:hover {
-    background: #f9f9f9;
+    background: #edf2f7;
+    color: #764ba2;
 }
-.article-details-toggle::before {
-    content: '▼';
-    margin-right: 10px;
+
+.article-details-toggle::after {
+    content: "▼";
     font-size: 12px;
-    display: inline-block;
-    transition: transform 0.2s ease;
+    transition: transform 0.3s;
 }
-.article-details-toggle {
-    list-style-type: none;
+
+.article-details-dropdown[open] .article-details-toggle::after {
+    transform: rotate(180deg);
 }
-details[open] > .article-details-toggle::before {
-    transform: rotate(-180deg);
-}
+
 .article-full-content-wrapper {
-    padding: 0 20px 20px 20px;
-    line-height: 1.7;
-    color: #333;
+    padding: 24px;
+    background: white;
+    color: #2d3748;
+    line-height: 1.8;
     font-size: 15px;
-    background: #fafafa;
+    max-height: 600px;
+    overflow-y: auto;
+    animation: slideDown 0.3s ease-out;
 }
-.article-full-content-wrapper h2,
-.article-full-content-wrapper h3,
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.article-full-content-wrapper h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 24px 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #667eea;
+}
+
+.article-full-content-wrapper h3 {
+    font-size: 19px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 20px 0 10px 0;
+}
+
 .article-full-content-wrapper h4 {
-    color: #2c3e50;
-    margin-top: 20px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #4a5568;
+    margin: 16px 0 8px 0;
 }
-.article-full-content-wrapper ul,
-.article-full-content-wrapper ol {
-    padding-left: 25px;
+
+.article-full-content-wrapper p {
+    margin: 12px 0;
 }
+
+.article-full-content-wrapper ul {
+    margin: 12px 0;
+    padding-left: 24px;
+}
+
 .article-full-content-wrapper li {
-    margin-bottom: 10px;
+    margin: 8px 0;
+    padding-left: 8px;
 }
+
 .article-full-content-wrapper strong {
-    color: #ff6b9d;
+    color: #2d3748;
+    font-weight: 600;
 }
+
 .article-source {
-    font-size: 13px;
-    color: #666;
-    font-style: italic;
     display: block;
-    margin-top: 15px;
-    background: #f0f0f0;
-    padding: 10px;
-    border-radius: 8px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 2px solid #e2e8f0;
+    font-size: 13px;
+    color: #718096;
+    font-style: italic;
 }
 
 /* =================================================================== */
-/* PERPUSTAKAAN v3.2.4 - IMAGE URLS (STATIC IN CSS) */
-/* =================================================================== */
-.article-img-0 { background-image: url('https://images.unsplash.com/photo-1600857592429-06388147aa0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-1 { background-image: url('https://images.unsplash.com/photo-1544385191-a8d83c0c0910?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-2 { background-image: url('https://images.unsplash.com/photo-1519733224424-a78932641e1c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-3 { background-image: url('https://images.unsplash.com/photo-1591160623347-0622c71a3a2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-4 { background-image: url('https://images.unsplash.com/photo-1606823354313-a4f1232c4533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-5 { background-image: url('https://images.unsplash.com/photo-1589139121857-a5735161394a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-6 { background-image: url('https://images.unsplash.com/photo-1598993685548-e0420d75765d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-7 { background-image: url('https://images.unsplash.com/photo-1582235880501-f2e519c636ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-8 { background-image: url('https://images.unsplash.com/photo-1604719212028-a3d1d236369c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-9 { background-image: url('https://images.unsplash.com/photo-1558220938-f91d0a3311c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-10 { background-image: url('https://images.unsplash.com/photo-1518610368143-69091b3ab806?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-11 { background-image: url('https://images.unsplash.com/photo-1546015026-6132b138026d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-12 { background-image: url('https://images.unsplash.com/photo-1519062136015-659f0f633d3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-13 { background-image: url('https://images.unsplash.com/photo-1518717758339-39B3c607eb42?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-14 { background-image: url('https://images.unsplash.com/photo-1546820389-0822369cbf34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-15 { background-image: url('https://images.unsplash.com/photo-1519362351240-d69b552f5071?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-16 { background-image: url('https://images.unsplash.com/photo-1557941733-27d6dbb8b209?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-17 { background-image: url('https://plus.unsplash.com/premium_photo-1664301530062-83b33375b426?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-18 { background-image: url('https://images.unsplash.com/photo-1605681145151-c0b3d6c7104b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-19 { background-image: url('https://images.unsplash.com/photo-1599599933544-672e4798c807?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-20 { background-image: url('https://images.unsplash.com/photo-1620336214302-1a4c38d4c1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-21 { background-image: url('https://images.unsplash.com/photo-1554734867-bf3c00a49371?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-22 { background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80'); }
-.article-img-23 { background-image: url('https://plus.unsplash.com/premium_photo-1661766820235-3c96bc13f938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-24 { background-image: url('https://images.unsplash.com/photo-1606838837238-57688313508c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-25 { background-image: url('https://images.unsplash.com/photo-1584610356248-81d3d66b596f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-26 { background-image: url('https://images.unsplash.com/photo-1522889639-6B4912BA542A?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-27 { background-image: url('https://images.unsplash.com/photo-1566004100631-35d015d6a491?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-28 { background-image: url('https://images.unsplash.com/photo-1484665754824-1d8e1469956e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-29 { background-image: url('https://images.unsplash.com/photo-1472090278799-d7c2a7156d68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80'); }
-.article-img-30 { background-image: url('https://images.unsplash.com/photo-1499781350138-d0f31a207612?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-31 { background-image: url('https://images.unsplash.com/photo-1506869639733-11215c54f5c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-32 { background-image: url('https://images.unsplash.com/photo-1599522190924-d5f2a1d2112a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80'); }
-.article-img-33 { background-image: url('https://images.unsplash.com/photo-1596707849382-e56d4001150f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-34 { background-image: url('https://images.unsplash.com/photo-1574023240294-f2549f8a816a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-35 { background-image: url('https://images.unsplash.com/photo-1600813160814-1f3f615306e6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-36 { background-image: url('https://images.unsplash.com/photo-1610481977931-36f73357b10a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-37 { background-image: url('https://images.unsplash.com/photo-1590240472421-5a50e932fe40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-.article-img-38 { background-image: url('https://images.unsplash.com/photo-1570228062259-e36c6c5188c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=871&q=80'); }
-.article-img-39 { background-image: url('https://images.unsplash.com/photo-1543083326-14c049e3a348?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
-/* =================================================================== */
-/* AKHIR BLOK IMAGE URLS */
+/* AKHIR BLOK GRADIENT VERSION */
 /* =================================================================== */
 
 /* Dark Mode overrides for new card */
@@ -6791,4 +6837,3 @@ if __name__ == "__main__":
 
 
 }
-
