@@ -7175,24 +7175,28 @@ def get_library_categories_list():
     return ["Semua Kategori"] + categories
 
 # ===================================================================
-# GANTI FUNGSI 'update_library_display' DI SECTION 10B DENGAN YANG INI
+# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
+# DI SECTION 10B DENGAN KODE BARU INI
 # ===================================================================
 
 def update_library_display(search_term: str, category: str):
     """
-    (REVISI UI v3.2.4 - Menggunakan KELAS CSS STATIS)
-    Fungsi ini sekarang hanya menghasilkan kelas (misal: "article-img-0")
+    (REVISI UI v3.2.5 - MEMPERBAIKI INDEKS CSS)
+    Fungsi ini sekarang menggunakan 'idx' ASLI dari database.
     """
     search_term = search_term.lower().strip()
     
     # --- PERBAIKAN DATABASE DUPLIKAT ---
     # Kita hanya ambil 40 artikel pertama untuk menghindari duplikat
+    # Dan kita enumerate DATABASE ASLI
     articles_to_process = ARTIKEL_LOKAL_DATABASE[:40] 
     
     filtered_articles = []
     
-    # Gunakan enumerate untuk mendapatkan 'idx'
-    for idx, art in enumerate(articles_to_process):
+    # Gunakan enumerate PADA DATABASE ASLI
+    for idx, art in enumerate(articles_to_process): 
+        
+        # --- MULAI FILTER ---
         if category != "Semua Kategori" and art.get("kategori") != category:
             continue
         
@@ -7202,8 +7206,9 @@ def update_library_display(search_term: str, category: str):
         
         if search_term and not (search_term in title or search_term in summary or search_term in content):
             continue
+        # --- AKHIR FILTER ---
             
-        # Simpan artikel DAN indeks aslinya
+        # Simpan artikel DAN INDEKS ASLINYA
         filtered_articles.append((idx, art)) 
 
     if not filtered_articles:
@@ -7214,6 +7219,7 @@ def update_library_display(search_term: str, category: str):
     html_output_list.append("<div class='library-grid-container'>")
     
     # Loop melalui artikel yang sudah difilter
+    # 'idx' di sini adalah INDEKS ASLI (0-39)
     for idx, art in filtered_articles:
         
         title_safe = art.get('title', 'Tanpa Judul').replace('<', '&lt;').replace('>', '&gt;')
@@ -7221,7 +7227,7 @@ def update_library_display(search_term: str, category: str):
         kategori_safe = art.get('kategori', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         source_safe = art.get('source', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         
-        # --- PERBAIKAN KONTEN HTML ---
+        # --- PERBAIKAN KONTEN HTML (REGEX FIX) ---
         content_html = art.get('full_content', 'Konten tidak tersedia.')
         content_html = content_html.replace('\n\n', '</p><p>')
         content_html = content_html.replace('---', '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">')
@@ -7232,10 +7238,18 @@ def update_library_display(search_term: str, category: str):
         
         import re
         content_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content_html)
-        content_html = re.sub(r'\* (.*?)(<br>|$)', r'<li>\1</li>', content_html)
+        
+        # Perbaikan regex list (lebih kuat)
+        # Ubah baris yang dimulai dengan '* ' menjadi <li>...</li>
+        content_html = re.sub(r'(<br>|^)\* (.*?)(<br>|$)', r'\1<li>\2</li>', content_html)
+        # Hapus <br> ekstra di antara <li>
         content_html = content_html.replace('</li><br><li>', '</li><li>') 
-        content_html = re.sub(r'(<li>.*</li>)', r'<ul>\1</ul>', content_html, flags=re.DOTALL)
+        # Bungkus grup <li> dengan <ul>
+        content_html = re.sub(r'(<li>.*?</li>)', r'<ul>\1</ul>', content_html, flags=re.DOTALL)
+        # Bersihkan <ul> ganda
         content_html = content_html.replace('</ul><br><ul>', '')
+        content_html = content_html.replace('</p><br><ul>', '</p><ul>')
+        content_html = content_html.replace('</ul><br><p>', '</ul><p>')
 
         
         html_output_list.append(f"""
@@ -7262,6 +7276,11 @@ def update_library_display(search_term: str, category: str):
 
     html_output_list.append("</div>")
     return "".join(html_output_list)
+
+
+def load_initial_articles():
+    """ (PERBAIKAN #4) Memuat semua artikel (versi perbaikan indeks) """
+    return update_library_display(search_term="", category="Semua Kategori")
 
 
 def load_initial_articles():
