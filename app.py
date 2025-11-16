@@ -8562,7 +8562,6 @@ with gr.Blocks(
     ),
     css=CUSTOM_CSS, # Gunakan CUSTOM_CSS yang sudah di-update
     analytics_enabled=False,
-    queue=False, # <--- TAMBAHKAN BARIS INI
 ) as demo:
     
     # =======================================================================
