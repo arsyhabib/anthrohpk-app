@@ -7260,7 +7260,7 @@ def update_library_display(search_term: str, category: str):
         html_output_list.append(f"""
         <div class="article-card-v3-2-3">
             
-            <img src="{image_url}" alt="{title_safe}" class="article-image">
+            <div class="article-image" style="background-image: url('{image_url}');"></div>
             
             <div class="article-summary-content">
                 <span class="article-category">{kategori_safe}</span>
@@ -7512,7 +7512,9 @@ blockquote {
 .article-image {
     width: 100%;
     height: 180px; /* Ukuran pas untuk card */
-    object-fit: cover; /* Agar gambar tidak gepeng */
+    background-size: cover; /* GANTI DARI object-fit */
+    background-position: center center; /* TAMBAHKAN INI */
+    background-repeat: no-repeat; /* TAMBAHKAN INI */
     border-bottom: 1px solid #eee;
 }
 .article-summary-content {
@@ -8878,8 +8880,10 @@ checklist yang disesuaikan dengan status gizi anak.
             # Solusinya: Kita buat 'gr.Column' sebagai OUTPUT, dan fungsi Python
             # akan mengembalikan 'gr.Column.update(...)'
             
-            library_output = gr.Markdown(
-            value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
+# Area output untuk daftar artikel
+            # KEMBALIKAN ke gr.HTML
+            library_output = gr.HTML(
+                value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
             )
 
             # --- Event Handlers untuk Tab Perpustakaan ---
