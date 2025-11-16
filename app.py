@@ -6896,24 +6896,24 @@ def get_library_categories_list():
 # GANTI FUNGSI 'update_library_display' DI SECTION 10B DENGAN YANG INI
 # ===================================================================
 
+# ===================================================================
+# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
+# DI SECTION 10B DENGAN KODE BARU INI
+# ===================================================================
+
 def update_library_display(search_term: str, category: str):
     """
-    (VERSI PERBAIKAN #2 - 16 Nov 2025)
-    Fungsi Python murni untuk memfilter dan menampilkan artikel
-    
-    PERBAIKAN: Fungsi ini HANYA MENGEMBALIKAN LIST komponen.
-    Gradio akan otomatis memasukkannya ke 'library_output'.
+    (VERSI PERBAIKAN #3 - KOMPATIBILITAS GRADI V3)
+    Fungsi ini mengembalikan STRING HTML, bukan komponen Gradio.
+    Ini untuk kompatibilitas dengan Gradio v3.
     """
     search_term = search_term.lower().strip()
     
-    # Filter database
     filtered_articles = []
     for art in ARTIKEL_LOKAL_DATABASE:
-        # Filter Kategori
         if category != "Semua Kategori" and art.get("kategori") != category:
             continue
-            
-        # Filter Pencarian (mencari di judul, summary, dan isi)
+        
         title = art.get("title", "").lower()
         summary = art.get("summary", "").lower()
         content = art.get("full_content", "").lower()
@@ -6923,41 +6923,56 @@ def update_library_display(search_term: str, category: str):
             
         filtered_articles.append(art)
 
-    # Buat komponen UI
     if not filtered_articles:
-        # --- PERBAIKAN: Hanya kembalikan list berisi 1 komponen Markdown ---
-        return [
-            gr.Markdown("### 🔍 Tidak ada artikel ditemukan\n\nCoba ganti kata kunci pencarian atau filter kategori Anda.")
-        ]
+        # Kembalikan string HTML
+        return "<div style='padding: 20px; text-align: center;'><h3>🔍 Tidak ada artikel ditemukan</h3><p>Coba ganti kata kunci pencarian atau filter kategori Anda.</p></div>"
 
-    # Ubah hasil filter menjadi komponen Accordion
-    ui_components = []
+    # Bangun string HTML
+    html_output_list = []
+    html_output_list.append(f"<p style='text-align:center; font-weight:bold; color:#333;'>Menampilkan {len(filtered_articles)} artikel:</p>")
+    
     for art in filtered_articles:
-        # Label Accordion: Judul (Bold) dan Summary (Italic)
-        label = f"📚 **{art.get('title')}**\n_{art.get('summary')}_"
+        # Menggunakan <details> dan <summary> untuk efek accordion
+        # Ini 100% HTML murni dan sangat stabil
         
-        # Format isi artikel sebagai Markdown
-        content_md = f"**Kategori:** {art.get('kategori', 'N/A')}  \n"
-        content_md += f"**Sumber:** {art.get('source', 'N/A')}  \n"
-        content_md += "---\n"
-        content_md += art.get('full_content', 'Konten tidak tersedia.')
+        # Amankan teks dari karakter HTML
+        title_safe = art.get('title', 'Tanpa Judul').replace('<', '&lt;').replace('>', '&gt;')
+        summary_safe = art.get('summary', '').replace('<', '&lt;').replace('>', '&gt;')
         
-        # Buat Accordion
-        # Kita harus mendefinisikannya di dalam 'with' block agar bisa ditambahkan ke list
-        with gr.Accordion(label=label, open=False) as accordion:
-            gr.Markdown(content_md)
+        # Konversi Markdown dasar ke HTML
+        content_html = art.get('full_content', 'Konten tidak tersedia.')
+        content_html = content_html.replace('\n\n', '</p><p>')
+        content_html = content_html.replace('---', '<hr>')
+        content_html = content_html.replace('\n', '<br>')
+        content_html = content_html.replace('# ', '<h2>')
+        content_html = content_html.replace('## ', '<h3>')
+        content_html = content_html.replace('### ', '<h4>')
+        content_html = content_html.replace('**', '<strong>')
         
-        # Tambahkan komponen Accordion (yang sudah berisi Markdown) ke list
-        ui_components.append(accordion)
+        html_output_list.append(f"""
+        <details style="border: 1px solid #e0e0e0; border-radius: 12px; margin-bottom: 12px; background: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <summary style="padding: 16px; cursor: pointer; font-size: 16px; font-weight: 600; list-style: inside; color: #2c3e50;">
+                📚 {title_safe}
+                <br>
+                <em style="font-size: 14px; font-weight: 400; color: #555;">{summary_safe}</em>
+            </summary>
+            <div style="padding: 0 20px 20px 20px; border-top: 1px solid #eee; line-height: 1.7; color: #333;">
+                <p style="font-size: 13px; color: #666; background: #f9f9f9; padding: 10px; border-radius: 8px;">
+                    <strong>Kategori:</strong> {art.get('kategori', 'N/A')} | 
+                    <strong>Sumber:</strong> {art.get('source', 'N/A')}
+                </p>
+                <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                {content_html}
+            </div>
+        </details>
+        """)
 
-    # Kembalikan daftar komponen untuk diperbarui
-    # --- PERBAIKAN: Hanya kembalikan list komponen ---
-    return ui_components
+    # Gabungkan semua string HTML menjadi satu
+    return "".join(html_output_list)
 
 
 def load_initial_articles():
-    """ (PERBAIKAN #2) Memuat semua artikel saat tab pertama kali dibuka """
-    # Panggil fungsi utama dengan filter kosong
+    """ (PERBAIKAN #3) Memuat semua artikel sebagai string HTML """
     return update_library_display(search_term="", category="Semua Kategori")
 
 print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
@@ -8369,8 +8384,8 @@ checklist yang disesuaikan dengan status gizi anak.
             # Solusinya: Kita buat 'gr.Column' sebagai OUTPUT, dan fungsi Python
             # akan mengembalikan 'gr.Column.update(...)'
             
-            library_output = gr.Column(
-                visible=True # Dibuat terlihat dari awal
+            library_output = gr.HTML(
+                value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
             )
 
             # --- Event Handlers untuk Tab Perpustakaan ---
