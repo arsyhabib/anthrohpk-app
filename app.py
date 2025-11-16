@@ -8879,8 +8879,8 @@ checklist yang disesuaikan dengan status gizi anak.
             # akan mengembalikan 'gr.Column.update(...)'
             
             library_output = gr.HTML(
-                value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
-                sanitize_html=False # <-- TAMBAHKAN BARIS INI
+            value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>", # <-- TAMBAHKAN KOMA DI SINI                
+            sanitize_html=False # <-- TAMBAHKAN BARIS INI
             )
 
             # --- Event Handlers untuk Tab Perpustakaan ---
