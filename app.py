@@ -8878,9 +8878,8 @@ checklist yang disesuaikan dengan status gizi anak.
             # Solusinya: Kita buat 'gr.Column' sebagai OUTPUT, dan fungsi Python
             # akan mengembalikan 'gr.Column.update(...)'
             
-            library_output = gr.HTML(
-            value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>", # <-- TAMBAHKAN KOMA DI SINI                
-            sanitize_html=False # <-- TAMBAHKAN BARIS INI
+            library_output = gr.Markdown(
+            value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
             )
 
             # --- Event Handlers untuk Tab Perpustakaan ---
