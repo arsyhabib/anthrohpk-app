@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════
-# requirements.txt for AnthroHPK v3.0
+# requirements.txt for AnthroHPK v3.2.3
 # Production-ready dependencies for Python 3.10.13
 # Tested and compatible with Render deployment
 # ═══════════════════════════════════════════════════════════════════
@@ -98,20 +98,4 @@ python-dotenv==1.0.1
 # 
 # 2. These versions work on Render.com free tier
 # 
-# 3. pygrowup is NOT listed here because it's a local package
-#    Make sure pygrowup/ folder is in your repository
-# 
-# 4. Installation command for development:
-#    pip install -r requirements.txt
-# 
-# 5. For production (Render), build command:
-#    pip install --upgrade pip && pip install -r requirements.txt
-# 
-# 6. If you encounter "No matching distribution" errors:
-#    - Check Python version (must be 3.10.x)
-#    - Try upgrading pip: pip install --upgrade pip
-#    - Try without version pins temporarily
-# 
-# 7. Memory usage estimate: ~500-800MB (fits in Render free tier)
-# 
-# ═══════════════════════════════════════════════════════════════════
+# 3. Updated for Perpustakaan Ibu Balita v3.2.3 with new image URLs
