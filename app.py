@@ -7175,32 +7175,28 @@ def get_library_categories_list():
     return ["Semua Kategori"] + categories
 
 # ===================================================================
-# GANTI FUNGSI LAMA DI SECTION 10B DENGAN YANG INI
-# ===================================================================
-
-# ===================================================================
-# GANTI FUNGSI 'update_library_display' DI SECTION 10B DENGAN YANG INI
-# ===================================================================
-
-# ===================================================================
-# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
-# DI SECTION 10B DENGAN KODE BARU INI
-# ===================================================================
-
-# ===================================================================
 # GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
 # DI SECTION 10B DENGAN KODE BARU INI
 # ===================================================================
 
 def update_library_display(search_term: str, category: str):
     """
-    (REVISI UI v3.2.3 - Tampilan Kartu Modern dengan Gambar)
-    Fungsi ini mengembalikan STRING HTML, bukan komponen Gradio.
+    (REVISI UI v3.2.5 - MEMPERBAIKI INDEKS CSS)
+    Fungsi ini sekarang menggunakan 'idx' ASLI dari database.
     """
     search_term = search_term.lower().strip()
     
+    # --- PERBAIKAN DATABASE DUPLIKAT ---
+    # Kita hanya ambil 40 artikel pertama untuk menghindari duplikat
+    # Dan kita enumerate DATABASE ASLI
+    articles_to_process = ARTIKEL_LOKAL_DATABASE[:40] 
+    
     filtered_articles = []
-    for art in ARTIKEL_LOKAL_DATABASE:
+    
+    # Gunakan enumerate PADA DATABASE ASLI
+    for idx, art in enumerate(articles_to_process): 
+        
+        # --- MULAI FILTER ---
         if category != "Semua Kategori" and art.get("kategori") != category:
             continue
         
@@ -7210,57 +7206,56 @@ def update_library_display(search_term: str, category: str):
         
         if search_term and not (search_term in title or search_term in summary or search_term in content):
             continue
+        # --- AKHIR FILTER ---
             
-        filtered_articles.append(art)
+        # Simpan artikel DAN INDEKS ASLINYA
+        filtered_articles.append((idx, art)) 
 
     if not filtered_articles:
-        # Kembalikan string HTML
         return "<div style='padding: 20px; text-align: center;'><h3>🔍 Tidak ada artikel ditemukan</h3><p>Coba ganti kata kunci pencarian atau filter kategori Anda.</p></div>"
 
-    # Bangun string HTML
     html_output_list = []
     html_output_list.append(f"<p style='text-align:center; font-weight:bold; color:#333;'>Menampilkan {len(filtered_articles)} artikel:</p>")
-    # Buka grid container
     html_output_list.append("<div class='library-grid-container'>")
     
-    for art in filtered_articles:
+    # Loop melalui artikel yang sudah difilter
+    # 'idx' di sini adalah INDEKS ASLI (0-39)
+    for idx, art in filtered_articles:
         
-        # Amankan teks dari karakter HTML
         title_safe = art.get('title', 'Tanpa Judul').replace('<', '&lt;').replace('>', '&gt;')
         summary_safe = art.get('summary', '').replace('<', '&lt;').replace('>', '&gt;')
         kategori_safe = art.get('kategori', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         source_safe = art.get('source', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
         
-        # Ambil URL gambar, gunakan placeholder jika tidak ada
-        image_url = art.get('image_url', 'https://via.placeholder.com/600x400/E0E0E0/909090?text=Gambar+Tidak+Tersedia')
-
-        # Konversi Markdown dasar ke HTML (tetap diperlukan untuk full_content)
+        # --- PERBAIKAN KONTEN HTML (REGEX FIX) ---
         content_html = art.get('full_content', 'Konten tidak tersedia.')
         content_html = content_html.replace('\n\n', '</p><p>')
         content_html = content_html.replace('---', '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">')
         content_html = content_html.replace('\n', '<br>')
-        
-        # Ubah #, ##, ### menjadi tag h
         content_html = content_html.replace('# ', '<h2>')
         content_html = content_html.replace('## ', '<h3>')
         content_html = content_html.replace('### ', '<h4>')
         
-        # Ubah **...** menjadi <strong>...</strong>
-        # Gunakan regex sederhana untuk menangani bold
         import re
         content_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content_html)
         
-        # Ubah * ... (list) menjadi <li>...</li>
-        content_html = re.sub(r'\* (.*?)(<br>|$)', r'<li>\1</li>', content_html)
-        content_html = content_html.replace('</li><li>', '</li><li>') # Bersihkan
-        content_html = content_html.replace('<ul><br>', '<ul>')
-        content_html = content_html.replace('</ul><br>', '</ul>')
+        # Perbaikan regex list (lebih kuat)
+        # Ubah baris yang dimulai dengan '* ' menjadi <li>...</li>
+        content_html = re.sub(r'(<br>|^)\* (.*?)(<br>|$)', r'\1<li>\2</li>', content_html)
+        # Hapus <br> ekstra di antara <li>
+        content_html = content_html.replace('</li><br><li>', '</li><li>') 
+        # Bungkus grup <li> dengan <ul>
+        content_html = re.sub(r'(<li>.*?</li>)', r'<ul>\1</ul>', content_html, flags=re.DOTALL)
+        # Bersihkan <ul> ganda
+        content_html = content_html.replace('</ul><br><ul>', '')
+        content_html = content_html.replace('</p><br><ul>', '</p><ul>')
+        content_html = content_html.replace('</ul><br><p>', '</ul><p>')
 
         
         html_output_list.append(f"""
         <div class="article-card-v3-2-3">
             
-            <img src="{image_url}" alt="{title_safe}" class="article-image">
+            <div class="article-image article-img-{idx}"></div>
             
             <div class="article-summary-content">
                 <span class="article-category">{kategori_safe}</span>
@@ -7271,9 +7266,7 @@ def update_library_display(search_term: str, category: str):
             <details class="article-details-dropdown">
                 <summary class="article-details-toggle">Baca Selengkapnya</summary>
                 <div class="article-full-content-wrapper">
-                    
                     {content_html}
-                    
                     <span class="article-source">Sumber: {source_safe}</span>
                 </div>
             </details>
@@ -7281,11 +7274,13 @@ def update_library_display(search_term: str, category: str):
         </div>
         """)
 
-    # Tutup grid container
     html_output_list.append("</div>")
-
-    # Gabungkan semua string HTML menjadi satu
     return "".join(html_output_list)
+
+
+def load_initial_articles():
+    """ (PERBAIKAN #4) Memuat semua artikel (versi perbaikan indeks) """
+    return update_library_display(search_term="", category="Semua Kategori")
 
 
 def load_initial_articles():
@@ -7512,7 +7507,9 @@ blockquote {
 .article-image {
     width: 100%;
     height: 180px; /* Ukuran pas untuk card */
-    object-fit: cover; /* Agar gambar tidak gepeng */
+    background-size: cover; /* GANTI DARI object-fit */
+    background-position: center center; /* TAMBAHKAN INI */
+    background-repeat: no-repeat; /* TAMBAHKAN INI */
     border-bottom: 1px solid #eee;
 }
 .article-summary-content {
@@ -7608,6 +7605,55 @@ details[open] > .article-details-toggle::before {
     padding: 10px;
     border-radius: 8px;
 }
+
+/* =================================================================== */
+/* PERPUSTAKAAN v3.2.4 - IMAGE URLS (STATIC IN CSS) */
+/* =================================================================== */
+.article-img-0 { background-image: url('https://images.unsplash.com/photo-1600857592429-06388147aa0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-1 { background-image: url('https://images.unsplash.com/photo-1544385191-a8d83c0c0910?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-2 { background-image: url('https://images.unsplash.com/photo-1519733224424-a78932641e1c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-3 { background-image: url('https://images.unsplash.com/photo-1591160623347-0622c71a3a2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-4 { background-image: url('https://images.unsplash.com/photo-1606823354313-a4f1232c4533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-5 { background-image: url('https://images.unsplash.com/photo-1589139121857-a5735161394a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-6 { background-image: url('https://images.unsplash.com/photo-1598993685548-e0420d75765d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-7 { background-image: url('https://images.unsplash.com/photo-1582235880501-f2e519c636ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-8 { background-image: url('https://images.unsplash.com/photo-1604719212028-a3d1d236369c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-9 { background-image: url('https://images.unsplash.com/photo-1558220938-f91d0a3311c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-10 { background-image: url('https://images.unsplash.com/photo-1518610368143-69091b3ab806?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-11 { background-image: url('https://images.unsplash.com/photo-1546015026-6132b138026d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-12 { background-image: url('https://images.unsplash.com/photo-1519062136015-659f0f633d3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-13 { background-image: url('https://images.unsplash.com/photo-1518717758339-39B3c607eb42?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-14 { background-image: url('https://images.unsplash.com/photo-1546820389-0822369cbf34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-15 { background-image: url('https://images.unsplash.com/photo-1519362351240-d69b552f5071?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-16 { background-image: url('https://images.unsplash.com/photo-1557941733-27d6dbb8b209?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-17 { background-image: url('https://plus.unsplash.com/premium_photo-1664301530062-83b33375b426?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-18 { background-image: url('https://images.unsplash.com/photo-1605681145151-c0b3d6c7104b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-19 { background-image: url('https://images.unsplash.com/photo-1599599933544-672e4798c807?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-20 { background-image: url('https://images.unsplash.com/photo-1620336214302-1a4c38d4c1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-21 { background-image: url('https://images.unsplash.com/photo-1554734867-bf3c00a49371?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-22 { background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80'); }
+.article-img-23 { background-image: url('https://plus.unsplash.com/premium_photo-1661766820235-3c96bc13f938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-24 { background-image: url('https://images.unsplash.com/photo-1606838837238-57688313508c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-25 { background-image: url('https://images.unsplash.com/photo-1584610356248-81d3d66b596f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-26 { background-image: url('https://images.unsplash.com/photo-1522889639-6B4912BA542A?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-27 { background-image: url('https://images.unsplash.com/photo-1566004100631-35d015d6a491?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-28 { background-image: url('https://images.unsplash.com/photo-1484665754824-1d8e1469956e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-29 { background-image: url('https://images.unsplash.com/photo-1472090278799-d7c2a7156d68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80'); }
+.article-img-30 { background-image: url('https://images.unsplash.com/photo-1499781350138-d0f31a207612?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-31 { background-image: url('https://images.unsplash.com/photo-1506869639733-11215c54f5c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-32 { background-image: url('https://images.unsplash.com/photo-1599522190924-d5f2a1d2112a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80'); }
+.article-img-33 { background-image: url('https://images.unsplash.com/photo-1596707849382-e56d4001150f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-34 { background-image: url('https://images.unsplash.com/photo-1574023240294-f2549f8a816a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-35 { background-image: url('https://images.unsplash.com/photo-1600813160814-1f3f615306e6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-36 { background-image: url('https://images.unsplash.com/photo-1610481977931-36f73357b10a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-37 { background-image: url('https://images.unsplash.com/photo-1590240472421-5a50e932fe40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-38 { background-image: url('https://images.unsplash.com/photo-1570228062259-e36c6c5188c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=871&q=80'); }
+.article-img-39 { background-image: url('https://images.unsplash.com/photo-1543083326-14c049e3a348?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+/* =================================================================== */
+/* AKHIR BLOK IMAGE URLS */
+/* =================================================================== */
+
+
 /* Dark Mode overrides for new card */
 @media (prefers-color-scheme: dark) {
     .article-card-v3-2-3 {
@@ -8878,9 +8924,10 @@ checklist yang disesuaikan dengan status gizi anak.
             # Solusinya: Kita buat 'gr.Column' sebagai OUTPUT, dan fungsi Python
             # akan mengembalikan 'gr.Column.update(...)'
             
+# Area output untuk daftar artikel
+            # KEMBALIKAN ke gr.HTML
             library_output = gr.HTML(
                 value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
-                sanitize_html=False # <-- TAMBAHKAN BARIS INI
             )
 
             # --- Event Handlers untuk Tab Perpustakaan ---
