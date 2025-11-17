@@ -3219,7 +3219,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Panduan MPASI perdana 6 bulan sesuai standar WHO dan Kemenkes, fokus pada Protein Hewani.",
         "source": "Kemenkes RI | WHO",
         # URL Baru: Bayi makan (High reliability)
-        "image_url": "https://images.unsplash.com/photo-1566232675115-7c5222610771?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/media.cnn.com/35257acbcc0204f1b337e3615145018206d00f9c.jpg",
         "full_content": """
         # Panduan MPASI Menu Lengkap (WHO & Kemenkes)
         
@@ -3284,7 +3284,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Memahami Stunting dan pentingnya 1000 HPK sebagai jendela emas pencegahan.",
         "source": "Kemenkes RI | UNICEF",
         # URL Baru: Pengukuran tinggi badan anak (Contextual)
-        "image_url": "https://images.unsplash.com/photo-1574606917556-c68662161b31?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/smartmedia.digital4danone.com/36cb4d9217479a8733b674ba2e5b907f0dfef7a1",
         "full_content": """
         # Apa itu Stunting dan 1000 Hari Pertama Kehidupan (HPK)
         
@@ -3354,7 +3354,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Strategi menghadapi anak yang GTM atau menjadi *picky eater*.",
         "source": "IDAI",
         # URL Baru: Anak menolak makan/messy eating
-        "image_url": "https://images.unsplash.com/photo-1472434690781-19e8946747c9?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/images.ctfassets.net/a2ac6a0ac4238134035c89d13125673cf4c0432a.jpg",
         "full_content": """
         # Mengatasi Gerakan Tutup Mulut (GTM) pada Anak
         
@@ -3409,7 +3409,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Mengapa lemak sangat penting untuk bayi dan sering dilupakan dalam MPASI.",
         "source": "WHO | IDAI",
         # URL Baru: Makanan kaya lemak (Alpukat/Salmon)
-        "image_url": "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/mylittleeater.com/3202d889029656d599a775332b9c0243c4bebb3c.png",
         "full_content": """
         # Peran Penting Lemak dalam MPASI
         
@@ -3461,7 +3461,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Panduan sukses ASI eksklusif 6 bulan dan cara mengatasi masalah menyusui.",
         "source": "Kemenkes RI | IDAI",
         # URL Baru: Ibu Menyusui (Contextual)
-        "image_url": "https://images.unsplash.com/photo-1584229631239-82403c97c33d?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.measurement-toolkit.org/8b0f5b8e932bdacd7b99b5815459f90e6a594ffa.png",
         "full_content": """
         # Panduan Sukses ASI Eksklusif dan Manajemen Laktasi
         
@@ -3509,7 +3509,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Meluruskan miskonsepsi umum tentang pemberian makan bayi.",
         "source": "IDAI | AAP",
         # URL Baru: Makanan bayi beragam
-        "image_url": "https://images.unsplash.com/photo-1589139121857-a5735161394a?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/images.agoramedia.com/ab0681b83828cfca6c291bb5e79c49de6038d9d2.jpg",
         "full_content": """
         # Mitos dan Fakta Seputar MPASI
         
@@ -3550,7 +3550,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Mengenali bahaya kekurangan zat besi dan mengapa MPASI harus kaya zat besi.",
         "source": "IDAI | WHO",
         # URL Baru: Sumber Zat Besi (Daging/Hati)
-        "image_url": "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/singing-river.com/8db5f6bf9fde2886825237f575d4b04fedcff1a6.jpg",
         "full_content": """
         # Bahaya Anemia Defisiensi Besi (ADB) pada Bayi
         
@@ -3598,7 +3598,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Membedakan alergi dan intoleransi, serta cara mengenalkan makanan alergen.",
         "source": "IDAI | AAP",
         # URL Baru: Konsep Alergi (Kacang/Telur)
-        "image_url": "https://images.unsplash.com/photo-1519154258565-9d6756cc7a27?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/mnmomma.com/1a70c54942c50a703023cbaf59b621da326270ae.jpg",
         "full_content": """
         # Mengenal Alergi Makanan pada Bayi
         
@@ -3660,7 +3660,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Cara menyimpan dan mengolah MPASI agar terhindar dari bakteri berbahaya.",
         "source": "WHO (Five Keys to Safer Food)",
         # URL Baru: Mencuci tangan/persiapan makanan
-        "image_url": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.olivaclinic.com/701ae72186a50beede96d7ec25e95516b1caf6e9.jpg",
         "full_content": """
         # 5 Kunci Keamanan Pangan (Food Safety) untuk MPASI
         
@@ -3715,7 +3715,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Peringatan serius mengapa madu bisa berakibat fatal bagi bayi.",
         "source": "IDAI | CDC",
         # URL Baru: Toples Madu (Simbolis)
-        "image_url": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/images.ctfassets.net/c0dfc032e26306d6a2a215c2dacce092a63d987b.png",
         "full_content": """
         # Bahaya Pemberian Madu pada Bayi di Bawah 1 Tahun
         
@@ -3765,7 +3765,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Panduan memantau tonggak perkembangan penting anak di tahun pertama kehidupannya.",
         "source": "CDC | IDAI (KPSP)",
         # URL Baru: Bayi merangkak/bermain
-        "image_url": "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/vinitfit.com/5cdc1172cccaef60b780ee06b4c22c223f9fe8c1.jpg",
         "full_content": """
         # Milestone (Tonggak) Perkembangan Anak 0-12 Bulan
         
@@ -3830,7 +3830,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Perkembangan anak tidak otomatis, perlu stimulasi (rangsangan) yang tepat dari orang tua.",
         "source": "Kemenkes RI | AAP",
         # URL Baru: Bermain Balok (Stimulasi)
-        "image_url": "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.proeves.com/14a2145d2a127207e1682be429ea6b207ac1d5a6.jpg",
         "full_content": """
         # Pentingnya Stimulasi untuk Perkembangan Otak
         
@@ -3889,7 +3889,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Memantau perkembangan anak usia 12-24 bulan, dari berjalan hingga berbicara.",
         "source": "CDC | IDAI (KPSP)",
         # URL Baru: Anak berjalan (Toddler walking)
-        "image_url": "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.kidsclubchildcare.com.au/fb498680696c882d4b24aff295ddf3669469bacc.png",
         "full_content": """
         # Milestone (Tonggak) Perkembangan Anak 1-2 Tahun (12-24 Bulan)
         
@@ -3960,7 +3960,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Mengenali tanda bahaya keterlambatan bicara dan kapan harus intervensi.",
         "source": "IDAI | AAP",
         # URL Baru: Orang tua bicara pada bayi
-        "image_url": "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/m.media-amazon.com/e4a24cf20a913e70afbeb7037916c1c62334064b.jpg",
         "full_content": """
         # Red Flags Keterlambatan Bicara (Speech Delay)
         
@@ -4020,7 +4020,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Apa itu tummy time, mengapa sangat penting, dan bagaimana cara melakukannya dengan aman.",
         "source": "AAP",
         # URL Baru: Bayi Tummy Time
-        "image_url": "https://images.unsplash.com/photo-1546820389-0822369cbf34?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/lingokids.com/0d9500b483f06b54f2012a2b85ae59cc840c5d70.jpg",
         "full_content": """
         # Pentingnya Tummy Time untuk Bayi
         
@@ -4074,7 +4074,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Mengapa membacakan buku (read aloud) adalah salah satu stimulasi terbaik untuk otak.",
         "source": "AAP | Kemenkes RI",
         # URL Baru: Membaca buku dengan anak
-        "image_url": "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/c8.alamy.com/48710544b0d8132433804fcf16bfcdb02fe00e59.jpg",
         "full_content": """
         # Manfaat Ajaib Membacakan Buku Sejak Dini (Read Aloud)
         
@@ -4126,7 +4126,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Bagaimana penglihatan bayi berkembang, dari buram hingga fokus.",
         "source": "American Academy of Ophthalmology (AAO)",
         # URL Baru: Wajah bayi (Eye contact)
-        "image_url": "https://images.unsplash.com/photo-1510552776732-03e61cf4b144?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.bfsuccess.com/78adc29db11b8520968d55ba0122a732e589730e.jpg",
         "full_content": """
         # Perkembangan Penglihatan Bayi dari Lahir hingga 1 Tahun
         
@@ -4181,7 +4181,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Mengapa baby walker tidak membantu anak berjalan dan justru berbahaya.",
         "source": "IDAI | AAP",
         # URL Baru: Bayi berdiri/berjalan aman (kaki bayi)
-        "image_url": "https://images.unsplash.com/photo-1515488042361-ee0065d21580?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/storytoys.com/347c008ea360b9fad503230d6e920b7ce5d21a9f.jpg",
         "full_content": """
         # Bahaya 'Baby Walker' dan Mengapa Dilarang
         
@@ -4226,7 +4226,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Mengapa imunisasi sangat penting dan daftar vaksin yang wajib diterima anak Indonesia.",
         "source": "IDAI | Kemenkes RI",
         # URL Baru: Dokter/Vaksin
-        "image_url": "https://images.unsplash.com/photo-1632053002928-26027410ce32?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/lovingthetoddlerlife.com/7e45aa73aab8cecf7ef3e3b660b6850feae934bc.jpg",
         "full_content": """
         # Pentingnya Imunisasi Dasar Lengkap
         
@@ -4283,7 +4283,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Kapan harus khawatir saat anak demam, dan pertolongan pertama yang benar (bukan kompres dingin!).",
         "source": "IDAI | AAP",
         # URL Baru: Anak demam/diukur suhu
-        "image_url": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.olivaclinic.com/701ae72186a50beede96d7ec25e95516b1caf6e9.jpg",
         "full_content": """
         # Panduan Tepat Mengatasi Demam pada Anak
         
@@ -4350,7 +4350,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Membedakan batuk pilek biasa (virus) dan kapan harus waspada infeksi bakteri.",
         "source": "IDAI | CDC",
         # URL Baru: Anak sakit/tidur
-        "image_url": "https://images.unsplash.com/photo-1606214891955-03fb323a458b?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/utknoxvilledentists.com/1a2450821aa5916c93a450902c3f76a7e91dbb9f.jpg",
         "full_content": """
         # Mengenal Batuk Pilek (ISPA) pada Anak
         
@@ -4409,7 +4409,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Kunci utama mengatasi diare adalah rehidrasi (cairan) untuk mencegah dehidrasi.",
         "source": "WHO | Kemenkes RI",
         # URL Baru: Anak minum air (Rehidrasi)
-        "image_url": "https://images.unsplash.com/photo-1515981276469-e8971e69e99c?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/blog.lovevery.com/ccdb76cd6aad9483bc6a402958a19eb1c99d9169.jpg",
         "full_content": """
         # Mengatasi Diare Akut pada Balita
         
@@ -4470,7 +4470,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Jadwal imunisasi lengkap yang direkomendasikan Ikatan Dokter Anak Indonesia (IDAI).",
         "source": "IDAI",
         # URL Baru: Pemeriksaan dokter/imunisasi
-        "image_url": "https://images.unsplash.com/photo-1583912268248-7c329b7a19c3?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/childrens-dental.com/cfb293d7a09681b46861c0930fccee2c0d796035.jpg",
         "full_content": """
         # Jadwal Imunisasi Anak Rekomendasi IDAI 2023
         
@@ -4533,7 +4533,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Apa yang harus dilakukan dan apa yang TIDAK boleh dilakukan saat anak kejang demam.",
         "source": "IDAI | AAP",
         # URL Baru: Ibu menggendong anak sakit
-        "image_url": "https://images.unsplash.com/photo-1530465376385-14354a4a26c9?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/cdn.dental.dev/0ad79032153cffdaaed4ebdce5066acee86d9eca.jpg",
         "full_content": """
         # Mengenal Kejang Demam (Step)
         
@@ -4595,7 +4595,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Merawat gigi bayi sejak gigi pertama tumbuh untuk mencegah karies (gigi berlubang).",
         "source": "IDAI | AAPD",
         # URL Baru: Anak menyikat gigi/tersenyum
-        "image_url": "https://images.unsplash.com/photo-1600211763138-533b528c1b18?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/cdn11.bigcommerce.com/690bbc8a72c0b7182d3ee4ff941d5066c9789158.jpg",
         "full_content": """
         # Perawatan Gigi Pertama Bayi (Mencegah Karies Botol)
         
@@ -4656,7 +4656,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Hubungan tak terduga antara toilet bersih, cuci tangan, dan stunting.",
         "source": "Kemenkes RI | WHO",
         # URL Baru: Mencuci tangan
-        "image_url": "https://images.unsplash.com/photo-1581622558663-b2e33377dfb2?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/thumbs.dreamstime.com/a08507d4f9080f3cd55fc1a97fa5fddb262c0b0d.jpg",
         "full_content": """
         # Sanitasi & Cuci Tangan: Kunci Tersembunyi Pencegahan Stunting
         
@@ -4714,7 +4714,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Rekomendasi IDAI dan AAP mengenai batasan penggunaan gadget/TV untuk anak.",
         "source": "IDAI | AAP",
         # URL Baru: Anak melihat layar/gadget
-        "image_url": "https://images.unsplash.com/photo-1516387938699-a93567ec168e?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/images.squarespace-cdn.com/1dd3112c34c51fc75b2d4f1e1addc4669373e8f0.jpg",
         "full_content": """
         # Bahaya 'Screen Time' Berlebihan pada Balita
         
@@ -4777,7 +4777,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Mengapa anak tantrum dan bagaimana cara orang tua meresponsnya dengan tepat.",
         "source": "CDC | AAP",
         # URL Baru: Anak menangis/emosional
-        "image_url": "https://images.unsplash.com/photo-1513959664334-6274a6421bdc?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/media.istockphoto.com/384d9b74cce8190e605803f972f9edfc86a1a951.jpg",
         "full_content": """
         # Memahami 'Tantrum' pada Toddler (1-3 Tahun)
         
@@ -4827,7 +4827,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Peran ayah bukan hanya mencari nafkah, tapi esensial untuk perkembangan anak.",
         "source": "AAP | UNICEF",
         # URL Baru: Ayah dan anak
-        "image_url": "https://images.unsplash.com/photo-1606105368264-82c27c094681?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/allsmilesdentalgroup.com/7964df7aee6ac7661d1733bab76b2ee0925c6259.jpg",
         "full_content": """
         # Pentingnya Ayah dalam Pengasuhan (Father's Role)
         
@@ -4885,7 +4885,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Membantu bayi belajar tidur nyenyak sepanjang malam tanpa bantuan.",
         "source": "AAP",
         # URL Baru: Bayi tidur nyenyak
-        "image_url": "https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.parents.com/bac01729c34d249dbbc2fd5a5f947b9d545e75b9.png",
         "full_content": """
         # Melatih Tidur Mandiri (Sleep Training)
         
@@ -4950,7 +4950,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Tantangan dan strategi pengasuhan modern di tengah gempuran teknologi.",
         "source": "AAP",
         # URL Baru: Anak dengan gadget
-        "image_url": "https://images.unsplash.com/photo-1544006659-f0ea6521ccc2?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/us.images.westend61.de/e1698918418c1b1f315b7bec64183e83ae06941d.jpg",
         "full_content": """
         # Mengasuh Anak di Era Digital
         
@@ -5002,7 +5002,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Cara mendisiplinkan anak tanpa perlu membentak, mengancam, atau memukul.",
         "source": "AAP | UNICEF",
         # URL Baru: Ibu dan anak (gentle parenting)
-        "image_url": "https://images.unsplash.com/photo-1536640712-4d4c36ff0e4e?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.prevea.com/720e0e1603c03c77fdad604118e8295ea70641de.jpg",
         "full_content": """
         # Disiplin Positif: Menghargai Sambil Mengarahkan
         
@@ -5058,7 +5058,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Tanda-tanda kesiapan anak untuk belajar buang air di toilet.",
         "source": "AAP",
         # URL Baru: Kamar mandi bersih/anak cuci tangan
-        "image_url": "https://images.unsplash.com/photo-1520031724093-972df940447e?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.nichd.nih.gov/ca85e11d01086a50846d14fc2726961804db6d28.jpg",
         "full_content": """
         # Kapan Anak Siap 'Toilet Training'?
         
@@ -5116,7 +5116,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Panduan 'Back to Sleep' dan praktik tidur aman untuk bayi.",
         "source": "AAP | CDC",
         # URL Baru: Bayi tidur di crib (Safe sleep)
-        "image_url": "https://images.unsplash.com/photo-1510153706236-18c700907680?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.thecapcenter.org/24162c46acf2f2ada993411c3114663893fe09d6.jpg",
         "full_content": """
         # Mencegah Sindrom Kematian Bayi Mendadak (SIDS)
         
@@ -5172,7 +5172,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Cara membuat rumah aman dari risiko jatuh (tangga, jendela, furnitur).",
         "source": "CDC | AAP",
         # URL Baru: Anak bermain di dalam ruangan
-        "image_url": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.dshs.texas.gov/7e8f9c426750bbf3d0b1bc4470c455175b584000.jpg",
         "full_content": """
         # Keamanan Rumah: Mencegah Anak Terjatuh
         
@@ -5220,7 +5220,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Cara menyimpan obat, produk pembersih, dan zat berbahaya lainnya.",
         "source": "CDC | Kemenkes RI",
         # URL Baru: Bahan pembersih (Safety warning)
-        "image_url": "https://images.unsplash.com/photo-1624726175512-19b9baf00ca9?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/media.sciencephoto.com/4378c3744ef590668df10323a4e4d2e8fa02a88d.jpg",
         "full_content": """
         # Keamanan Rumah: Mencegah Keracunan pada Anak
         
@@ -5268,7 +5268,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Bahaya tenggelam di bak mandi, ember, dan kolam renang.",
         "source": "WHO | AAP",
         # URL Baru: Mandi bayi (Bath time safety)
-        "image_url": "https://images.unsplash.com/photo-1571210474123-f20e558d0a4f?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/media.istockphoto.com/b85d954734a34a89df1e9ef86b81a27d02e61a94.jpg",
         "full_content": """
         # Mencegah Anak Tenggelam (Drowning)
         
@@ -5318,7 +5318,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Menjaga keamanan di dapur, bahaya air panas, dan stopkontak.",
         "source": "WHO | IDAI",
         # URL Baru: Dapur (Kitchen safety)
-        "image_url": "https://images.unsplash.com/photo-1556910103-1c02745a30bf?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/riverwoodhealthcare.org/65152ba7d00c5d3902914207d72041485fa8540f.jpg",
         "full_content": """
         # Mencegah Luka Bakar pada Anak
         
@@ -5365,7 +5365,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Pentingnya penggunaan 'car seat' yang benar sesuai usia.",
         "source": "AAP | WHO",
         # URL Baru: Car Seat
-        "image_url": "https://images.unsplash.com/photo-1510030752099-b639e2d7df1a?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/www.shutterstock.com/d4e16fdd245154cbfe34b0bef92fc619b932a9a1.jpg",
         "full_content": """
         # Keamanan di Mobil (Car Seat)
         
@@ -5411,7 +5411,7 @@ ARTIKEL_LOKAL_DATABASE = [
         "summary": "Cara melindungi bayi dari gigitan nyamuk Aedes aegypti.",
         "source": "IDAI | CDC",
         # URL Baru: Alam terbuka/hijau (Simbolis lingkungan)
-        "image_url": "https://images.unsplash.com/photo-1583324113626-70df0f4deaab?auto=format&fit=crop&w=800&q=80",
+        "image_url": "https://kimi-web-img.moonshot.cn/img/i.pinimg.com/c15b12050424847ac6e2e2d66938e62645738538.jpg",
         "full_content": """
         # Pencegahan Gigitan Nyamuk (Demam Berdarah & Lainnya)
         
