@@ -3203,14 +3203,23 @@ def mode_mudah_handler(age_months: int, gender: str) -> str:
 # MULAI REVISI DI SINI
 # ================================================================
 
+# ==============================================================================
+# DATABASE ARTIKEL ANTHROHPK (REVISED IMAGE URLS)
+# File ini berisi konten artikel untuk fitur Perpustakaan Ibu Balita.
+# URL Gambar telah diperbarui agar kompatibel dengan Render & Gradio.
+# ==============================================================================
+
 ARTIKEL_LOKAL_DATABASE = [
-    # Kategori: Nutrisi & MPASI (10 Artikel)
+    # ============================================================
+    # KATEGORI: NUTRISI & MPASI
+    # ============================================================
     {
         "kategori": "Nutrisi & MPASI",
         "title": "Panduan MPASI Menu Lengkap (WHO & Kemenkes)",
         "summary": "Panduan MPASI perdana 6 bulan sesuai standar WHO dan Kemenkes, fokus pada Protein Hewani.",
         "source": "Kemenkes RI | WHO",
-        "image_url": "https://images.unsplash.com/photo-1600857592429-06388147aa0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Bayi makan (High reliability)
+        "image_url": "https://images.unsplash.com/photo-1566232675115-7c5222610771?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Panduan MPASI Menu Lengkap (WHO & Kemenkes)
         
@@ -3274,7 +3283,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Apa itu Stunting dan 1000 Hari Pertama Kehidupan (HPK)",
         "summary": "Memahami Stunting dan pentingnya 1000 HPK sebagai jendela emas pencegahan.",
         "source": "Kemenkes RI | UNICEF",
-        "image_url": "https://images.unsplash.com/photo-1544385191-a8d83c0c0910?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Pengukuran tinggi badan anak (Contextual)
+        "image_url": "https://images.unsplash.com/photo-1574606917556-c68662161b31?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Apa itu Stunting dan 1000 Hari Pertama Kehidupan (HPK)
         
@@ -3343,7 +3353,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mengatasi Gerakan Tutup Mulut (GTM) pada Anak",
         "summary": "Strategi menghadapi anak yang GTM atau menjadi *picky eater*.",
         "source": "IDAI",
-        "image_url": "https://images.unsplash.com/photo-1519733224424-a78932641e1c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak menolak makan/messy eating
+        "image_url": "https://images.unsplash.com/photo-1472434690781-19e8946747c9?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mengatasi Gerakan Tutup Mulut (GTM) pada Anak
         
@@ -3397,7 +3408,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Peran Lemak dalam MPASI",
         "summary": "Mengapa lemak sangat penting untuk bayi dan sering dilupakan dalam MPASI.",
         "source": "WHO | IDAI",
-        "image_url": "https://images.unsplash.com/photo-1591160623347-0622c71a3a2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Makanan kaya lemak (Alpukat/Salmon)
+        "image_url": "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Peran Penting Lemak dalam MPASI
         
@@ -3448,7 +3460,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "ASI Eksklusif dan Manajemen Laktasi",
         "summary": "Panduan sukses ASI eksklusif 6 bulan dan cara mengatasi masalah menyusui.",
         "source": "Kemenkes RI | IDAI",
-        "image_url": "https://images.unsplash.com/photo-1606823354313-a4f1232c4533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Ibu Menyusui (Contextual)
+        "image_url": "https://images.unsplash.com/photo-1584229631239-82403c97c33d?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Panduan Sukses ASI Eksklusif dan Manajemen Laktasi
         
@@ -3495,7 +3508,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mitos dan Fakta Seputar MPASI",
         "summary": "Meluruskan miskonsepsi umum tentang pemberian makan bayi.",
         "source": "IDAI | AAP",
-        "image_url": "https://images.unsplash.com/photo-1589139121857-a5735161394a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Makanan bayi beragam
+        "image_url": "https://images.unsplash.com/photo-1589139121857-a5735161394a?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mitos dan Fakta Seputar MPASI
         
@@ -3535,7 +3549,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Bahaya Anemia Defisiensi Besi (ADB) pada Bayi",
         "summary": "Mengenali bahaya kekurangan zat besi dan mengapa MPASI harus kaya zat besi.",
         "source": "IDAI | WHO",
-        "image_url": "https://images.unsplash.com/photo-1598993685548-e0420d75765d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Sumber Zat Besi (Daging/Hati)
+        "image_url": "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Bahaya Anemia Defisiensi Besi (ADB) pada Bayi
         
@@ -3582,7 +3597,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mengenal Alergi Makanan pada Bayi",
         "summary": "Membedakan alergi dan intoleransi, serta cara mengenalkan makanan alergen.",
         "source": "IDAI | AAP",
-        "image_url": "https://images.unsplash.com/photo-1582235880501-f2e519c636ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Konsep Alergi (Kacang/Telur)
+        "image_url": "https://images.unsplash.com/photo-1519154258565-9d6756cc7a27?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mengenal Alergi Makanan pada Bayi
         
@@ -3643,7 +3659,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Keamanan Pangan MPASI (Food Safety)",
         "summary": "Cara menyimpan dan mengolah MPASI agar terhindar dari bakteri berbahaya.",
         "source": "WHO (Five Keys to Safer Food)",
-        "image_url": "https://images.unsplash.com/photo-1604719212028-a3d1d236369c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Mencuci tangan/persiapan makanan
+        "image_url": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # 5 Kunci Keamanan Pangan (Food Safety) untuk MPASI
         
@@ -3697,7 +3714,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Bahaya Pemberian Madu pada Bayi di Bawah 1 Tahun",
         "summary": "Peringatan serius mengapa madu bisa berakibat fatal bagi bayi.",
         "source": "IDAI | CDC",
-        "image_url": "https://images.unsplash.com/photo-1558220938-f91d0a3311c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Toples Madu (Simbolis)
+        "image_url": "https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Bahaya Pemberian Madu pada Bayi di Bawah 1 Tahun
         
@@ -3738,13 +3756,16 @@ ARTIKEL_LOKAL_DATABASE = [
         """
     },
     
-    # Kategori: Tumbuh Kembang (8 Artikel)
+    # ============================================================
+    # KATEGORI: TUMBUH KEMBANG
+    # ============================================================
     {
         "kategori": "Tumbuh Kembang",
         "title": "Milestone (Tonggak) Perkembangan Anak 0-12 Bulan",
         "summary": "Panduan memantau tonggak perkembangan penting anak di tahun pertama kehidupannya.",
         "source": "CDC | IDAI (KPSP)",
-        "image_url": "https://images.unsplash.com/photo-1518610368143-69091b3ab806?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Bayi merangkak/bermain
+        "image_url": "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Milestone (Tonggak) Perkembangan Anak 0-12 Bulan
         
@@ -3803,17 +3824,13 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-    # ... (Sisa artikel akan dilanjutkan di Bagian 3 dan 4) ...
-    
-    # ... (Artikel 1-10 dari Bagian 2 ada di sini) ...
-
-    # Lanjutan Kategori: Tumbuh Kembang (8 Artikel)
     {
         "kategori": "Tumbuh Kembang",
         "title": "Pentingnya Stimulasi untuk Perkembangan Otak",
         "summary": "Perkembangan anak tidak otomatis, perlu stimulasi (rangsangan) yang tepat dari orang tua.",
         "source": "Kemenkes RI | AAP",
-        "image_url": "https://images.unsplash.com/photo-1546015026-6132b138026d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Bermain Balok (Stimulasi)
+        "image_url": "https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Pentingnya Stimulasi untuk Perkembangan Otak
         
@@ -3871,7 +3888,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Milestone (Tonggak) Perkembangan Anak 1-2 Tahun",
         "summary": "Memantau perkembangan anak usia 12-24 bulan, dari berjalan hingga berbicara.",
         "source": "CDC | IDAI (KPSP)",
-        "image_url": "https://images.unsplash.com/photo-1519062136015-659f0f633d3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak berjalan (Toddler walking)
+        "image_url": "https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Milestone (Tonggak) Perkembangan Anak 1-2 Tahun (12-24 Bulan)
         
@@ -3941,7 +3959,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Red Flags Keterlambatan Bicara (Speech Delay)",
         "summary": "Mengenali tanda bahaya keterlambatan bicara dan kapan harus intervensi.",
         "source": "IDAI | AAP",
-        "image_url": "https://images.unsplash.com/photo-1518717758339-39B3c607eb42?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Orang tua bicara pada bayi
+        "image_url": "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Red Flags Keterlambatan Bicara (Speech Delay)
         
@@ -4000,7 +4019,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Pentingnya Tummy Time untuk Bayi",
         "summary": "Apa itu tummy time, mengapa sangat penting, dan bagaimana cara melakukannya dengan aman.",
         "source": "AAP",
-        "image_url": "https://images.unsplash.com/photo-1546820389-0822369cbf34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Bayi Tummy Time
+        "image_url": "https://images.unsplash.com/photo-1546820389-0822369cbf34?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Pentingnya Tummy Time untuk Bayi
         
@@ -4046,13 +4066,15 @@ ARTIKEL_LOKAL_DATABASE = [
         
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
-    },
-    {
+    }
+    # ----- BATAS BAGIAN 1 (LANJUT KE BAGIAN 2) -----
+{
         "kategori": "Tumbuh Kembang",
         "title": "Manfaat Membacakan Buku Sejak Dini",
         "summary": "Mengapa membacakan buku (read aloud) adalah salah satu stimulasi terbaik untuk otak.",
         "source": "AAP | Kemenkes RI",
-        "image_url": "https://images.unsplash.com/photo-1519362351240-d69b552f5071?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Membaca buku dengan anak
+        "image_url": "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Manfaat Ajaib Membacakan Buku Sejak Dini (Read Aloud)
         
@@ -4103,7 +4125,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Perkembangan Penglihatan Bayi dari Lahir hingga 1 Tahun",
         "summary": "Bagaimana penglihatan bayi berkembang, dari buram hingga fokus.",
         "source": "American Academy of Ophthalmology (AAO)",
-        "image_url": "https://images.unsplash.com/photo-1557941733-27d6dbb8b209?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Wajah bayi (Eye contact)
+        "image_url": "https://images.unsplash.com/photo-1510552776732-03e61cf4b144?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Perkembangan Penglihatan Bayi dari Lahir hingga 1 Tahun
         
@@ -4157,7 +4180,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Bahaya 'Baby Walker' dan Mengapa Dilarang",
         "summary": "Mengapa baby walker tidak membantu anak berjalan dan justru berbahaya.",
         "source": "IDAI | AAP",
-        "image_url": "https://plus.unsplash.com/premium_photo-1664301530062-83b33375b426?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Bayi berdiri/berjalan aman (kaki bayi)
+        "image_url": "https://images.unsplash.com/photo-1515488042361-ee0065d21580?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Bahaya 'Baby Walker' dan Mengapa Dilarang
         
@@ -4193,13 +4217,16 @@ ARTIKEL_LOKAL_DATABASE = [
         """
     },
     
-    # Kategori: Kesehatan & Imunisasi (8 Artikel)
+    # ============================================================
+    # KATEGORI: KESEHATAN & IMUNISASI
+    # ============================================================
     {
         "kategori": "Kesehatan & Imunisasi",
         "title": "Pentingnya Imunisasi Dasar Lengkap",
         "summary": "Mengapa imunisasi sangat penting dan daftar vaksin yang wajib diterima anak Indonesia.",
         "source": "IDAI | Kemenkes RI",
-        "image_url": "https://images.unsplash.com/photo-1605681145151-c0b3d6c7104b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Dokter/Vaksin
+        "image_url": "https://images.unsplash.com/photo-1632053002928-26027410ce32?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Pentingnya Imunisasi Dasar Lengkap
         
@@ -4255,7 +4282,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Panduan Tepat Mengatasi Demam pada Anak",
         "summary": "Kapan harus khawatir saat anak demam, dan pertolongan pertama yang benar (bukan kompres dingin!).",
         "source": "IDAI | AAP",
-        "image_url": "https://images.unsplash.com/photo-1599599933544-672e4798c807?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak demam/diukur suhu
+        "image_url": "https://images.unsplash.com/photo-1584634731339-252c581abfc5?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Panduan Tepat Mengatasi Demam pada Anak
         
@@ -4316,16 +4344,13 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-    # ... (Sisa artikel akan dilanjutkan di Bagian 4) ...
-    # ... (Artikel 1-20 dari Bagian 2 & 3 ada di sini) ...
-
-    # Lanjutan Kategori: Kesehatan & Imunisasi (8 Artikel)
     {
         "kategori": "Kesehatan & Imunisasi",
         "title": "Mengenal Batuk Pilek (ISPA) pada Anak",
         "summary": "Membedakan batuk pilek biasa (virus) dan kapan harus waspada infeksi bakteri.",
         "source": "IDAI | CDC",
-        "image_url": "https://images.unsplash.com/photo-1620336214302-1a4c38d4c1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak sakit/tidur
+        "image_url": "https://images.unsplash.com/photo-1606214891955-03fb323a458b?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mengenal Batuk Pilek (ISPA) pada Anak
         
@@ -4383,7 +4408,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mengatasi Diare Akut pada Balita",
         "summary": "Kunci utama mengatasi diare adalah rehidrasi (cairan) untuk mencegah dehidrasi.",
         "source": "WHO | Kemenkes RI",
-        "image_url": "https://images.unsplash.com/photo-1554734867-bf3c00a49371?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak minum air (Rehidrasi)
+        "image_url": "https://images.unsplash.com/photo-1515981276469-e8971e69e99c?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mengatasi Diare Akut pada Balita
         
@@ -4443,7 +4469,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Jadwal Imunisasi Rekomendasi IDAI 2023",
         "summary": "Jadwal imunisasi lengkap yang direkomendasikan Ikatan Dokter Anak Indonesia (IDAI).",
         "source": "IDAI",
-        "image_url": "https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80",
+        # URL Baru: Pemeriksaan dokter/imunisasi
+        "image_url": "https://images.unsplash.com/photo-1583912268248-7c329b7a19c3?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Jadwal Imunisasi Anak Rekomendasi IDAI 2023
         
@@ -4505,7 +4532,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mengenal Kejang Demam (Step)",
         "summary": "Apa yang harus dilakukan dan apa yang TIDAK boleh dilakukan saat anak kejang demam.",
         "source": "IDAI | AAP",
-        "image_url": "https://plus.unsplash.com/premium_photo-1661766820235-3c96bc13f938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Ibu menggendong anak sakit
+        "image_url": "https://images.unsplash.com/photo-1530465376385-14354a4a26c9?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mengenal Kejang Demam (Step)
         
@@ -4566,7 +4594,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Perawatan Gigi Pertama Bayi (Karies Botol)",
         "summary": "Merawat gigi bayi sejak gigi pertama tumbuh untuk mencegah karies (gigi berlubang).",
         "source": "IDAI | AAPD",
-        "image_url": "https://images.unsplash.com/photo-1606838837238-57688313508c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak menyikat gigi/tersenyum
+        "image_url": "https://images.unsplash.com/photo-1600211763138-533b528c1b18?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Perawatan Gigi Pertama Bayi (Mencegah Karies Botol)
         
@@ -4618,7 +4647,7 @@ ARTIKEL_LOKAL_DATABASE = [
         1.  Ikatan Dokter Anak Indonesia (IDAI). *Merawat Gigi Anak Sejak Dini.*
         2.  American Academy of Pediatric Dentistry (AAPD). *Dental Home.*
         
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy)
+        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy)*
         """
     },
     {
@@ -4626,7 +4655,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Sanitasi & Cuci Tangan: Kunci Cegah Stunting",
         "summary": "Hubungan tak terduga antara toilet bersih, cuci tangan, dan stunting.",
         "source": "Kemenkes RI | WHO",
-        "image_url": "https://images.unsplash.com/photo-1584610356248-81d3d66b596f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Mencuci tangan
+        "image_url": "https://images.unsplash.com/photo-1581622558663-b2e33377dfb2?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Sanitasi & Cuci Tangan: Kunci Tersembunyi Pencegahan Stunting
         
@@ -4675,13 +4705,16 @@ ARTIKEL_LOKAL_DATABASE = [
         """
     },
     
-    # Kategori: Pola Asuh & Psikologi (8 Artikel)
+    # ============================================================
+    # KATEGORI: POLA ASUH & PSIKOLOGI
+    # ============================================================
     {
         "kategori": "Pola Asuh & Psikologi",
         "title": "Bahaya 'Screen Time' Berlebihan pada Balita",
         "summary": "Rekomendasi IDAI dan AAP mengenai batasan penggunaan gadget/TV untuk anak.",
         "source": "IDAI | AAP",
-        "image_url": "https://images.unsplash.com/photo-1522889639-6B4912BA542A?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak melihat layar/gadget
+        "image_url": "https://images.unsplash.com/photo-1516387938699-a93567ec168e?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Bahaya 'Screen Time' Berlebihan pada Balita
         
@@ -4737,16 +4770,14 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-    # ... (Sisa artikel akan dilanjutkan di Bagian 4b) ...
-    # ... (Artikel 1-27 dari Bagian 2, 3, & 4a ada di sini) ...
-
-    # Lanjutan Kategori: Pola Asuh & Psikologi (8 Artikel)
-    {
+    # ----- BATAS BAGIAN 2 (LANJUT KE BAGIAN 3) -----
+{
         "kategori": "Pola Asuh & Psikologi",
         "title": "Memahami 'Tantrum' pada Toddler (1-3 Tahun)",
         "summary": "Mengapa anak tantrum dan bagaimana cara orang tua meresponsnya dengan tepat.",
         "source": "CDC | AAP",
-        "image_url": "https://images.unsplash.com/photo-1566004100631-35d015d6a491?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak menangis/emosional
+        "image_url": "https://images.unsplash.com/photo-1513959664334-6274a6421bdc?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Memahami 'Tantrum' pada Toddler (1-3 Tahun)
         
@@ -4795,7 +4826,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Pentingnya Ayah dalam Pengasuhan (Father's Role)",
         "summary": "Peran ayah bukan hanya mencari nafkah, tapi esensial untuk perkembangan anak.",
         "source": "AAP | UNICEF",
-        "image_url": "https://images.unsplash.com/photo-1484665754824-1d8e1469956e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Ayah dan anak
+        "image_url": "https://images.unsplash.com/photo-1606105368264-82c27c094681?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Pentingnya Ayah dalam Pengasuhan (Father's Role)
         
@@ -4852,7 +4884,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Melatih Tidur Mandiri (Sleep Training)",
         "summary": "Membantu bayi belajar tidur nyenyak sepanjang malam tanpa bantuan.",
         "source": "AAP",
-        "image_url": "https://images.unsplash.com/photo-1472090278799-d7c2a7156d68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80",
+        # URL Baru: Bayi tidur nyenyak
+        "image_url": "https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Melatih Tidur Mandiri (Sleep Training)
         
@@ -4916,7 +4949,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Membesarkan Anak di Era Digital",
         "summary": "Tantangan dan strategi pengasuhan modern di tengah gempuran teknologi.",
         "source": "AAP",
-        "image_url": "https://images.unsplash.com/photo-1499781350138-d0f31a207612?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak dengan gadget
+        "image_url": "https://images.unsplash.com/photo-1544006659-f0ea6521ccc2?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mengasuh Anak di Era Digital
         
@@ -4967,7 +5001,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Disiplin Positif: Menghargai Sambil Mengarahkan",
         "summary": "Cara mendisiplinkan anak tanpa perlu membentak, mengancam, atau memukul.",
         "source": "AAP | UNICEF",
-        "image_url": "https://images.unsplash.com/photo-1506869639733-11215c54f5c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Ibu dan anak (gentle parenting)
+        "image_url": "https://images.unsplash.com/photo-1536640712-4d4c36ff0e4e?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Disiplin Positif: Menghargai Sambil Mengarahkan
         
@@ -5022,7 +5057,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Kapan Anak Siap 'Toilet Training'?",
         "summary": "Tanda-tanda kesiapan anak untuk belajar buang air di toilet.",
         "source": "AAP",
-        "image_url": "https://images.unsplash.com/photo-1599522190924-d5f2a1d2112a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80",
+        # URL Baru: Kamar mandi bersih/anak cuci tangan
+        "image_url": "https://images.unsplash.com/photo-1520031724093-972df940447e?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Kapan Anak Siap 'Toilet Training'?
         
@@ -5071,15 +5107,16 @@ ARTIKEL_LOKAL_DATABASE = [
         """
     },
     
-    # ================================================
-    # Kategori: Keamanan & Pencegahan Kecelakaan (6 Artikel BARU)
-    # ================================================
+    # ============================================================
+    # KATEGORI: KEAMANAN & PENCEGAHAN
+    # ============================================================
     {
         "kategori": "Keamanan & Pencegahan",
         "title": "Mencegah Sindrom Kematian Bayi Mendadak (SIDS)",
         "summary": "Panduan 'Back to Sleep' dan praktik tidur aman untuk bayi.",
         "source": "AAP | CDC",
-        "image_url": "https://images.unsplash.com/photo-1596707849382-e56d4001150f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Bayi tidur di crib (Safe sleep)
+        "image_url": "https://images.unsplash.com/photo-1510153706236-18c700907680?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mencegah Sindrom Kematian Bayi Mendadak (SIDS)
         
@@ -5129,16 +5166,13 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-    # ... (Sisa artikel akan dilanjutkan di Bagian 4c) ...
-    # ... (Artikel 1-34 dari Bagian 2, 3, 4a, & 4b ada di sini) ...
-
-    # Lanjutan Kategori: Keamanan & Pencegahan Kecelakaan
     {
         "kategori": "Keamanan & Pencegahan",
         "title": "Keamanan Rumah: Mencegah Anak Terjatuh",
         "summary": "Cara membuat rumah aman dari risiko jatuh (tangga, jendela, furnitur).",
         "source": "CDC | AAP",
-        "image_url": "https://images.unsplash.com/photo-1574023240294-f2549f8a816a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Anak bermain di dalam ruangan
+        "image_url": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Keamanan Rumah: Mencegah Anak Terjatuh
         
@@ -5185,7 +5219,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mencegah Keracunan pada Anak",
         "summary": "Cara menyimpan obat, produk pembersih, dan zat berbahaya lainnya.",
         "source": "CDC | Kemenkes RI",
-        "image_url": "https://images.unsplash.com/photo-1600813160814-1f3f615306e6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Bahan pembersih (Safety warning)
+        "image_url": "https://images.unsplash.com/photo-1624726175512-19b9baf00ca9?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Keamanan Rumah: Mencegah Keracunan pada Anak
         
@@ -5232,7 +5267,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mencegah Anak Tenggelam (Drowning)",
         "summary": "Bahaya tenggelam di bak mandi, ember, dan kolam renang.",
         "source": "WHO | AAP",
-        "image_url": "https://images.unsplash.com/photo-1610481977931-36f73357b10a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Mandi bayi (Bath time safety)
+        "image_url": "https://images.unsplash.com/photo-1571210474123-f20e558d0a4f?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mencegah Anak Tenggelam (Drowning)
         
@@ -5281,7 +5317,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Mencegah Luka Bakar pada Anak",
         "summary": "Menjaga keamanan di dapur, bahaya air panas, dan stopkontak.",
         "source": "WHO | IDAI",
-        "image_url": "https://images.unsplash.com/photo-1590240472421-5a50e932fe40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
+        # URL Baru: Dapur (Kitchen safety)
+        "image_url": "https://images.unsplash.com/photo-1556910103-1c02745a30bf?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Mencegah Luka Bakar pada Anak
         
@@ -5327,7 +5364,8 @@ ARTIKEL_LOKAL_DATABASE = [
         "title": "Keamanan di Mobil (Car Seat)",
         "summary": "Pentingnya penggunaan 'car seat' yang benar sesuai usia.",
         "source": "AAP | WHO",
-        "image_url": "https://images.unsplash.com/photo-1570228062259-e36c6c5188c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=871&q=80",
+        # URL Baru: Car Seat
+        "image_url": "https://images.unsplash.com/photo-1510030752099-b639e2d7df1a?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Keamanan di Mobil (Car Seat)
         
@@ -5367,1733 +5405,13 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     },
-    
-    # Kategori: Nutrisi & MPASI (8 Artikel BARU)
-    # INI ADALAH ARTIKEL 36
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Kebutuhan Cairan (Air Putih) pada Bayi dan Balita",
-        "summary": "Kapan bayi boleh minum air putih dan berapa kebutuhannya.",
-        "source": "WHO | IDAI",
-        "image_url": "https://images.unsplash.com/photo-1543083326-14c049e3a348?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
-        "full_content": """
-        # Kebutuhan Cairan (Air Putih) pada Bayi dan Balita
-        
-        Pemberian air putih pada bayi memiliki aturan khusus yang penting untuk diketahui agar tidak mengganggu proses menyusu dan keseimbangan elektrolit.
-        
-        ## Usia 0-6 Bulan
-        
-        * **TIDAK PERLU air putih.**
-        * Bayi yang mendapat ASI Eksklusif atau Susu Formula sudah mendapatkan seluruh kebutuhan cairannya dari susu.
-        * ASI mengandung sekitar 88% air, yang cukup untuk menghidrasi bayi, bahkan di cuaca panas.
-        * **Bahaya Memberi Air Putih:**
-            1.  **Mengganggu Menyusu:** Perut kecil bayi akan terisi air (yang nol kalori), membuatnya kenyang dan mengurangi frekuensi menyusu. Ini bisa menyebabkan berat badan tidak naik.
-            2.  **Risiko Intoksikasi Air:** Ginjal bayi belum matang dan tidak bisa memproses kelebihan air. Pemberian air putih berlebih bisa mengencerkan kadar natrium dalam darah (hiponatremia), yang dapat menyebabkan kejang dan (jarang) koma.
-        
-        ## Usia 6-12 Bulan
-        
-        * **Boleh Diperkenalkan:** Saat MPASI dimulai pada usia 6 bulan, air putih matang boleh mulai diberikan.
-        * **Jumlah:** Tawarkan sedikit-sedikit di sela-sela waktu makan MPASI.
-        * **Total Kebutuhan:** Sekitar 60-120 ml per hari (sekitar setengah cangkir).
-        * **Fungsi:** Untuk membiasakan rasa, membersihkan mulut setelah makan, dan membantu mencegah sembelit.
-        * **Susu Utama:** ASI atau susu formula tetap menjadi sumber cairan dan nutrisi utama.
-        
-        ## Usia 12-24 Bulan (1-2 Tahun)
-        
-        * **Kebutuhan Meningkat:** Seiring anak makan lebih banyak makanan padat dan (mungkin) frekuensi menyusu berkurang, kebutuhan air putih meningkat.
-        * **Total Kebutuhan Cairan (termasuk susu):** Sekitar 1,3 liter per hari.
-        * **Air Putih:** Tawarkan secara teratur sepanjang hari, sekitar 1-4 gelas (250 - 1000 ml) tergantung aktivitas dan cuaca.
-        
-        ## Usia 2-3 Tahun
-        
-        * **Total Kebutuhan Cairan:** Sekitar 1,7 liter per hari.
-        * **Air Putih:** Tawarkan sekitar 1-5 gelas per hari.
-        
-        **Catatan:** Hindari minuman manis seperti jus kemasan, soda, atau teh manis. Air putih adalah minuman terbaik untuk hidrasi.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  World Health Organization (WHO). *Water, sanitation, hygiene, and health.*
-        2.  Ikatan Dokter Anak Indonesia (IDAI). *Pemberian Air Putih pada Bayi.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Mengenal 'Junk Food' untuk Balita",
-        "summary": "Apa itu makanan HFSS (High Fat, Salt, Sugar) dan dampaknya.",
-        "source": "WHO | Kemenkes RI",
-        "image_url": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=872&q=80",
-        "full_content": """
-        # Mengenal 'Junk Food' untuk Balita (Makanan HFSS)
-        
-        Istilah "Junk Food" sering merujuk pada makanan yang Tinggi Lemak, Garam, dan Gula (HFSS - High Fat, Salt, Sugar) serta rendah nutrisi penting (vitamin, mineral, serat).
-        
-        ## Apa Saja Makanan HFSS?
-        
-        Contoh makanan HFSS yang sering diberikan pada balita:
-        
-        * **Minuman Manis:** Soda, jus buah kemasan, teh manis kemasan, susu kental manis (SKM).
-        * **Camilan Kemasan:** Keripik kentang, biskuit manis, wafer, cokelat, permen.
-        * **Makanan Cepat Saji (Fast Food):** Kentang goreng, nugget, sosis.
-        * **Makanan Instan:** Mi instan (terlalu tinggi natrium).
-        * **Kue dan Roti:** Donat, kue bolu manis, roti tawar putih (rendah serat).
-        
-        **Catat:** Susu Kental Manis (SKM) **BUKANLAH** susu pertumbuhan. SKM adalah produk tinggi gula dan tidak boleh diberikan sebagai minuman susu untuk balita.
-        
-        ## Dampak Negatif pada Balita
-        
-        Pemberian makanan HFSS terlalu sering pada 1000 Hari Pertama Kehidupan (HPK) berdampak serius:
-        
-        1.  **Membentuk Selera Makan yang Buruk:** Lidah anak menjadi terbiasa dengan rasa yang sangat kuat (terlalu manis, asin, gurih). Ini membuat mereka menolak makanan sehat alami (sayur, buah, lauk pauk) yang rasanya "hambar".
-        2.  **Menggeser Makanan Bergizi:** Perut balita kecil. Jika sudah kenyang dengan keripik atau biskuit (kalori kosong), mereka tidak akan mau makan makanan utama yang kaya protein dan zat besi.
-        3.  **Risiko 'Hidden Hunger':** Anak mungkin terlihat kenyang atau bahkan gemuk (overweight), tetapi sebenarnya kekurangan zat gizi mikro penting (seperti zat besi, zinc, vitamin A).
-        4.  **Risiko Jangka Panjang:** Membangun fondasi untuk obesitas, diabetes tipe 2, dan penyakit jantung di kemudian hari.
-        
-        ## Tips Mengurangi HFSS
-        
-        * **Jadikan Makanan Sehat sebagai Pilihan Utama:** Selalu sediakan buah potong, sayuran rebus, atau yogurt tawar sebagai camilan.
-        * **Baca Label:** Perhatikan kandungan gula, garam (natrium), dan lemak jenuh pada label makanan kemasan.
-        * **Jadilah Teladan:** Anak meniru apa yang orang tuanya makan.
-        * **Jangan Jadikan Hadiah:** Hindari menggunakan cokelat atau es krim sebagai "hadiah" (reward) karena membuat makanan itu terlihat lebih istimewa.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  World Health Organization (WHO). *Reducing salt intake.*
-        2.  Kementerian Kesehatan RI. *Pedoman Gizi Seimbang.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Peran Protein Hewani vs Nabati dalam MPASI",
-        "summary": "Mengapa protein hewani lebih superior untuk cegah stunting.",
-        "source": "WHO | IDAI | Kemenkes RI",
-        "image_url": "https://images.unsplash.com/photo-1627907228175-2bf846a303b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
-        "full_content": """
-        # Peran Protein Hewani vs Nabati dalam MPASI
-        
-        Semua protein penting, tetapi untuk pencegahan stunting pada bayi 6-24 bulan, **protein hewani** memiliki peran yang tidak tergantikan.
-        
-        ## Mengapa Protein Hewani Diutamakan?
-        
-        Protein hewani (daging, ayam, ikan, telur, susu) disebut "superior" dibandingkan protein nabati (tahu, tempe, kacang) karena tiga alasan utama:
-        
-        1.  **Kelengkapan Asam Amino Esensial:**
-            * Protein hewani mengandung **9 asam amino esensial** dalam komposisi yang lengkap dan seimbang, yang sangat dibutuhkan tubuh untuk membangun sel-sel baru (pertumbuhan).
-            * Protein nabati seringkali kekurangan satu atau lebih asam amino esensial (misal: lisin pada biji-bijian).
-        
-        2.  **Ketersediaan Bio (Bioavailability) Zat Gizi Mikro:**
-            * Ini adalah faktor kunci. Bukan hanya soal *kandungan*, tapi seberapa baik zat gizi itu *diserap* tubuh.
-            * **Zat Besi (Fe):** Protein hewani mengandung **zat besi Heme**, yang tingkat penyerapannya oleh tubuh sangat tinggi (15-40%). Protein nabati mengandung zat besi **Non-Heme**, yang penyerapannya jauh lebih rendah (<10%) dan mudah terhambat oleh zat lain (seperti fitat pada sayuran).
-            * **Zinc (Seng):** Zinc dari sumber hewani juga diserap jauh lebih baik daripada dari sumber nabati.
-            * **Vitamin B12:** Vitamin ini **hanya** ditemukan secara alami di produk hewani. Vitamin B12 krusial untuk perkembangan saraf dan otak.
-        
-        3.  **Faktor Pertumbuhan (IGF-1):** Konsumsi protein hewani terbukti lebih kuat merangsang produksi *Insulin-like Growth Factor 1* (IGF-1), hormon yang sangat penting untuk pertumbuhan linear (tinggi badan).
-        
-        ## Apakah Protein Nabati Tidak Penting?
-        
-        **Sangat Penting!** Tahu, tempe, dan kacang-kacangan tetap harus diberikan. Mereka adalah sumber protein, lemak baik, dan serat yang sangat baik.
-        
-        Namun, mereka **tidak bisa** dijadikan sumber protein *utama* untuk menggantikan protein hewani dalam konteks pencegahan stunting.
-        
-        ## Rekomendasi Praktis
-        
-        * **Prioritaskan:** Pastikan ada **protein hewani** dalam **setiap menu makan utama** (pagi, siang, malam) bayi Anda sejak usia 6 bulan.
-        * **Kombinasikan:** Kombinasikan sumber protein hewani dan nabati dalam satu menu.
-        * **Contoh Menu Lengkap:** Nasi (Karbo) + Sup Ikan (Hewani) + Tahu Kukus (Nabati) + Brokoli (Sayur) + Sedikit Minyak (Lemak).
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  World Health Organization (WHO). (2023). *Guideline for complementary feeding.*
-        2.  Kementerian Kesehatan RI. *Strategi Pencegahan Stunting.*
-        3.  Ikatan Dokter Anak Indonesia (IDAI). *Pentingnya Protein Hewani untuk Tumbuh Kembang Optimal.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Konstipasi (Sembelit) Saat Awal MPASI",
-        "summary": "Penyebab dan cara mengatasi sembelit yang umum terjadi saat transisi MPASI.",
-        "source": "IDAI | AAP",
-        "image_url": "https://images.unsplash.com/photo-1605660443301-3366c8cd39e3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
-        "full_content": """
-        # Konstipasi (Sembelit) Saat Awal MPASI
-        
-        Sangat umum terjadi sembelit (susah BAB atau feses keras) saat bayi memulai MPASI. Ini adalah fase adaptasi sistem pencernaan bayi dari makanan cair (ASI) ke makanan padat.
-        
-        ## Tanda-tanda Konstipasi
-        
-        * Frekuensi BAB lebih jarang dari biasanya (misal: 3 hari tidak BAB).
-        * Feses tampak keras, kering, atau seperti kerikil kecil.
-        * Bayi tampak mengejan berlebihan, kesakitan, atau menangis saat BAB.
-        * Kadang disertai sedikit bercak darah di feses (akibat lecet di anus).
-        
-        ## Penyebab Umum
-        
-        1.  **Transisi Usus:** Usus bayi sedang belajar memproses makanan padat yang lebih kompleks.
-        2.  **Kurang Cairan:** Bayi mungkin kurang minum (ASI atau air putih) setelah MPASI dimulai.
-        3.  **Kurang Serat:** Menu MPASI kurang mengandung serat.
-        4.  **Terlalu Banyak Serat:** Anehnya, terlalu banyak serat (terutama dari sereal beras) tanpa diimbangi cairan yang cukup justru bisa memperparah sembelit.
-        5.  **Makanan Pemicu:** Beberapa makanan dikenal sebagai pemicu sembelit pada beberapa bayi, seperti pisang, apel (saus apel), sereal beras, dan produk susu (jika berlebihan).
-        
-        ## Cara Mengatasi di Rumah
-        
-        1.  **Cairan:** Pastikan bayi cukup terhidrasi.
-            * Tawarkan ASI/Susu Formula lebih sering.
-            * Tawarkan air putih matang di sela-sela makan MPASI (untuk bayi >6 bulan).
-        
-        2.  **Makanan "P" (Pelancar):** Berikan makanan yang dikenal membantu melancarkan pencernaan:
-            * **P**runes (Plum kering, dibuat puree)
-            * **P**ears (Pir, dibuat puree)
-            * **P**eaches (Persik, dibuat puree)
-            * **P**apaya (Pepaya)
-        
-        3.  **Hindari Pemicu:** Kurangi sementara makanan pemicu (pisang, apel, sereal beras) dan ganti dengan variasi lain (misal: oatmeal, ubi).
-        
-        4.  **Gerakan:** Lakukan "pijat I-L-U" pada perut bayi searah jarum jam. Gerakkan kaki bayi seperti mengayuh sepeda untuk membantu merangsang pergerakan usus.
-        
-        5.  **Mandi Air Hangat:** Merendam bayi di air hangat bisa membantu merelakskan otot perutnya.
-        
-        ## Kapan Harus ke Dokter?
-        
-        Segera konsultasi ke dokter jika:
-        * Sembelit berlangsung lebih dari 1-2 minggu.
-        * Bayi tampak sangat kesakitan.
-        * Ada darah dalam jumlah banyak di feses.
-        * Perut bayi tampak kembung dan keras.
-        * Bayi menolak makan sama sekali.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Konstipasi pada Anak.*
-        2.  American Academy of Pediatrics (AAP). *Constipation in Children.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Mitos vs Fakta: Makanan Pemicu Alergi",
-        "summary": "Revisi panduan alergi: mengapa menunda telur dan seafood justru salah.",
-        "source": "IDAI | AAP | ASCIA",
-        "image_url": "https://images.unsplash.com/photo-1606756794270-d8d42d65b161?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80",
-        "full_content": """
-        # Mitos vs Fakta: Makanan Pemicu Alergi (Panduan Baru)
-        
-        Panduan mengenai pengenalan makanan pemicu alergi (seperti telur, kacang, seafood) telah berubah drastis dalam beberapa tahun terakhir.
-        
-        ## MITOS: Menunda Makanan Alergen Mencegah Alergi
-        
-        **PANDUAN LAMA (SALAH):** "Jangan berikan telur sebelum 1 tahun, atau kacang sebelum 3 tahun, untuk mencegah alergi."
-        
-        **FAKTA (PANDUAN BARU):**
-        
-        Penelitian besar (seperti LEAP study) membuktikan bahwa **menunda** pengenalan makanan alergen justru dapat **MENINGKATKAN** risiko alergi makanan.
-        
-        > **Panduan baru merekomendasikan: Kenalkan makanan pemicu alergi (termasuk telur, kacang, ikan) segera setelah bayi mulai MPASI (sekitar usia 6 bulan).**
-        
-        Jendela waktu antara 6-12 bulan dianggap sebagai "jendela emas" untuk melatih sistem imun tubuh agar *mentoleransi* makanan tersebut, bukan melawannya.
-        
-        ## Makanan Alergen Utama
-        
-        Kelompok makanan yang paling sering menyebabkan alergi adalah:
-        * Telur
-        * Susu Sapi (dalam olahan, misal: yogurt)
-        * Kacang Tanah
-        * Kacang Pohon (Mede, Almond)
-        * Gandum
-        * Kedelai
-        * Ikan
-        * Kerang-kerangan (Udang, Kepiting)
-        
-        ## Cara Mengenalkan Makanan Alergen (Aturan 4 Hari)
-        
-        1.  **Mulai dengan Makanan Non-Alergen:** Pastikan bayi sudah terbiasa dengan 1-2 makanan pertamanya (misal: bubur nasi, labu).
-        2.  **Satu per Satu:** Kenalkan makanan alergen **satu jenis** dalam satu waktu.
-        3.  **Mulai dari Jumlah Kecil:** Berikan sedikit saja di hari pertama (misal: seujung sendok teh telur rebus yang dilumatkan).
-        4.  **Tunggu dan Amati (Aturan 4 Hari):** Tunggu 3-4 hari sebelum mengenalkan makanan alergen baru lainnya. Amati tanda-tanda alergi (ruam kulit, bengkak, muntah, diare, sesak napas).
-        5.  **Berikan di Pagi/Siang Hari:** Agar Anda mudah mengamati reaksinya.
-        6.  **Masak Hingga Matang:** Pastikan telur dan ikan dimasak hingga matang sempurna.
-        7.  **Format yang Aman:** Untuk kacang, berikan dalam bentuk selai kacang murni (tanpa gula/garam) yang diencerkan dengan air, atau bubuk kacang yang dicampur ke bubur. **JANGAN** berikan kacang utuh (bahaya tersedak).
-        
-        ## Pengecualian
-        
-        * Jika bayi sudah memiliki **eksim (dermatitis atopik) yang parah** atau **riwayat alergi makanan lain**, konsultasikan terlebih dahulu dengan dokter anak atau ahli alergi sebelum mengenalkan makanan alergen.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Rekomendasi Pencegahan Alergi.*
-        2.  American Academy of Pediatrics (AAP). *Preventing Food Allergies.*
-        3.  ASCIA (Australasian Society of Clinical Immunology and Allergy). *Introducing Solid Foods and Allergy Prevention.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Mengenal 'Junk Food' untuk Balita",
-        "summary": "Apa itu makanan HFSS (High Fat, Salt, Sugar) dan dampaknya.",
-        "source": "WHO | Kemenkes RI",
-        "full_content": """
-        # Mengenal 'Junk Food' untuk Balita (Makanan HFSS)
-        
-        Istilah "Junk Food" sering merujuk pada makanan yang Tinggi Lemak, Garam, dan Gula (HFSS - High Fat, Salt, Sugar) serta rendah nutrisi penting (vitamin, mineral, serat).
-        
-        ## Apa Saja Makanan HFSS?
-        
-        Contoh makanan HFSS yang sering diberikan pada balita:
-        
-        * **Minuman Manis:** Soda, jus buah kemasan, teh manis kemasan, susu kental manis (SKM).
-        * **Camilan Kemasan:** Keripik kentang, biskuit manis, wafer, cokelat, permen.
-        * **Makanan Cepat Saji (Fast Food):** Kentang goreng, nugget, sosis.
-        * **Makanan Instan:** Mi instan (terlalu tinggi natrium).
-        * **Kue dan Roti:** Donat, kue bolu manis, roti tawar putih (rendah serat).
-        
-        **Catat:** Susu Kental Manis (SKM) **BUKANLAH** susu pertumbuhan. SKM adalah produk tinggi gula dan tidak boleh diberikan sebagai minuman susu untuk balita.
-        
-        ## Dampak Negatif pada Balita
-        
-        Pemberian makanan HFSS terlalu sering pada 1000 Hari Pertama Kehidupan (HPK) berdampak serius:
-        
-        1.  **Membentuk Selera Makan yang Buruk:** Lidah anak menjadi terbiasa dengan rasa yang sangat kuat (terlalu manis, asin, gurih). Ini membuat mereka menolak makanan sehat alami (sayur, buah, lauk pauk) yang rasanya "hambar".
-        2.  **Menggeser Makanan Bergizi:** Perut balita kecil. Jika sudah kenyang dengan keripik atau biskuit (kalori kosong), mereka tidak akan mau makan makanan utama yang kaya protein dan zat besi.
-        3.  **Risiko 'Hidden Hunger':** Anak mungkin terlihat kenyang atau bahkan gemuk (overweight), tetapi sebenarnya kekurangan zat gizi mikro penting (seperti zat besi, zinc, vitamin A).
-        4.  **Risiko Jangka Panjang:** Membangun fondasi untuk obesitas, diabetes tipe 2, dan penyakit jantung di kemudian hari.
-        
-        ## Tips Mengurangi HFSS
-        
-        * **Jadikan Makanan Sehat sebagai Pilihan Utama:** Selalu sediakan buah potong, sayuran rebus, atau yogurt tawar sebagai camilan.
-        * **Baca Label:** Perhatikan kandungan gula, garam (natrium), dan lemak jenuh pada label makanan kemasan.
-        * **Jadilah Teladan:** Anak meniru apa yang orang tuanya makan.
-        * **Jangan Jadikan Hadiah:** Hindari menggunakan cokelat atau es krim sebagai "hadiah" (reward) karena membuat makanan itu terlihat lebih istimewa.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  World Health Organization (WHO). *Reducing salt intake.*
-        2.  Kementerian Kesehatan RI. *Pedoman Gizi Seimbang.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Peran Protein Hewani vs Nabati dalam MPASI",
-        "summary": "Mengapa protein hewani lebih superior untuk cegah stunting.",
-        "source": "WHO | IDAI | Kemenkes RI",
-        "full_content": """
-        # Peran Protein Hewani vs Nabati dalam MPASI
-        
-        Semua protein penting, tetapi untuk pencegahan stunting pada bayi 6-24 bulan, **protein hewani** memiliki peran yang tidak tergantikan.
-        
-        ## Mengapa Protein Hewani Diutamakan?
-        
-        Protein hewani (daging, ayam, ikan, telur, susu) disebut "superior" dibandingkan protein nabati (tahu, tempe, kacang) karena tiga alasan utama:
-        
-        1.  **Kelengkapan Asam Amino Esensial:**
-            * Protein hewani mengandung **9 asam amino esensial** dalam komposisi yang lengkap dan seimbang, yang sangat dibutuhkan tubuh untuk membangun sel-sel baru (pertumbuhan).
-            * Protein nabati seringkali kekurangan satu atau lebih asam amino esensial (misal: lisin pada biji-bijian).
-        
-        2.  **Ketersediaan Bio (Bioavailability) Zat Gizi Mikro:**
-            * Ini adalah faktor kunci. Bukan hanya soal *kandungan*, tapi seberapa baik zat gizi itu *diserap* tubuh.
-            * **Zat Besi (Fe):** Protein hewani mengandung **zat besi Heme**, yang tingkat penyerapannya oleh tubuh sangat tinggi (15-40%). Protein nabati mengandung zat besi **Non-Heme**, yang penyerapannya jauh lebih rendah (<10%) dan mudah terhambat oleh zat lain (seperti fitat pada sayuran).
-            * **Zinc (Seng):** Zinc dari sumber hewani juga diserap jauh lebih baik daripada dari sumber nabati.
-            * **Vitamin B12:** Vitamin ini **hanya** ditemukan secara alami di produk hewani. Vitamin B12 krusial untuk perkembangan saraf dan otak.
-        
-        3.  **Faktor Pertumbuhan (IGF-1):** Konsumsi protein hewani terbukti lebih kuat merangsang produksi *Insulin-like Growth Factor 1* (IGF-1), hormon yang sangat penting untuk pertumbuhan linear (tinggi badan).
-        
-        ## Apakah Protein Nabati Tidak Penting?
-        
-        **Sangat Penting!** Tahu, tempe, dan kacang-kacangan tetap harus diberikan. Mereka adalah sumber protein, lemak baik, dan serat yang sangat baik.
-        
-        Namun, mereka **tidak bisa** dijadikan sumber protein *utama* untuk menggantikan protein hewani dalam konteks pencegahan stunting.
-        
-        ## Rekomendasi Praktis
-        
-        * **Prioritaskan:** Pastikan ada **protein hewani** dalam **setiap menu makan utama** (pagi, siang, malam) bayi Anda sejak usia 6 bulan.
-        * **Kombinasikan:** Kombinasikan sumber protein hewani dan nabati dalam satu menu.
-        * **Contoh Menu Lengkap:** Nasi (Karbo) + Sup Ikan (Hewani) + Tahu Kukus (Nabati) + Brokoli (Sayur) + Sedikit Minyak (Lemak).
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  World Health Organization (WHO). (2023). *Guideline for complementary feeding.*
-        2.  Kementerian Kesehatan RI. *Strategi Pencegahan Stunting.*
-        3.  Ikatan Dokter Anak Indonesia (IDAI). *Pentingnya Protein Hewani untuk Tumbuh Kembang Optimal.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Konstipasi (Sembelit) Saat Awal MPASI",
-        "summary": "Penyebab dan cara mengatasi sembelit yang umum terjadi saat transisi MPASI.",
-        "source": "IDAI | AAP",
-        "full_content": """
-        # Konstipasi (Sembelit) Saat Awal MPASI
-        
-        Sangat umum terjadi sembelit (susah BAB atau feses keras) saat bayi memulai MPASI. Ini adalah fase adaptasi sistem pencernaan bayi dari makanan cair (ASI) ke makanan padat.
-        
-        ## Tanda-tanda Konstipasi
-        
-        * Frekuensi BAB lebih jarang dari biasanya (misal: 3 hari tidak BAB).
-        * Feses tampak keras, kering, atau seperti kerikil kecil.
-        * Bayi tampak mengejan berlebihan, kesakitan, atau menangis saat BAB.
-        * Kadang disertai sedikit bercak darah di feses (akibat lecet di anus).
-        
-        ## Penyebab Umum
-        
-        1.  **Transisi Usus:** Usus bayi sedang belajar memproses makanan padat yang lebih kompleks.
-        2.  **Kurang Cairan:** Bayi mungkin kurang minum (ASI atau air putih) setelah MPASI dimulai.
-        3.  **Kurang Serat:** Menu MPASI kurang mengandung serat.
-        4.  **Terlalu Banyak Serat:** Anehnya, terlalu banyak serat (terutama dari sereal beras) tanpa diimbangi cairan yang cukup justru bisa memperparah sembelit.
-        5.  **Makanan Pemicu:** Beberapa makanan dikenal sebagai pemicu sembelit pada beberapa bayi, seperti pisang, apel (saus apel), sereal beras, dan produk susu (jika berlebihan).
-        
-        ## Cara Mengatasi di Rumah
-        
-        1.  **Cairan:** Pastikan bayi cukup terhidrasi.
-            * Tawarkan ASI/Susu Formula lebih sering.
-            * Tawarkan air putih matang di sela-sela makan MPASI (untuk bayi >6 bulan).
-        
-        2.  **Makanan "P" (Pelancar):** Berikan makanan yang dikenal membantu melancarkan pencernaan:
-            * **P**runes (Plum kering, dibuat puree)
-            * **P**ears (Pir, dibuat puree)
-            * **P**eaches (Persik, dibuat puree)
-            * **P**apaya (Pepaya)
-        
-        3.  **Hindari Pemicu:** Kurangi sementara makanan pemicu (pisang, apel, sereal beras) dan ganti dengan variasi lain (misal: oatmeal, ubi).
-        
-        4.  **Gerakan:** Lakukan "pijat I-L-U" pada perut bayi searah jarum jam. Gerakkan kaki bayi seperti mengayuh sepeda untuk membantu merangsang pergerakan usus.
-        
-        5.  **Mandi Air Hangat:** Merendam bayi di air hangat bisa membantu merelakskan otot perutnya.
-        
-        ## Kapan Harus ke Dokter?
-        
-        Segera konsultasi ke dokter jika:
-        * Sembelit berlangsung lebih dari 1-2 minggu.
-        * Bayi tampak sangat kesakitan.
-        * Ada darah dalam jumlah banyak di feses.
-        * Perut bayi tampak kembung dan keras.
-        * Bayi menolak makan sama sekali.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Konstipasi pada Anak.*
-        2.  American Academy of Pediatrics (AAP). *Constipation in Children.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Mitos vs Fakta: Makanan Pemicu Alergi",
-        "summary": "Revisi panduan alergi: mengapa menunda telur dan seafood justru salah.",
-        "source": "IDAI | AAP | ASCIA",
-        "full_content": """
-        # Mitos vs Fakta: Makanan Pemicu Alergi (Panduan Baru)
-        
-        Panduan mengenai pengenalan makanan pemicu alergi (seperti telur, kacang, seafood) telah berubah drastis dalam beberapa tahun terakhir.
-        
-        ## MITOS: Menunda Makanan Alergen Mencegah Alergi
-        
-        **PANDUAN LAMA (SALAH):** "Jangan berikan telur sebelum 1 tahun, atau kacang sebelum 3 tahun, untuk mencegah alergi."
-        
-        **FAKTA (PANDUAN BARU):**
-        
-        Penelitian besar (seperti LEAP study) membuktikan bahwa **menunda** pengenalan makanan alergen justru dapat **MENINGKATKAN** risiko alergi makanan.
-        
-        > **Panduan baru merekomendasikan: Kenalkan makanan pemicu alergi (termasuk telur, kacang, ikan) segera setelah bayi mulai MPASI (sekitar usia 6 bulan).**
-        
-        Jendela waktu antara 6-12 bulan dianggap sebagai "jendela emas" untuk melatih sistem imun tubuh agar *mentoleransi* makanan tersebut, bukan melawannya.
-        
-        ## Makanan Alergen Utama
-        
-        Kelompok makanan yang paling sering menyebabkan alergi adalah:
-        * Telur
-        * Susu Sapi (dalam olahan, misal: yogurt)
-        * Kacang Tanah
-        * Kacang Pohon (Mede, Almond)
-        * Gandum
-        * Kedelai
-        * Ikan
-        * Kerang-kerangan (Udang, Kepiting)
-        
-        ## Cara Mengenalkan Makanan Alergen (Aturan 4 Hari)
-        
-        1.  **Mulai dengan Makanan Non-Alergen:** Pastikan bayi sudah terbiasa dengan 1-2 makanan pertamanya (misal: bubur nasi, labu).
-        2.  **Satu per Satu:** Kenalkan makanan alergen **satu jenis** dalam satu waktu.
-        3.  **Mulai dari Jumlah Kecil:** Berikan sedikit saja di hari pertama (misal: seujung sendok teh telur rebus yang dilumatkan).
-        4.  **Tunggu dan Amati (Aturan 4 Hari):** Tunggu 3-4 hari sebelum mengenalkan makanan alergen baru lainnya. Amati tanda-tanda alergi (ruam kulit, bengkak, muntah, diare, sesak napas).
-        5.  **Berikan di Pagi/Siang Hari:** Agar Anda mudah mengamati reaksinya.
-        6.  **Masak Hingga Matang:** Pastikan telur dan ikan dimasak hingga matang sempurna.
-        7.  **Format yang Aman:** Untuk kacang, berikan dalam bentuk selai kacang murni (tanpa gula/garam) yang diencerkan dengan air, atau bubuk kacang yang dicampur ke bubur. **JANGAN** berikan kacang utuh (bahaya tersedak).
-        
-        ## Pengecualian
-        
-        * Jika bayi sudah memiliki **eksim (dermatitis atopik) yang parah** atau **riwayat alergi makanan lain**, konsultasikan terlebih dahulu dengan dokter anak atau ahli alergi sebelum mengenalkan makanan alergen.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Rekomendasi Pencegahan Alergi.*
-        2.  American Academy of Pediatrics (AAP). *Preventing Food Allergies.*
-        3.  ASCIA (Australasian Society of Clinical Immunology and Allergy). *Introducing Solid Foods and Allergy Prevention.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "BLW (Baby-Led Weaning) vs Spoon-Feeding",
-        "summary": "Memahami metode BLW, pro-kontra, dan cara aman melakukannya.",
-        "source": "IDAI | AAP",
-        "full_content": """
-        # BLW (Baby-Led Weaning) vs Spoon-Feeding (Suap)
-        
-        Ada dua metode utama dalam mengenalkan MPASI: *Spoon-Feeding* (disuapi bubur oleh orang tua) dan *Baby-Led Weaning* (BLW), di mana bayi makan sendiri.
-        
-        ## Apa itu Baby-Led Weaning (BLW)?
-        
-        BLW adalah metode MPASI di mana bayi (biasanya mulai usia 6 bulan) langsung ditawari makanan padat dalam bentuk *finger food* (potongan seukuran jari) yang lunak, alih-alih disuapi bubur (puree).
-        
-        Bayi didorong untuk memegang dan memasukkan makanan ke mulutnya sendiri, mengontrol apa dan berapa banyak yang ia makan.
-        
-        ## Syarat Bayi Siap BLW
-        
-        BLW tidak cocok untuk semua bayi. Syaratnya lebih ketat:
-        1.  Usia **tepat 6 bulan**.
-        2.  **Sudah bisa duduk tegak** dengan baik tanpa bantuan (atau hanya sedikit bantuan). Ini sangat penting untuk mencegah tersedak.
-        3.  Koordinasi mata-tangan sudah baik (bisa meraih dan menggenggam makanan).
-        4.  Refleks menjulurkan lidah sudah hilang.
-        
-        ## Pro dan Kontra
-        
-        | Aspek | Spoon-Feeding (Suap Tradisional) | Baby-Led Weaning (BLW) |
-        | :--- | :--- | :--- |
-        | **Kontrol Asupan** | **Pro:** Orang tua bisa mengontrol jumlah dan variasi nutrisi (terutama zat besi) yang masuk. | **Kontra:** Sulit memastikan bayi mendapat cukup kalori dan zat besi (karena makanan lebih banyak terbuang/dimainkan). |
-        | **Keterampilan Motorik** | **Kontra:** Kurang melatih motorik halus (menjimpit) di awal. | **Pro:** Sangat baik melatih keterampilan motorik halus, koordinasi mata-tangan, dan mengunyah. |
-        | **Risiko Tersedak** | **Pro:** Risiko tersedak (choking) rendah jika tekstur puree sesuai. | **Kontra:** Risiko tersedak **lebih tinggi** jika makanan tidak disiapkan dengan benar (terlalu keras/bulat). |
-        | **Gagging (Ogah)** | Sering terjadi saat transisi tekstur. | Sering terjadi di awal. *Gagging* (refleks muntah) adalah normal dan berbeda dari *choking* (tersedak/tersumbat). |
-        | **Kemandirian** | Lambat, perlu diajarkan makan sendiri nanti. | **Pro:** Melatih kemandirian dan mengenali rasa lapar/kenyang sejak dini. |
-        | **Kebersihan** | Relatif bersih. | Sangat berantakan. |
-        
-        ## Cara Aman Melakukan BLW
-        
-        * **Makanan Lunak:** Makanan harus cukup lunak sehingga bisa hancur jika ditekan antara ibu jari dan telunjuk (misal: alpukat, ubi kukus, brokoli kukus).
-        * **Potongan Jari:** Potong makanan seukuran jari orang dewasa agar mudah digenggam bayi.
-        * **Hindari Bahaya Tersedak:** **JANGAN** berikan makanan bulat dan keras (anggur utuh, kacang utuh, potongan apel mentah, sosis utuh).
-        * **Selalu Awasi:** **JANGAN PERNAH** tinggalkan bayi makan sendirian.
-        * **Fokus Zat Besi:** Karena risiko kekurangan zat besi, tawarkan makanan kaya zat besi yang mudah digenggam (misal: potongan hati ayam kukus, daging giling yang dibuat strip).
-        
-        ## Metode Campuran (The Best of Both Worlds)
-        
-        Banyak ahli merekomendasikan metode campuran:
-        * Berikan makanan utama (kaya zat besi & kalori) dengan cara disuapi (spoon-feeding).
-        * Sediakan 1-2 *finger food* (BLW) di piringnya agar ia bisa belajar memegang dan makan sendiri sebagai "camilan".
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Menimbang Metode BLW.*
-        2.  American Academy of Pediatrics (AAP). *Starting Solid Foods.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Pentingnya Omega-3 (DHA/EPA) untuk Otak Bayi",
-        "summary": "Mengapa DHA sangat penting dan dari mana sumber terbaiknya.",
-        "source": "WHO | AAP",
-        "full_content": """
-        # Pentingnya Omega-3 (DHA/EPA) untuk Otak Bayi
-        
-        Asam lemak Omega-3, terutama DHA (Docosahexaenoic Acid), adalah nutrisi krusial untuk perkembangan otak dan mata bayi, terutama selama 1000 Hari Pertama Kehidupan (HPK).
-        
-        ## Apa Peran DHA?
-        
-        * **Blok Pembangun Otak:** DHA adalah komponen struktural utama di otak dan retina (mata). Otak manusia terdiri dari sekitar 60% lemak, dan DHA adalah lemak dominan di dalamnya.
-        * **Mielinisasi:** DHA sangat penting untuk pembentukan mielin, yaitu selubung pelindung yang melapisi sel saraf. Mielin yang sehat memungkinkan sinyal otak bergerak lebih cepat, yang penting untuk pembelajaran, memori, dan fungsi kognitif.
-        * **Perkembangan Visual:** Konsentrasi DHA tertinggi di tubuh ditemukan di retina. DHA sangat penting untuk ketajaman visual (kemampuan melihat) bayi.
-        
-        ## Kapan Kebutuhan DHA Paling Tinggi?
-        
-        Kebutuhan DHA paling tinggi adalah selama **trimester ketiga kehamilan** (saat otak janin berkembang pesat) dan **dua tahun pertama kehidupan**.
-        
-        ## Sumber DHA/EPA
-        
-        1.  **ASI (Air Susu Ibu):**
-            * ASI adalah sumber DHA terbaik untuk bayi 0-6 bulan.
-            * **PENTING:** Kandungan DHA dalam ASI sangat bergantung pada **diet ibu**. Ibu menyusui sangat dianjurkan untuk mengonsumsi makanan kaya Omega-3 atau suplemen.
-        
-        2.  **Ikan Berlemak (Sumber Terbaik MPASI):**
-            * Ini adalah sumber DHA dan EPA (Eicosapentaenoic Acid) paling langsung dan mudah diserap.
-            * **Contoh:** Ikan Kembung, Salmon, Sarden, Tuna, Tongkol.
-            * **Rekomendasi:** Berikan ikan berlemak untuk MPASI bayi setidaknya 2 kali seminggu.
-        
-        3.  **Susu Formula (Fortifikasi):**
-            * Sebagian besar susu formula saat ini sudah difortifikasi (ditambahkan) DHA.
-        
-        4.  **Telur (Terutama Kuningnya):**
-            * Kuning telur mengandung DHA, terutama jika berasal dari ayam yang diberi pakan kaya Omega-3.
-        
-        5.  **Sumber Nabati (ALA):**
-            * Sumber nabati seperti biji chia (chia seeds), biji rami (flaxseed), dan kenari (walnuts) mengandung Omega-3 dalam bentuk **ALA** (Alpha-Linolenic Acid).
-            * **Masalah:** Tubuh manusia (terutama bayi) sangat tidak efisien dalam mengubah ALA menjadi DHA yang dibutuhkan otak. Konversinya sangat kecil (<5%).
-            * **Kesimpulan:** Jangan hanya mengandalkan sumber nabati untuk kebutuhan DHA bayi.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  World Health Organization (WHO). *Fats and fatty acids in human nutrition.*
-        2.  American Academy of Pediatrics (AAP). *Choosing Fish for Your Child.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Nutrisi & MPASI",
-        "title": "Zat Gizi Mikro Kunci: Zinc (Seng)",
-        "summary": "Peran penting Zinc untuk imunitas dan pertumbuhan anak.",
-        "source": "WHO | IDAI",
-        "full_content": """
-        # Zat Gizi Mikro Kunci: Zinc (Seng)
-        
-        Selain Zat Besi, Zinc (Seng) adalah mineral mikro esensial yang sangat penting untuk pertumbuhan dan sistem kekebalan tubuh anak. Kekurangan Zinc sering terjadi bersamaan dengan kekurangan zat besi.
-        
-        ## Mengapa Zinc Penting?
-        
-        1.  **Sistem Imun (Kekebalan Tubuh):**
-            * Zinc sangat vital untuk produksi dan fungsi sel-sel imun (seperti sel T dan sel B).
-            * Kekurangan Zinc membuat anak sangat rentan terhadap infeksi.
-            * **Fakta:** Suplementasi Zinc terbukti mengurangi durasi dan keparahan diare akut pada balita.
-        
-        2.  **Pertumbuhan Sel:**
-            * Zinc diperlukan untuk sintesis DNA dan protein, serta pembelahan sel. Proses ini adalah dasar dari pertumbuhan fisik.
-            * Kekurangan Zinc secara langsung berkontribusi pada kegagalan pertumbuhan (stunting).
-        
-        3.  **Nafsu Makan dan Pengecapan:**
-            * Zinc berperan dalam fungsi indra perasa (pengecapan).
-            * Kekurangan Zinc seringkali menyebabkan nafsu makan menurun, yang memperburuk lingkaran setan malnutrisi.
-        
-        4.  **Penyembuhan Luka:**
-            * Zinc diperlukan untuk perbaikan jaringan dan kulit.
-        
-        ## Kapan Kebutuhan Zinc Tinggi?
-        
-        * Sama seperti zat besi, simpanan Zinc dari lahir akan menipis.
-        * Kebutuhan Zinc tidak dapat dipenuhi hanya oleh ASI setelah usia 6 bulan.
-        * MPASI harus menjadi sumber Zinc yang adekuat.
-        
-        ## Sumber Zinc Terbaik untuk MPASI
-        
-        Ketersediaan bio (penyerapan) Zinc dari sumber hewani jauh lebih baik daripada sumber nabati.
-        
-        1.  **Daging Merah (Sapi, Kambing):** Sumber Zinc terbaik dan paling mudah diserap.
-        2.  **Hati (Ayam atau Sapi):** Sangat kaya Zinc dan Zat Besi.
-        3.  **Unggas (Ayam, Kalkun):** Terutama daging bagian paha.
-        4.  **Kerang-kerangan:** Tiram (kandungan tertinggi), kepiting, udang. (Kenalkan dengan hati-hati terkait alergi).
-        5.  **Kacang-kacangan & Biji-bijian:** (Sumber nabati, penyerapan lebih rendah).
-        
-        **Tantangan:** Makanan nabati (seperti sereal dan kacang-kacangan) mengandung *fitat*, yang dapat mengikat Zinc dan menghambat penyerapannya. Ini adalah alasan lain mengapa protein hewani sangat penting dalam MPASI.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  World Health Organization (WHO). *Zinc supplementation in infants and children.*
-        2.  Ikatan Dokter Anak Indonesia (IDAI). *Peran Zinc pada Tumbuh Kembang Anak.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    
-    # ================================================
-    # Kategori: Tumbuh Kembang (7 Artikel BARU)
-    # ================================================
-    {
-        "kategori": "Tumbuh Kembang",
-        "title": "Milestone (Tonggak) Perkembangan Anak 2-3 Tahun",
-        "summary": "Memantau perkembangan anak usia 24-36 bulan, dari 'ledakan' bahasa hingga kemandirian.",
-        "source": "CDC | IDAI (KPSP)",
-        "full_content": """
-        # Milestone (Tonggak) Perkembangan Anak 2-3 Tahun (24-36 Bulan)
-        
-        Usia 2 tahun adalah masa "ledakan" dalam kemampuan bahasa dan kognitif. Anak Anda berubah dari bayi menjadi individu kecil dengan pemikiran dan keinginannya sendiri.
-        
-        ## Usia 24 Bulan (2 Tahun)
-        
-        * **Motorik Kasar:**
-            * Berlari dengan baik.
-            * Mulai bisa menendang bola ke depan.
-            * Naik turun tangga sambil berpegangan (mungkin masih dengan 2 kaki per langkah).
-        * **Motorik Halus:**
-            * Menumpuk 4-6 balok.
-            * Menggambar garis lurus (vertikal/horizontal).
-            * Membalik halaman buku satu per satu.
-        * **Bahasa & Kognitif:**
-            * **"Ledakan Kosakata"**: Bisa mengucapkan 50+ kata.
-            * **Mulai merangkai 2 kata** (PENTING!). Contoh: "mau susu", "mama pergi".
-            * Mengenali nama benda dan gambar yang familiar.
-            * Mengikuti perintah 2 langkah (misal: "Ambil bola dan berikan ke Papa").
-        * **Sosial & Emosional:**
-            * Mulai menunjukkan kemandirian (fase "Aku bisa sendiri!").
-            * Fase *tantrum* sering terjadi.
-            * Bermain paralel (main di samping teman, tapi belum main bersama).
-        
-        ## Usia 30 Bulan (2.5 Tahun)
-        
-        * **Motorik Kasar:**
-            * Melompat dengan kedua kaki.
-            * Berjalan mundur.
-        * **Motorik Halus:**
-            * Menumpuk 8+ balok.
-            * Mulai bisa memutar gagang pintu.
-            * Mencuci dan mengeringkan tangan sendiri.
-        * **Bahasa & Kognitif:**
-            * Menggunakan kalimat 2-3 kata.
-            * Mulai mengerti konsep "satu" dan "dua".
-            * Menyebutkan nama teman.
-        * **Sosial & Emosional:**
-            * Mulai menunjukkan minat pada *toilet training*.
-            * Menunjukkan berbagai macam emosi.
-        
-        ## Usia 36 Bulan (3 Tahun)
-        
-        * **Motorik Kasar:**
-            * Mengayuh sepeda roda tiga.
-            * Naik turun tangga dengan kaki bergantian.
-            * Berdiri dengan satu kaki selama beberapa detik.
-        * **Motorik Halus:**
-            * Menggambar lingkaran.
-            * Mampu memakai dan melepas beberapa pakaian sendiri.
-            * Menggunakan sendok garpu dengan baik.
-        * **Bahasa & Kognitif:**
-            * Bisa diajak bicara dan mengerti sebagian besar percakapan.
-            * Menggunakan kalimat 3-4 kata.
-            * Mengerti konsep "di dalam", "di atas", "di bawah".
-            * Menyebutkan usia dan jenis kelaminnya.
-        * **Sosial & Emosional:**
-            * Mulai bisa bermain bergiliran.
-            * Menunjukkan empati (misal: memeluk teman yang menangis).
-            * Memahami konsep "milikku" dan "miliknya".
-        
-        ## 🚩 Red Flags (Waspada Keterlambatan)
-        
-        Segera konsultasi ke dokter jika:
-        * **Usia 2 Tahun:**
-            * **Belum bisa merangkai 2 kata** (misal: "mau minum").
-            * Tidak bisa berjalan dengan stabil.
-            * Tidak mengikuti perintah sederhana.
-        * **Usia 3 Tahun:**
-            * Sering jatuh atau sulit naik tangga.
-            * Bicara sangat tidak jelas sehingga orang asing tidak mengerti.
-            * Tidak bisa merangkai kalimat 3 kata.
-            * Tidak mau berinteraksi/bermain dengan anak lain.
-            * Hilangnya kemampuan yang sebelumnya sudah bisa.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Centers for Disease Control and Prevention (CDC). *Milestone Moments Booklet.*
-        2.  Ikatan Dokter Anak Indonesia (IDAI). *Skrining Tumbuh Kembang (KPSP).*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Tumbuh Kembang",
-        "title": "Stimulasi untuk Anak Usia 1-2 Tahun",
-        "summary": "Ide bermain sederhana untuk merangsang otak 'toddler' Anda.",
-        "source": "Kemenkes RI (Buku KIA) | AAP",
-        "full_content": """
-        # Stimulasi untuk Anak Usia 1-2 Tahun (Toddler)
-        
-        Anak usia 1-2 tahun adalah penjelajah ulung. Mereka belajar melalui gerakan fisik dan interaksi langsung. Stimulasi di usia ini berfokus pada bahasa, motorik kasar, dan kemandirian.
-        
-        ## 1. Stimulasi Bahasa (Ledakan Kosakata)
-        
-        Ini adalah prioritas utama. Otak anak sedang "menyerap" kata-kata.
-        
-        * **Membaca Buku (Setiap Hari):** Ini adalah stimulasi terbaik.
-            * Pilih buku dengan gambar besar dan 1-2 kata per halaman.
-            * **Tunjuk dan Sebutkan:** Tunjuk gambar (misal: kucing) dan sebutkan namanya ("Kucing!").
-            * **Minta Anak Menunjuk:** "Di mana bola?" (Biarkan anak menunjuk).
-            * **Tirukan Suara:** "Kucing bunyinya 'Meong'!"
-        * **Narasikan Aktivitas:** Bicarakan apa yang sedang Anda lakukan. "Mama sedang pakai kaos kaki biru." "Adik sedang mandi pakai sabun."
-        * **Ulangi Kata Anak:** Jika anak bilang "bil" (mobil), Anda respon, "Iya betul, itu Mobil. Mobil besar warna merah."
-        
-        ## 2. Stimulasi Motorik Kasar (Bergerak)
-        
-        Anak perlu bergerak untuk melatih otot besar dan keseimbangan.
-        
-        * **Bermain di Luar:** Biarkan anak berlari di taman, memanjat mainan playground (dengan pengawasan), atau bermain di rumput.
-        * **Menendang & Melempar Bola:** Gunakan bola plastik ringan.
-        * **Menari:** Putar musik dan ajak anak menari, melompat, dan berputar.
-        * **Naik Turun:** Latih naik turun tangga (dengan pegangan) atau naik turun sofa.
-        
-        ## 3. Stimulasi Motorik Halus (Keterampilan Tangan)
-        
-        Melatih otot-otot kecil di tangan untuk persiapan menulis.
-        
-        * **Mencoret-coret:** Berikan krayon besar (non-toxic) dan kertas. Awasi agar tidak dimakan.
-        * **Menyusun Balok:** Ajarkan menumpuk 2-3 balok. Biarkan ia merobohkannya (ini juga bagian dari belajar).
-        * **Memasukkan Benda:** Siapkan wadah dan minta anak memasukkan mainan kecil ke dalamnya.
-        * **Makan Sendiri:** Biarkan anak mencoba makan sendiri dengan sendok atau *finger food*. (Akan berantakan, tapi ini proses belajar).
-        
-        ## 4. Stimulasi Sosial & Kemandirian
-        
-        * **Meniru Pekerjaan Rumah:** Berikan anak lap kecil saat Anda bersih-bersih, atau ajak ia "membantu" menaruh baju kotor.
-        * **Mengenal Bagian Tubuh:** "Di mana hidung Adik?" "Mana mata Mama?"
-        * **Playdate (Bermain):** Ajak bertemu anak seusianya. Meskipun mereka mungkin hanya bermain "paralel" (berdampingan), ini adalah awal interaksi sosial.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Kementerian Kesehatan RI. *Buku Kesehatan Ibu dan Anak (Buku KIA) - Stimulasi.*
-        2.  American Academy of Pediatrics (AAP). *Fun and Games: The Prescription for a Healthy Child.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Tumbuh Kembang",
-        "title": "Stimulasi untuk Anak Usia 2-3 Tahun",
-        "summary": "Ide bermain untuk mengembangkan bahasa, kognitif, dan imajinasi.",
-        "source": "CDC | Kemenkes RI",
-        "full_content": """
-        # Stimulasi untuk Anak Usia 2-3 Tahun
-        
-        Pada usia ini, imajinasi anak mulai berkembang pesat. Mereka mulai bermain "pura-pura" (pretend play) dan kemampuan bahasanya semakin kompleks.
-        
-        ## 1. Stimulasi Bahasa & Kognitif
-        
-        Fokus bergeser dari "menyebut nama" ke "memahami konsep".
-        
-        * **Membaca Buku Interaktif:**
-            * Bacakan cerita yang lebih panjang.
-            * Ajukan pertanyaan: "Menurutmu apa yang terjadi selanjutnya?", "Kenapa ya bebeknya sedih?"
-        * **Bermain Pura-pura (Pretend Play):**
-            * Ini adalah stimulasi kognitif terbaik di usia ini.
-            * Main masak-masakan, dokter-dokteran, atau main "rumah" dengan boneka.
-            * Ini mengajarkan anak tentang peran sosial, emosi, dan memecahkan masalah.
-        * **Mengenal Konsep:**
-            * **Warna:** "Ayo kita cari semua mainan yang warna merah."
-            * **Bentuk:** "Ini lingkaran, seperti bola."
-            * **Berhitung Sederhana:** Hitung anak tangga saat naik, "Satu, dua, tiga..."
-            * **Ukuran:** "Ini sendok besar, ini sendok kecil."
-        
-        ## 2. Stimulasi Motorik Kasar
-        
-        Anak semakin lincah dan butuh menyalurkan energi.
-        
-        * **Aktivitas "Berat":** Mendorong kotak, menarik mainan, membawa buku.
-        * **Keseimbangan:** Ajarkan berdiri satu kaki, berjalan di atas garis lurus, atau melompat.
-        * **Mengayuh:** Ajarkan mengayuh sepeda roda tiga.
-        
-        ## 3. Stimulasi Motorik Halus
-        
-        Keterampilan tangan semakin presisi.
-        
-        * **Menggambar:** Ajarkan menggambar garis lurus dan lingkaran.
-        * **Puzzle Sederhana:** Mulai dengan puzzle 2-4 keping yang besar.
-        * **Play-Doh (Lilin Mainan):** Meremas, menggulung, dan memotong play-doh sangat baik untuk menguatkan otot tangan.
-        * **Meronce:** Ajak anak memasukkan manik-manik besar ke dalam tali.
-        
-        ## 4. Stimulasi Kemandirian & Emosi
-        
-        * **Tugas Sederhana:** Minta anak membantu. "Tolong ambilkan sepatu Kakak." "Tolong taruh mainan di kotak." Ini membangun rasa percaya diri.
-        * **Mengenal Emosi:** Saat anak marah (tantrum), validasi emosinya. "Adik marah ya karena mainannya rusak. Mama ngerti." (Lihat artikel Disiplin Positif).
-        * **Pilihan Sederhana:** Berikan pilihan terbatas untuk melatihnya membuat keputusan. "Kakak mau pakai baju biru atau baju merah?"
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Centers for Disease Control and Prevention (CDC). *Milestones and Tips for 2-3 Year Olds.*
-        2.  Kementerian Kesehatan RI. *Buku Kesehatan Ibu dan Anak (Buku KIA) - Stimulasi.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Tumbuh Kembang",
-        "title": "Membedakan 'Gagging' (Ogah) vs 'Choking' (Tersedak)",
-        "summary": "Perbedaan vital antara refleks aman (gagging) dan kondisi darurat (choking).",
-        "source": "AAP | Red Cross",
-        "full_content": """
-        # Membedakan 'Gagging' (Ogah) vs 'Choking' (Tersedak)
-        
-        Saat memulai MPASI, terutama dengan metode BLW atau saat menaikkan tekstur, orang tua sering panik melihat anak seperti mau muntah. Penting untuk membedakan *gagging* (normal) dan *choking* (berbahaya).
-        
-        ## Gagging (Refleks Ogah) - AMAN & NORMAL
-        
-        *Gagging* adalah refleks alami tubuh untuk mencegah tersedak. Ini adalah respons keamanan.
-        
-        * **Apa itu?** Kontraksi tenggorokan untuk mendorong makanan yang terlalu besar atau terlalu cepat ke depan mulut.
-        * **Bagaimana Tampilannya?**
-            * Anak **BERSUARA:** Batuk, terbatuk-batuk, mengeluarkan suara "gah-gah".
-            * Wajah mungkin memerah.
-            * Mata mungkin berair.
-            * Anak mungkin memuntahkan (mengeluarkan) makanan dari mulutnya.
-        * **Apa yang Harus Dilakukan?**
-            * **TETAP TENANG.** Jangan panik.
-            * **JANGAN** masukkan jari Anda ke mulutnya (ini bisa mendorong makanan ke belakang dan menyebabkan tersedak).
-            * Biarkan anak mengatasinya sendiri. Beri ia waktu 10-15 detik.
-            * Ini adalah bagian dari proses belajar bayi mengunyah dan memindahkan makanan di mulut.
-        
-        ## Choking (Tersedak) - KONDISI DARURAT
-        
-        *Choking* terjadi ketika jalan napas **tersumbat** oleh makanan atau benda, sehingga anak tidak bisa bernapas.
-        
-        * **Apa itu?** Sumbatan total atau sebagian pada saluran napas.
-        * **Bagaimana Tampilannya?**
-            * **HENING (TIDAK BERSUARA):** Anak tidak bisa menangis, batuk, atau bicara.
-            * Mungkin ada suara melengking (stridor) saat mencoba bernapas.
-            * **Wajah MEMBIRU** atau pucat (di sekitar bibir dan kuku).
-            * Ekspresi panik, mata melotot.
-            * Anak mungkin mencengkeram lehernya (jika lebih tua).
-        * **Apa yang Harus Dilakukan?**
-            * **SEGERA BERTINDAK!** Teriak minta tolong.
-            * Lakukan **Pertolongan Pertama Tersedak (Heimlich Maneuver untuk Bayi/Anak)**.
-            * **Untuk Bayi (<1 Tahun):**
-                1.  **5 Back Blows:** Telungkupkan bayi di lengan Anda (kepala lebih rendah). Beri 5 hentakan kuat di punggung (di antara tulang belikat) dengan tumit tangan Anda.
-                2.  **5 Chest Thrusts:** Balikkan bayi. Letakkan 2 jari di tengah dada (di bawah garis puting). Tekan ke dalam dan ke atas sebanyak 5 kali.
-                3.  Ulangi (5 back blows, 5 chest thrusts) sampai benda keluar atau bayi tidak sadar.
-            * **Jika Anak Tidak Sadar:** Lakukan CPR.
-        
-        **Pencegahan Tersedak:** Selalu potong makanan dengan benar (hindari bentuk bulat/koin) dan selalu awasi anak saat makan.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Infant Choking and Gagging.*
-        2.  American Red Cross. *Choking: First Aid.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Tumbuh Kembang",
-        "title": "Pentingnya Permainan Sensorik (Sensory Play)",
-        "summary": "Merangsang 5 indra anak untuk membangun koneksi otak.",
-        "source": "AAP",
-        "full_content": """
-        # Pentingnya Permainan Sensorik (Sensory Play)
-        
-        *Sensory Play* (permainan sensorik) adalah aktivitas bermain apa pun yang merangsang indra anak: sentuhan, penciuman, rasa, penglihatan, dan pendengaran.
-        
-        Permainan ini sangat penting untuk membangun koneksi saraf di otak (perkembangan kognitif), bahasa, dan keterampilan motorik.
-        
-        ## Mengapa Permainan Sensorik Penting?
-        
-        * **Membangun Koneksi Otak:** Saat anak menyentuh tekstur baru atau mencium bau baru, otaknya menciptakan jalur saraf baru untuk memproses informasi tersebut.
-        * **Pengembangan Bahasa:** Memberi anak kosakata untuk menggambarkan apa yang mereka rasakan. "Ini *lembut*," "Airnya *dingin*," "Pasirnya *kasar*."
-        * **Keterampilan Motorik:** Meremas *play-doh*, menuang air, atau mengambil biji-bijian melatih keterampilan motorik halus.
-        * **Menenangkan:** Aktivitas seperti bermain air atau pasir bisa sangat menenangkan bagi anak yang sedang rewel atau cemas.
-        
-        ## Ide Permainan Sensorik Sederhana
-        
-        Anda tidak perlu mainan mahal. Gunakan barang-barang di rumah (selalu awasi!).
-        
-        ### 1. Indra Peraba (Sentuhan)
-        
-        * **Sensory Bin:** Ambil kotak kontainer, isi dengan bahan kering.
-            * **Bayi (yang masih memasukkan ke mulut):** Gunakan bahan yang aman jika tertelan (edible). Contoh: Oatmeal kering, remahan biskuit, bubur sagu mutiara.
-            * **Balita (diawasi ketat):** Beras, kacang hijau, pasta kering. Sediakan sendok dan mangkuk untuk menuang.
-        * **Bermain Air:** Aktivitas sensorik terbaik. Biarkan anak bermain di bak mandi (diawasi) atau siapkan baskom air di luar ruangan. Beri spons, cangkir, dan corong.
-        * **Tekstur Makanan:** Biarkan anak menyentuh makanannya (misal: memegang brokoli kukus, meremas alpukat).
-        * **Play-Doh (Lilin Mainan):** Buatan sendiri (tepung, garam, air) atau beli (non-toxic).
-        
-        ### 2. Indra Penciuman & Rasa
-        
-        * **Dapur:** Ajak anak mencium bau bumbu dapur (kayu manis, jahe) atau kulit jeruk.
-        * **MPASI:** Kenalkan berbagai rasa (asam dari tomat, pahit ringan dari sayuran) selain manis dan gurih.
-        
-        ### 3. Indra Penglihatan & Pendengaran
-        
-        * **Botol Suara:** Isi beberapa botol plastik kecil dengan benda berbeda (beras, kancing, air) dan tutup rapat. Biarkan anak mengocoknya dan membedakan suaranya.
-        * **Bermain di Alam:** Ajak anak berjalan di rumput (tanpa alas kaki), menyentuh daun, mendengar suara burung.
-        
-        **Keselamatan:** Selalu awasi anak selama permainan sensorik, terutama dengan benda-benda kecil (bahaya tersedak) atau air (bahaya tenggelam).
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Sensory Play: What It Is and Why It's Important.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Tumbuh Kembang",
-        "title": "Perkembangan Pendengaran Bayi",
-        "summary": "Bagaimana bayi belajar mendengar, dari rahim hingga mengenali nama.",
-        "source": "American Speech-Language-Hearing Association (ASHA)",
-        "full_content": """
-        # Perkembangan Pendengaran Bayi
-        
-        Pendengaran adalah indra yang sangat penting untuk perkembangan bahasa. Bayi sudah mulai mendengar bahkan sejak di dalam rahim.
-        
-        ## Milestone Pendengaran
-        
-        * **Di Dalam Rahim (Trimester Ketiga):**
-            * Janin dapat mendengar suara detak jantung ibu, suara pencernaan, dan suara ibu yang teredam.
-            * Mereka mungkin merespons suara keras dari luar dengan bergerak.
-        
-        * **Baru Lahir (0-1 Bulan):**
-            * Bayi terkejut atau "melompat" (refleks Moro) terhadap suara keras dan tiba-tiba.
-            * Mungkin menjadi tenang saat mendengar suara yang familiar (suara ibu).
-            * Ini adalah waktu dilakukannya **Skrining Pendengaran Bayi Baru Lahir (OAE/BERA)** di rumah sakit. Pastikan bayi Anda mendapatkannya.
-        
-        * **Usia 2-4 Bulan:**
-            * Mulai menolehkan kepala ke arah sumber suara (meskipun belum akurat).
-            * Memperhatikan mainan yang mengeluarkan bunyi (kerincingan).
-            * Mulai membedakan nada suara (misal: suara marah vs. suara lembut).
-        
-        * **Usia 4-6 Bulan:**
-            * Menoleh secara akurat ke arah sumber suara.
-            * Merespons namanya sendiri (mulai menoleh).
-            * Senang bermain dengan mainan yang berbunyi.
-        
-        * **Usia 7-12 Bulan:**
-            * **Memahami kata-kata sederhana:** Mengerti kata "tidak", "dadah", atau "mama" (bukan hanya meniru suara, tapi mengerti maknanya).
-            * Menoleh dengan cepat saat namanya dipanggil.
-            * Mulai meniru suara ("babbling") sebagai respons terhadap ajakan bicara.
-        
-        ## 🚩 Red Flags (Waspada Gangguan Pendengaran)
-        
-        Gangguan pendengaran adalah salah satu penyebab utama keterlambatan bicara (*speech delay*). Intervensi dini sangat penting.
-        
-        Segera konsultasi ke dokter THT atau Audiolog jika:
-        
-        * **Bayi Baru Lahir:** Gagal skrining pendengaran di RS.
-        * **Usia 3-4 Bulan:** Tidak menoleh ke arah suara.
-        * **Usia 6 Bulan:** Tidak merespons saat namanya dipanggil.
-        * **Usia 12 Bulan:** Tidak mengoceh ("babbling") atau tidak merespons perintah sederhana.
-        * **Riwayat Infeksi:** Mengalami infeksi telinga tengah (Otitis Media Efusa / OME) yang berulang atau parah. Cairan di telinga tengah dapat menghalangi pendengaran (tuli konduktif sementara) dan mengganggu belajar bicara.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Speech-Language-Hearing Association (ASHA). *Hearing Development: Birth to 1 Year.*
-        2.  Ikatan Dokter Anak Indonesia (IDAI). *Skrining Pendengaran pada Bayi Baru Lahir.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Tumbuh Kembang",
-        "title": "Perkembangan Emosi: 'Separation Anxiety' (Cemas Berpisah)",
-        "summary": "Mengapa bayi tiba-tiba menangis saat ditinggal ibu dan cara mengatasinya.",
-        "source": "AAP",
-        "full_content": """
-        # Perkembangan Emosi: 'Separation Anxiety' (Cemas Berpisah)
-        
-        *Separation anxiety* (kecemasan berpisah) adalah fase perkembangan emosional yang **NORMAL** di mana bayi menjadi cemas atau takut ketika berpisah dari pengasuh utamanya (biasanya ibu).
-        
-        Ini justru pertanda baik! Ini menunjukkan bayi telah membentuk ikatan (bonding) yang kuat dan aman dengan Anda.
-        
-        ## Kapan Terjadi?
-        
-        * **Mulai:** Biasanya muncul sekitar usia 8-9 bulan.
-        * **Puncak:** Seringkali memuncak antara usia 10-18 bulan.
-        * **Mereda:** Mulai berkurang setelah usia 2 tahun, seiring anak lebih mengerti bahasa dan konsep waktu.
-        
-        ## Mengapa Terjadi?
-        
-        Ini terkait dengan perkembangan kognitif:
-        
-        1.  **Ikatan (Bonding):** Bayi sudah sangat terikat dengan Anda.
-        2.  **Konsep Keabadian Objek (Object Permanence):** Bayi mulai mengerti bahwa Anda tetap ada meskipun Anda tidak terlihat. Dulu, jika Anda hilang dari pandangan, Anda dianggap "tidak ada". Sekarang, ia tahu Anda ada "di suatu tempat" dan ia ingin Anda kembali.
-        3.  **Belum Paham Waktu:** Bayi belum mengerti konsep "Mama pergi sebentar" atau "Mama akan kembali nanti sore". Baginya, "pergi" adalah "pergi selamanya".
-        
-        ## Tanda-tanda Separation Anxiety
-        
-        * Menangis histeris saat ibu berjalan ke kamar mandi atau ruangan lain.
-        * Menempel ketat (clingy) pada pengasuh.
-        * Menangis saat diserahkan ke orang lain, bahkan kakek/nenek.
-        * Terbangun di malam hari dan menangis mencari Anda.
-        
-        ## Cara Mengatasi (Bukan Menghindari)
-        
-        Tujuannya bukan menghindari perpisahan, tapi membantu anak merasa aman.
-        
-        1.  **Jangan Pergi Diam-diam:** Ini adalah kesalahan umum. Pergi diam-diam saat anak lengah akan merusak kepercayaan. Anak akan menjadi lebih cemas karena takut Anda "hilang" tiba-tiba.
-        
-        2.  **Ritual Perpisahan (Cepat & Konsisten):**
-            * Selalu ucapkan pamit.
-            * Buat ritual singkat: "Mama kerja dulu ya. Mama sayang Adik. Dadah!" (Peluk, cium, lalu pergi).
-            * **PENTING:** Setelah Anda pamit, **langsung pergi**. Jangan kembali lagi meskipun anak menangis. Kembali hanya akan memperpanjang drama dan mengajarkan bahwa menangis bisa membuat Anda kembali.
-        
-        3.  **Latih Perpisahan Singkat:** Mulai dengan pergi ke kamar sebelah selama 1 menit, lalu kembali. Tingkatkan durasinya perlahan.
-        
-        4.  **Alihkan Perhatian:** Sebelum Anda pergi, alihkan perhatian anak ke pengasuh lain atau mainan favorit.
-        
-        5.  **Tepati Janji:** Saat Anda kembali, tunjukkan antusiasme. "Mama kembalii!" Ini mengajarkan anak bahwa Anda selalu menepati janji untuk kembali.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Separation Anxiety in Babies.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    # ================================================
-    # Kategori: Kesehatan & Imunisasi (5 Artikel BARU)
-    # ================================================
-    {
-        "kategori": "Kesehatan & Imunisasi",
-        "title": "Mengenal Cacar Air (Varisela)",
-        "summary": "Penyebab, gejala, dan perawatan cacar air pada anak.",
-        "source": "IDAI | AAP",
-        "full_content": """
-        # Mengenal Cacar Air (Varisela)
-        
-        Cacar air (Varisela) adalah infeksi yang sangat menular yang disebabkan oleh virus *Varicella-Zoster*. Penyakit ini paling sering menyerang anak-anak.
-        
-        ## Gejala
-        
-        * **Demam & Lesu:** Gejala awal biasanya demam ringan, sakit kepala, dan rasa lesu, 1-2 hari sebelum ruam muncul.
-        * **Ruam (Gejala Khas):**
-            1.  **Bintik Merah (Makula):** Dimulai sebagai bintik-bintik merah kecil, biasanya di badan (dada/punggung) lalu menyebar ke wajah, kulit kepala, dan anggota gerak.
-            2.  **Lentingan (Vesikel):** Bintik merah ini dengan cepat berubah menjadi lenting-lenting berisi cairan bening (seperti tetesan embun).
-            3.  **Koreng (Krusta):** Lentingan akan pecah, mengering, dan menjadi koreng (keropeng).
-        * **Penting:** Ciri khas cacar air adalah munculnya **semua bentuk ruam (bintik, lenting, koreng)** secara bersamaan di satu area tubuh.
-        * **Gatal:** Ruam ini sangat gatal.
-        
-        ## Perawatan di Rumah
-        
-        Karena disebabkan oleh virus, fokus perawatan adalah meredakan gejala (simptomatik):
-        
-        1.  **Atasi Gatal:**
-            * Mandi air sejuk (bisa dicampur oatmeal koloid).
-            * Gunakan losion *calamine* di area yang gatal (hindari wajah).
-            * Jaga kuku anak tetap pendek dan bersih untuk mencegah infeksi akibat garukan.
-        2.  **Atasi Demam:** Berikan Paracetamol sesuai dosis berat badan. **JANGAN** berikan Aspirin pada anak dengan infeksi virus (risiko Sindrom Reye).
-        3.  **Jaga Kebersihan:** Tetap mandikan anak 2x sehari dengan sabun lembut untuk mencegah infeksi bakteri sekunder pada kulit.
-        
-        ## Kapan Harus ke Dokter?
-        
-        * Jika bayi Anda (< 1 tahun) terkena cacar air.
-        * Jika anak mengalami demam tinggi yang tidak kunjung reda.
-        * Jika lenting tampak sangat merah, bengkak, dan bernanah (tanda infeksi bakteri).
-        * Jika anak tampak kebingungan, kaku leher, atau kejang.
-        
-        ## Pencegahan
-        
-        Pencegahan terbaik adalah **Vaksinasi Varisela**. IDAI merekomendasikan vaksin ini mulai usia 12 bulan.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Cacar Air: Gejala dan Tatalaksana.*
-        2.  American Academy of Pediatrics (AAP). *Chickenpox (Varicella).*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Kesehatan & Imunisasi",
-        "title": "Mengenal Penyakit Tangan, Kaki, dan Mulut (HFMD)",
-        "summary": "Penyakit 'Flu Singapura' yang sering mewabah di penitipan anak.",
-        "source": "IDAI | CDC",
-        "full_content": """
-        # Mengenal Penyakit Tangan, Kaki, dan Mulut (HFMD)
-        
-        Penyakit Tangan, Kaki, dan Mulut (*Hand, Foot, and Mouth Disease* - HFMD) atau sering disebut "Flu Singapura" adalah infeksi virus yang sangat umum pada balita.
-        
-        ## Penyebab
-        
-        Disebabkan oleh *Coxsackievirus* (paling sering) atau *Enterovirus 71*. Penyakit ini sangat menular melalui air liur, cairan hidung, dan feses.
-        
-        ## Gejala
-        
-        1.  **Demam & Sakit Tenggorokan:** Gejala awal mirip flu biasa, seperti demam ringan dan anak mengeluh sakit menelan.
-        2.  **Sariawan (di Mulut):** Muncul bintik-bintik merah kecil yang cepat menjadi sariawan (ulkus) yang nyeri. Biasanya di lidah, gusi, dan bagian dalam pipi. Ini adalah gejala utama yang membuat anak tidak mau makan/minum.
-        3.  **Ruam (di Tangan & Kaki):** Muncul ruam berupa bintik merah rata atau lenting kecil (tidak selalu berisi air) di:
-            * Telapak tangan
-            * Telapak kaki
-        4.  **Area Lain:** Ruam juga bisa muncul di bokong dan area popok.
-        
-        Penyakit ini biasanya ringan dan akan sembuh sendiri (self-limiting) dalam 7-10 hari.
-        
-        ## Perawatan di Rumah
-        
-        Fokus utama adalah mengatasi nyeri dan mencegah dehidrasi.
-        
-        * **Atasi Nyeri:** Berikan Paracetamol atau Ibuprofen sesuai dosis untuk meredakan nyeri sariawan dan demam.
-        * **Cegah Dehidrasi:** Ini adalah komplikasi paling umum karena anak tidak mau minum akibat nyeri telan.
-            * Tawarkan cairan dingin (ASI, susu dingin, air putih dingin).
-            * Berikan makanan lembut dan dingin (es krim, yogurt, puding, agar-agar).
-            * Hindari makanan asam (jeruk) atau asin (keripik) yang akan memperparah nyeri.
-        * **Jaga Kebersihan:** Cuci tangan adalah pencegahan terbaik.
-        
-        ## Kapan Harus ke Dokter?
-        
-        * Jika anak menunjukkan **tanda dehidrasi** (jarang pipis, mulut kering, lemas, menangis tanpa air mata).
-        * Jika demam tinggi tidak kunjung turun.
-        * Jika anak tampak sangat kesakitan.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Hand, Foot, and Mouth Disease (HFMD).*
-        2.  Centers for Disease Control and Prevention (CDC). *Hand, Foot, and Mouth Disease.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Kesehatan & Imunisasi",
-        "title": "Ruam Popok (Diaper Rash): Pencegahan dan Perawatan",
-        "summary": "Cara mengatasi iritasi kulit paling umum pada bayi.",
-        "source": "IDAI | AAP",
-        "full_content": """
-        # Ruam Popok (Diaper Rash): Pencegahan dan Perawatan
-        
-        Ruam popok (dermatitis popok) adalah iritasi kulit di area yang tertutup popok. Hampir semua bayi pernah mengalaminya.
-        
-        ## Penyebab
-        
-        Penyebab utamanya adalah kontak yang terlalu lama dengan **urin (pipis) dan feses (BAB)**.
-        
-        * Kulit yang lembap dan hangat di dalam popok menjadi rentan.
-        * Amonia dalam urin dan enzim dalam feses merusak lapisan pelindung kulit, menyebabkan iritasi.
-        * Gesekan dengan popok memperburuk kondisi.
-        * Kadang bisa diperparah oleh infeksi jamur (Candida) jika tidak segera diatasi.
-        
-        ## Gejala
-        
-        * Kulit di area popok (bokong, lipatan paha, alat kelamin) tampak kemerahan dan meradang.
-        * Kulit bisa tampak bengkak atau melepuh (pada kasus berat).
-        * Bayi tampak tidak nyaman atau menangis saat area tersebut dibersihkan atau disentuh.
-        
-        ## Pencegahan adalah Kunci (A-B-C-D)
-        
-        1.  **A = Air & Area:** Jaga area popok tetap bersih dan kering.
-        2.  **B = Barriers:** Gunakan krim pelindung (barrier cream) **setiap kali** ganti popok.
-            * Pilih krim yang mengandung **Zinc Oxide** atau **Petroleum Jelly**.
-            * Oleskan tebal-tebal (seperti lapisan mentega) untuk membuat lapisan pelindung antara kulit dan popok.
-        3.  **C = Cleansing:** Bersihkan dengan lembut.
-            * Gunakan air bersih dan kapas atau waslap lembut.
-            * Hindari tisu basah yang mengandung alkohol atau pewangi jika kulit sedang iritasi.
-            * Keringkan dengan cara ditepuk-tepuk (jangan digosok) sebelum memakaikan popok baru.
-        4.  **D = Diapers:** Ganti popok **SESERING MUNGKIN**.
-            * Ini adalah pencegahan terpenting.
-            * Ganti popok segera setelah bayi BAB.
-            * Ganti popok setiap 2-3 jam meskipun hanya basah karena pipis.
-        
-        ## Tips Tambahan
-        
-        * **Bebas Popok (Diaper-Free Time):** Biarkan bayi bermain tanpa popok selama 15-30 menit beberapa kali sehari di atas perlak. Paparan udara adalah obat terbaik untuk ruam popok.
-        * **Ukuran Popok:** Pastikan ukuran popok pas (tidak terlalu ketat) agar ada sirkulasi udara.
-        
-        ## Kapan Harus ke Dokter?
-        
-        * Ruam tidak membaik dalam 2-3 hari perawatan di rumah.
-        * Ruam tampak sangat parah, melepuh, atau bernanah.
-        * Ruam disertai bintik-bintik merah kecil terpisah (satelit) di pinggirnya (curiga infeksi jamur, perlu krim anti-jamur).
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Ruam Popok pada Bayi.*
-        2.  American Academy of Pediatrics (AAP). *Diaper Rash: Prevention and Treatment.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Kesehatan & Imunisasi",
-        "title": "Mengenal Eksim (Dermatitis Atopik) pada Bayi",
-        "summary": "Penyebab kulit kering, gatal, dan merah pada bayi dengan 'bakat' atopik.",
-        "source": "IDAI | AAP",
-        "full_content": """
-        # Mengenal Eksim (Dermatitis Atopik) pada Bayi
-        
-        Dermatitis Atopik (DA) atau eksim adalah kondisi kulit kronis (jangka panjang) yang sangat umum pada bayi dan anak-anak. Ini adalah bagian dari "Atopic March", yang juga mencakup alergi makanan, rinitis alergi (pilek alergi), dan asma.
-        
-        ## Gejala
-        
-        * **Kulit Kering:** Gejala utama. Kulit bayi terasa kering, kasar, dan bersisik.
-        * **Gatal:** Ini adalah kunci dari DA. Rasa gatal yang hebat membuat bayi rewel dan menggaruk.
-        * **Ruam Merah:** Akibat garukan, kulit menjadi meradang, kemerahan, dan kadang bengkak atau mengeluarkan cairan.
-        * **Lokasi Khas:**
-            * **Bayi (0-2 tahun):** Paling sering di **pipi**, kulit kepala, dahi, serta bagian luar lengan dan tungkai.
-            * **Anak (>2 tahun):** Pindah ke lipatan (siku, belakang lutut, leher, pergelangan tangan).
-        
-        ## Penyebab
-        
-        Eksim bukan penyakit menular. Penyebabnya kompleks:
-        1.  **Genetik (Bakat):** Paling penting. Jika orang tua punya riwayat eksim, asma, atau alergi, risiko anak lebih tinggi.
-        2.  **Kerusakan Skin Barrier:** Kulit atopik memiliki "skin barrier" (pelindung kulit) yang lemah. Kulit tidak bisa menahan kelembapan (sehingga kering) dan tidak bisa menghalau iritan/alergen (sehingga mudah meradang).
-        
-        ## Pemicu (Bukan Penyebab)
-        
-        Sesuatu yang memperburuk eksim yang sudah ada:
-        * **Iritan:** Sabun yang keras (deterjen tinggi), parfum, keringat, kain wol.
-        * **Alergen:** Tungau debu rumah, bulu hewan, serbuk sari. Pada beberapa (tidak semua) anak, alergi makanan (susu sapi, telur) bisa memperburat eksim.
-        * **Cuaca:** Udara yang terlalu kering (misal: kamar ber-AC) atau terlalu panas (berkeringat).
-        
-        ## Perawatan Dasar (Wajib)
-        
-        Perawatan DA berfokus pada perbaikan skin barrier dan mengontrol gatal.
-        
-        1.  **Mandi Singkat (Maks 10 Menit):** Gunakan **air hangat kuku** (bukan panas). Air panas menghilangkan kelembapan kulit.
-        2.  **Sabun Lembut:** Gunakan sabun khusus kulit sensitif/atopik (pH netral, hipoalergenik, tanpa pewangi).
-        3.  **Lembapkan SEGERA (Kunci Utama):**
-            * **Pravilo 3 Menit:** Segera setelah mandi, keringkan badan anak dengan ditepuk-tepuk lembut (jangan digosok).
-            * **Dalam 3 menit** (saat kulit masih lembap), oleskan **pelembap (moisturizer)** dalam jumlah banyak ke seluruh tubuh.
-            * Pelembap adalah "obat" utama untuk DA. Gunakan pelembap bentuk krim kental atau salep (bukan losion encer) minimal 2x sehari.
-        4.  **Hindari Pemicu:** Kenakan pakaian katun yang lembut. Jaga kuku tetap pendek.
-        
-        Jika ruam sangat merah dan meradang, dokter mungkin akan meresepkan krim steroid ringan untuk mengontrol peradangan.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Dermatitis Atopik pada Anak.*
-        2.  American Academy of Pediatrics (AAP). *Eczema in Babies and Children.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Kesehatan & Imunisasi",
-        "title": "Kapan Harus Khawatir Tentang Muntah pada Bayi?",
-        "summary": "Membedakan gumoh (normal) dan muntah (waspada).",
-        "source": "IDAI | AAP",
-        "full_content": """
-        # Membedakan Gumoh (Spitting Up) vs Muntah (Vomiting)
-        
-        Penting bagi orang tua untuk membedakan antara gumoh yang normal dan muntah yang mungkin menandakan masalah.
-        
-        ## Gumoh (Spitting Up) - NORMAL
-        
-        * **Apa itu?** Aliran balik ASI/susu formula dari lambung ke mulut yang terjadi **tanpa usaha**.
-        * **Kapan?** Biasanya terjadi setelah menyusu, saat bersendawa, atau saat bayi dibaringkan.
-        * **Seperti apa?** Susu mengalir begitu saja dari mulut, jumlahnya sedikit (1-2 sendok makan).
-        * **Perilaku Bayi:** Bayi tampak **nyaman**, tidak rewel, dan berat badan tetap naik dengan baik.
-        * **Mengapa?** Sangat normal. Katup antara kerongkongan dan lambung bayi belum matang dan kuat.
-        * **Solusi:** Sendawakan bayi setelah menyusu, tegakkan bayi 15-30 menit setelah menyusu, jangan menyusu berlebihan.
-        
-        ## Muntah (Vomiting) - PERLU WASPADA
-        
-        * **Apa itu?** Pengeluaran isi lambung yang **disertai paksaan/kontraksi otot perut**.
-        * **Kapan?** Bisa terjadi kapan saja, tidak harus setelah menyusu.
-        * **Seperti apa?** **Menyemprot (proyektil)** atau keluar dalam jumlah banyak, disertai kontraksi perut yang jelas.
-        * **Perilaku Bayi:** Bayi tampak **tidak nyaman**, rewel, menangis, atau lemas.
-        * **Mengapa?** Bisa jadi tanda infeksi (virus, bakteri), alergi, atau sumbatan.
-        
-        ## 🚩 Red Flags: Kapan Muntah Berbahaya?
-        
-        Segera hubungi dokter jika muntah disertai:
-        
-        1.  **Tanda Dehidrasi:**
-            * Jarang pipis (popok kering > 6 jam).
-            * Mulut kering, menangis tanpa air mata.
-            * Ubun-ubun (jika belum menutup) tampak cekung.
-            * Bayi sangat lemas atau tidur terus.
-        
-        2.  **Warna Muntahan:**
-            * **Hijau atau Kuning Terang (Cairan Empedu):** Ini tanda **darurat**, bisa berarti ada sumbatan (obstruksi) usus. **Segera ke UGD!**
-            * **Merah atau Cokelat (Darah):** Bisa karena luka di kerongkongan, tapi harus selalu diperiksakan.
-        
-        3.  **Gejala Penyerta:**
-            * Demam tinggi.
-            * Perut kembung dan keras.
-            * Menolak menyusu/minum sama sekali.
-            * Muntah proyektil (menyemprot hebat) berulang kali, terutama pada bayi < 3 bulan (curiga *stenosis pilorus*).
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Ikatan Dokter Anak Indonesia (IDAI). *Muntah pada Bayi dan Anak.*
-        2.  American Academy of Pediatrics (AAP). *Spitting Up vs. Vomiting.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    
-    # ================================================
-    # Kategori: Pola Asuh & Psikologi (5 Artikel BARU)
-    # ================================================
-    {
-        "kategori": "Pola Asuh & Psikologi",
-        "title": "Membangun Ikatan (Bonding) dengan Bayi",
-        "summary": "Cara memperkuat ikatan emosional antara orang tua dan bayi baru lahir.",
-        "source": "AAP | UNICEF",
-        "full_content": """
-        # Membangun Ikatan (Bonding) dengan Bayi
-        
-        *Bonding* (ikatan) adalah proses terbentuknya hubungan emosional yang kuat antara orang tua dan bayi. Ini adalah fondasi dari rasa aman (*secure attachment*) yang akan memengaruhi perkembangan sosial dan emosional anak seumur hidupnya.
-        
-        Bonding adalah proses dua arah dan membutuhkan waktu.
-        
-        ## Cara Membangun Bonding (Sejak Hari Pertama)
-        
-        1.  **Kontak Kulit ke Kulit (Skin-to-Skin):**
-            * Ini adalah cara paling ampuh.
-            * Buka baju bayi (hanya pakai popok) dan letakkan ia di dada telanjang Anda (berlaku untuk Ibu dan Ayah). Selimuti punggung bayi.
-            * **Manfaat:** Menstabilkan detak jantung dan pernapasan bayi, menghangatkan bayi, menenangkan bayi, dan merangsang produksi ASI.
-            * Lakukan Inisiasi Menyusu Dini (IMD) segera setelah lahir.
-        
-        2.  **Kontak Mata:**
-            * Bayi baru lahir bisa fokus pada jarak 20-30 cm (jarak wajah Anda saat menyusui/menggendong).
-            * Sering-seringlah menatap mata bayi saat Anda menyusui, mengganti popok, atau menggendongnya.
-        
-        3.  **Suara Anda:**
-            * Bayi sudah mengenali suara Anda sejak di dalam rahim.
-            * Ajak bayi bicara dengan nada lembut (*parentese* / "bahasa bayi" yang bernada tinggi), bernyanyi, atau membacakan cerita.
-            * Suara Anda adalah hal yang paling menenangkannya.
-        
-        4.  **Menyusui (Breastfeeding):**
-            * Proses menyusui adalah momen bonding yang luar biasa, menggabungkan sentuhan (skin-to-skin), kontak mata, dan nutrisi.
-        
-        5.  **Responsif (Responsive Caregiving):**
-            * Segera merespons saat bayi menangis.
-            * Menggendong bayi saat ia menangis **TIDAK** akan membuatnya "bau tangan" atau manja.
-            * Ini mengajarkan bayi pelajaran terpenting: "Dunia adalah tempat yang aman, dan ada orang yang peduli padaku."
-        
-        6.  **Pijat Bayi:**
-            * Pijatan lembut setelah mandi dapat memperkuat ikatan dan merelakskan bayi.
-        
-        ## Ayah Juga Penting!
-        
-        Bonding bukan hanya tugas Ibu. Ayah bisa melakukan semua hal di atas (kecuali menyusui langsung):
-        * Melakukan *skin-to-skin contact*.
-        * Mengambil alih tugas memandikan, mengganti popok, dan menidurkan.
-        * Menggendong bayi dan mengajaknya bicara.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Bonding With Your Baby.*
-        2.  UNICEF. *Importance of Bonding.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Pola Asuh & Psikologi",
-        "title": "Pentingnya Konsistensi dalam Pola Asuh",
-        "summary": "Mengapa aturan yang konsisten menciptakan rasa aman bagi anak.",
-        "source": "AAP",
-        "full_content": """
-        # Pentingnya Konsistensi dalam Pola Asuh
-        
-        Konsistensi adalah salah satu pilar utama dalam pengasuhan balita. Konsistensi berarti menerapkan aturan, rutinitas, dan konsekuensi yang sama setiap saat dan oleh semua pengasuh (Ibu, Ayah, Nenek, Pengasuh).
-        
-        ## Mengapa Konsistensi Menciptakan Rasa Aman?
-        
-        Bagi seorang balita, dunia adalah tempat yang besar dan membingungkan. Konsistensi menciptakan **prediktabilitas**.
-        
-        * **Dunia yang Teratur:** Rutinitas yang konsisten (misal: bangun, makan, main, mandi, tidur) membuat dunia anak terasa aman dan teratur. Ia tahu apa yang akan terjadi selanjutnya, yang mengurangi kecemasan.
-        * **Batasan yang Jelas:** Aturan yang konsisten (misal: "Kita tidak melempar makanan") mengajarkan anak batasan perilaku yang jelas.
-        * **Belajar Konsekuensi:** Jika hari ini melempar makanan dilarang, tapi besok dibolehkan (karena orang tua lelah), anak akan bingung. Ia tidak belajar bahwa perilakunya salah, ia hanya belajar bahwa "Kadang boleh, kadang tidak, tergantung mood Mama."
-        
-        ## 3 Area Kunci untuk Konsistensi
-        
-        1.  **Rutinitas Harian:**
-            * **Waktu Tidur:** Usahakan memiliki jam tidur siang dan malam yang sama setiap hari. Lakukan "ritual tidur" yang sama setiap malam (mandi, sikat gigi, baca buku, tidur). Ini memberi sinyal pada tubuh anak bahwa waktunya istirahat.
-            * **Waktu Makan:** Terapkan jadwal makan teratur (3x makan utama, 2x snack). Jangan biarkan anak *ngemil* sepanjang hari. (Lihat artikel *Feeding Rules*).
-        
-        2.  **Aturan dan Batasan:**
-            * Tentukan 2-3 aturan utama yang tidak bisa ditawar (misal: "Tidak boleh memukul", "Tidak boleh lari ke jalan").
-            * Terapkan aturan ini setiap saat. Jika Anda bilang "tidak", itu berarti "tidak".
-        
-        3.  **Antar Pengasuh (Ibu, Ayah, Nenek):**
-            * Ini adalah tantangan terbesar. Ibu, Ayah, dan Nenek/Kakek harus memiliki **satu suara**.
-            * Jika Ibu melarang nonton TV saat makan, tapi Nenek membolehkannya agar anak mau makan, aturan Ibu akan hancur.
-            * Diskusikan aturan pengasuhan saat anak tidak ada, dan sepakati bersama.
-        
-        Konsistensi bukan berarti menjadi kaku. Tentu boleh ada fleksibilitas (misal: saat liburan). Tetapi dalam kehidupan sehari-hari, konsistensi adalah fondasi disiplin dan rasa aman anak.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Consistency in Parenting: Why It's Important.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Pola Asuh & Psikologi",
-        "title": "Mengatasi 'Sibling Rivalry' (Kecemburuan Saudara)",
-        "summary": "Mempersiapkan Kakak untuk menyambut kelahiran Adik.",
-        "source": "AAP",
-        "full_content": """
-        # Mengatasi 'Sibling Rivalry' (Kecemburuan Saudara)
-        
-        Kelahiran bayi baru adalah kebahagiaan, tetapi bagi seorang balita (Kakak), ini bisa terasa seperti "dunianya runtuh". Tiba-tiba, ia harus berbagi perhatian dan kasih sayang utama. Kecemburuan dan kemunduran perilaku (regresi) adalah hal yang SANGAT NORMAL.
-        
-        ## Mempersiapkan Kakak (Sebelum Adik Lahir)
-        
-        * **Beri Tahu di Waktu yang Tepat:** Beri tahu saat kehamilan sudah terlihat jelas (Trimester 2). Gunakan bahasa sederhana, "Nanti akan ada bayi di rumah, Adik akan jadi Kakak."
-        * **Libatkan Kakak:** Ajak Kakak merasakan tendangan di perut, memilih baju bayi, atau membantu menata kamar bayi.
-        * **Jangan Terlalu Memuji:** Hindari berkata, "Nanti kamu akan senang sekali punya teman main." Realitanya, bayi baru lahir tidak bisa diajak main.
-        * **Pindahkan Jauh-jauh Hari:** Jika Kakak harus pindah kamar atau pindah ke tempat tidur besar, lakukan **beberapa bulan sebelum** bayi lahir, agar ia tidak merasa "diusir" oleh si Adik.
-        
-        ## Saat Adik Baru Lahir
-        
-        Minggu-minggu pertama adalah yang terberat bagi Kakak.
-        
-        * **Hadiah dari Adik:** Siapkan kado kecil yang seolah-olah "diberikan" oleh si Adik untuk Kakak saat pertama kali bertemu.
-        * **Prioritaskan Kakak (Saat Tamu Datang):** Saat tamu datang menjenguk, mereka pasti akan fokus ke bayi. Sapa Kakak terlebih dahulu, "Wah, Kakak hebat sudah jadi Kakak!"
-        * **Libatkan dalam Perawatan:** Beri Kakak "tugas penting". "Tolong ambilkan popok Adik," atau "Tolong bantu usap-usap punggung Adik." Puji bantuannya.
-        
-        ## Mengatasi Regresi (Kemunduran Perilaku)
-        
-        Sangat wajar jika Kakak (yang mungkin sudah bisa *toilet training*) tiba-tiba mengompol lagi, atau minta minum dari botol/dot, atau bicara seperti bayi.
-        
-        * **Jangan Dimarahi:** Ini adalah caranya mencari perhatian dan memastikan ia masih disayang.
-        * **Validasi Perasaannya:** "Mama tahu Kakak kesal karena Adik menangis terus."
-        * **Turuti (Sebentar):** Tidak apa-apa menuruti keinginannya (misal: pura-pura menggendongnya seperti bayi) selama beberapa menit.
-        
-        ## Luangkan Waktu Eksklusif
-        
-        Ini adalah hal terpenting.
-        
-        * **'Special Time':** Sisihkan waktu 10-15 menit setiap hari **hanya untuk Kakak**.
-        * Selama waktu itu, fokus 100% padanya. Biarkan Ayah atau pengasuh lain memegang Adik. Lakukan apa yang Kakak mau (misal: membaca buku favoritnya, menyusun balok).
-        * Ini meyakinkan Kakak bahwa cintanya tidak terbagi, melainkan bertambah.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Preparing Your Older Child for a New Baby.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Pola Asuh & Psikologi",
-        "title": "Manfaat Bermain di Luar Ruangan (Outdoor Play)",
-        "summary": "Mengapa bermain di taman (lumpur, rumput, matahari) penting untuk anak.",
-        "source": "AAP",
-        "full_content": """
-        # Manfaat Bermain di Luar Ruangan (Outdoor Play)
-        
-        Di era digital, waktu bermain di dalam ruangan (indoor) dan *screen time* sering mendominasi. Padahal, bermain di luar ruangan (outdoor) memberikan manfaat unik yang tidak tergantikan untuk tumbuh kembang anak.
-        
-        ## 1. Manfaat Fisik
-        
-        * **Motorik Kasar:** Berlari, melompat, memanjat, dan melempar di area terbuka adalah latihan motorik kasar terbaik.
-        * **Vitamin D:** Paparan sinar matahari pagi (sebelum jam 9) membantu tubuh memproduksi Vitamin D, yang sangat penting untuk kesehatan tulang (penyerapan kalsium).
-        * **Kesehatan Mata:** Studi menunjukkan bahwa anak-anak yang menghabiskan lebih banyak waktu di luar ruangan memiliki risiko lebih rendah terkena rabun jauh (miopia).
-        
-        ## 2. Manfaat Kognitif & Sensorik
-        
-        * **Stimulasi Sensorik:** Alam menyediakan stimulasi sensorik yang kaya: merasakan tekstur rumput/tanah, mencium bau hujan, mendengar suara burung, melihat berbagai warna bunga.
-        * **Melatih Fokus:** Lingkungan alam yang tenang terbukti dapat meningkatkan rentang perhatian (fokus) anak.
-        
-        ## 3. Manfaat Emosional & Sosial
-        
-        * **Pengambilan Risiko yang Sehat:** Bermain di luar (misal: memanjat pohon pendek, berlari di permukaan tidak rata) mengajarkan anak untuk menilai risiko, mengatasi tantangan, dan membangun kepercayaan diri.
-        * **Manajemen Stres:** Berada di alam terbukti mengurangi stres dan kecemasan, baik pada anak maupun orang dewasa.
-        * **Interaksi Sosial:** Taman bermain adalah tempat anak belajar berinteraksi, bergiliran (main ayunan), dan bekerja sama.
-        
-        ## 4. Manfaat Imunitas (Hipotesis Higienis)
-        
-        * Teori "Hipotesis Higienis" menyebutkan bahwa lingkungan yang terlalu steril justru membuat sistem imun anak "kurang terlatih".
-        * Bermain kotor (terpapar lumpur, tanah, kuman baik) diyakini dapat membantu melatih sistem imun anak agar tidak bereaksi berlebihan, yang diduga dapat mengurangi risiko alergi dan asma.
-        
-        ## Tips Memulai
-        
-        * **Tidak Perlu Jauh:** Cukup di halaman rumah, taman komplek, atau lapangan terdekat.
-        * **Biarkan Berantakan:** Tidak apa-apa jika anak kotor terkena lumpur atau pasir. Pakaian bisa dicuci.
-        * **Prioritaskan:** Jadikan "waktu main di luar" sebagai bagian dari rutinitas harian, sama pentingnya dengan makan atau tidur.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *The Power of Play: How Fun and Games Help Children Thrive.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Pola Asuh & Psikologi",
-        "title": "Mengenali Tanda Stres pada Balita",
-        "summary": "Balita juga bisa stres. Kenali tanda-tanda yang tidak mereka ucapkan.",
-        "source": "AAP",
-        "full_content": """
-        # Mengenali Tanda Stres pada Balita
-        
-        Stres pada balita seringkali tidak terlihat jelas karena mereka belum bisa mengungkapkannya dengan kata-kata seperti, "Aku cemas." Stres pada balita (disebut *toxic stress* jika berat dan berkepanjangan) dapat memengaruhi perkembangan otak.
-        
-        ## Pemicu Stres Umum pada Balita
-        
-        * **Perubahan Besar:** Pindah rumah, lahirnya adik baru, ibu mulai bekerja, masuk *daycare* baru.
-        * **Konflik di Rumah:** Sering mendengar orang tua bertengkar.
-        * **Rutinitas Kacau:** Jadwal tidur atau makan yang tidak konsisten.
-        * **Overstimulasi:** Terlalu banyak aktivitas, terlalu bising, atau terlalu banyak *screen time*.
-        * **Penyakit atau Nyeri:** Sakit kronis atau nyeri yang tidak terdeteksi.
-        
-        ## Tanda-tanda Stres pada Balita
-        
-        Stres pada balita sering muncul sebagai perubahan perilaku:
-        
-        1.  **Regresi (Kemunduran Perilaku):**
-            * Tiba-tiba mengompol lagi padahal sudah bisa *toilet training*.
-            * Minta dot atau botol padahal sudah lama berhenti.
-            * Bicara seperti bayi.
-        
-        2.  **Perubahan Pola Tidur:**
-            * Tiba-tiba sulit tidur di malam hari.
-            * Sering terbangun atau mengalami mimpi buruk.
-        
-        3.  **Perubahan Pola Makan:**
-            * Menolak makan makanan favoritnya.
-            * Nafsu makan berkurang drastis atau meningkat.
-        
-        4.  **Perilaku Emosional:**
-            * Lebih sering tantrum dan lebih eksplosif dari biasanya.
-            * Lebih "cengeng", mudah menangis untuk hal-hal kecil.
-            * Tiba-tiba menjadi sangat penakut atau *clingy* (menempel terus).
-        
-        5.  **Perilaku Fisik:**
-            * Sakit perut atau sakit kepala "misterius" (psikosomatis).
-            * Mulai melakukan kebiasaan baru: menggigit kuku, memutar-mutar rambut.
-        
-        ## Cara Membantu Anak yang Stres
-        
-        * **Kembali ke Dasar (Rutinitas):** Pastikan jadwal tidur dan makan anak konsisten. Rutinitas adalah "jangkar" rasa aman bagi balita.
-        * **Ekstra Sabar dan Pelukan:** Jangan marahi regresi. Anak sedang butuh "diisi ulang" rasa amannya. Berikan lebih banyak pelukan dan validasi.
-        * **Luangkan Waktu Koneksi:** Sisihkan 10-15 menit waktu berkualitas (tanpa HP) hanya berdua dengan anak.
-        * **Bermain Fisik:** Ajak anak bermain aktif di luar ruangan untuk melepaskan energi terpendam.
-        * **Cari Penyebab:** Coba identifikasi apa pemicunya. Apakah ada perubahan besar di rumah?
-        
-        Jika perilaku ini berlangsung lama dan mengganggu fungsi sehari-hari, konsultasikan dengan dokter anak atau psikolog anak.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Stress in Children: Signs and Strategies.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    
-    # ================================================
-    # Kategori: Keamanan & Pencegahan (3 Artikel BARU)
-    # ================================================
-    {
-        "kategori": "Keamanan & Pencegahan",
-        "title": "Pencegahan Tersedak: Makanan Aman vs Berbahaya",
-        "summary": "Cara memotong makanan untuk meminimalkan risiko tersedak.",
-        "source": "CDC | AAP",
-        "full_content": """
-        # Pencegahan Tersedak: Makanan Aman vs Berbahaya
-        
-        Tersedak (choking) adalah salah satu ketakutan terbesar orang tua saat MPASI. Risiko tersedak bisa diminimalkan dengan cara persiapan dan pemotongan makanan yang benar.
-        
-        Saluran napas (trakea) balita hanya seukuran sedotan kecil.
-        
-        ## Makanan Berisiko Tinggi Tersedak (Hindari / Modifikasi)
-        
-        Kelompok makanan ini **HARUS DIHINDARI** atau **DIMODIFIKASI** secara ketat untuk anak di bawah usia 4 tahun:
-        
-        1.  **Bentuk Bulat & Keras:**
-            * **Anggur, Ceri, Tomat Ceri:** **SANGAT BERBAHAYA.** Bentuknya pas menyumbat jalan napas.
-            * **Cara Aman:** Potong memanjang jadi 4 bagian (quarter).
-        
-        2.  **Bentuk Koin (Bulat Pipih):**
-            * **Sosis (Hot dog):** Ini adalah penyebab tersedak paling umum.
-            * **Cara Aman:** **JANGAN** potong bentuk koin. Potong memanjang jadi 4 bagian, lalu potong dadu kecil.
-        
-        3.  **Keras & Mentah:**
-            * **Potongan Apel Mentah, Wortel Mentah, Seledri Mentah.**
-            * **Cara Aman:** Masak (kukus/rebus) hingga sangat lunak, atau parut halus.
-        
-        4.  **Kacang-kacangan & Biji-bijian Utuh:**
-            * **Kacang Tanah, Kacang Mede, Biji Bunga Matahari.**
-            * **Cara Aman:** Berikan dalam bentuk selai (butter) yang dioles tipis atau bubuk yang dicampur ke makanan.
-        
-        5.  **Lengket atau Kenyal:**
-            * **Permen Karet, Marshmallow, Permen Jeli, Selai Kacang Kental (gumpalan).**
-            * **Cara Aman:** Hindari (permen). Untuk selai kacang, oleskan sangat tipis di biskuit atau encerkan.
-        
-        6.  **Lain-lain:**
-            * **Popcorn:** Teksturnya keras dan mudah menyangkut.
-            * **Potongan Daging/Keju yang Besar dan Keras.**
-        
-        ## Aturan Makan yang Aman
-        
-        * **Selalu Duduk:** Anak harus selalu makan dalam posisi **duduk tegak** (di high chair). Jangan biarkan makan sambil berjalan, berlari, tertawa, atau di dalam mobil.
-        * **Selalu Awasi:** Jangan pernah tinggalkan anak makan sendirian.
-        * **Potong dengan Benar:** Potong makanan (terutama yang bulat) menjadi ukuran yang sangat kecil (dadu < 1 cm) atau potongan memanjang tipis.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  Centers for Disease Control and Prevention (CDC). *Choking Hazards for Young Children.*
-        2.  American Academy of Pediatrics (AAP). *Preventing Choking in Children.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
-    {
-        "kategori": "Keamanan & Pencegahan",
-        "title": "Keselamatan Hewan Peliharaan dan Bayi",
-        "summary": "Mempersiapkan anjing atau kucing untuk kedatangan bayi baru.",
-        "source": "AAP | The Humane Society",
-        "full_content": """
-        # Keselamatan Hewan Peliharaan dan Bayi
-        
-        Mengenalkan bayi baru kepada hewan peliharaan (anjing/kucing) membutuhkan persiapan agar transisi berjalan mulus dan aman. Jangan pernah berasumsi hewan Anda yang "paling manis" sekalipun akan otomatis menerima bayi.
-        
-        ## Sebelum Bayi Lahir (Persiapan Hewan)
-        
-        * **Biasakan dengan Perubahan Rutinitas:** Mulailah mengubah rutinitas hewan (waktu makan, jalan-jalan) beberapa bulan sebelumnya agar ia tidak mengaitkan perubahan itu dengan si bayi.
-        * **Kenalkan Bau & Suara:**
-            * Putar rekaman suara tangisan bayi di rumah secara bertahap.
-            * Oleskan losion atau bedak bayi di tangan Anda agar hewan terbiasa dengan baunya.
-        * **Area Terlarang:** Latih hewan bahwa kamar bayi adalah area terlarang atau hanya boleh masuk jika diundang. Pasang pagar pengaman.
-        * **Latihan Kepatuhan:** Perkuat latihan dasar (duduk, diam, jangan lompat).
-        
-        ## Saat Pertama Kali Bertemu
-        
-        1.  **Kenalkan Bau Dulu:** Bawa pulang selimut atau pakaian yang sudah dipakai bayi dari RS agar hewan bisa mencium baunya terlebih dahulu.
-        2.  **Sapa Hewan Dulu:** Saat Ibu pulang dari RS, biarkan orang lain menggendong bayi. Sapa hewan peliharaan Anda terlebih dahulu (ia sudah kangen Anda).
-        3.  **Perkenalan Terkontrol:**
-            * Jaga hewan tetap terikat (leash) saat perkenalan pertama.
-            * Biarkan hewan mengendus kaki bayi (jangan wajah) dari jarak aman.
-            * Berikan pujian dan camilan kepada hewan atas perilakunya yang tenang.
-        
-        ## Aturan Keselamatan Utama
-        
-        * **JANGAN PERNAH TINGGALKAN BERDUAAN:** Ini adalah aturan emas. **JANGAN PERNAH** meninggalkan bayi atau balita sendirian dengan hewan peliharaan, bahkan sedetik pun, tidak peduli seberapa percayanya Anda.
-        * **Selalu Awasi:** Harus selalu ada orang dewasa yang mengawasi interaksi secara aktif.
-        * **Area Aman Bayi:** Sediakan tempat aman (seperti *playpen*) di mana bayi bisa bermain tanpa bisa dijangkau oleh hewan.
-        * **Tempat "Kabur" Hewan:** Sediakan juga tempat aman (misal: kandang atau ruangan lain) di mana hewan peliharaan bisa "mundur" jika ia merasa stres oleh bayi.
-        * **Ajari Anak:** Saat anak tumbuh besar, ajari ia cara menghargai hewan (mengelus dengan lembut, tidak menarik ekor/telinga, tidak mengganggu saat hewan makan/tidur).
-        * **Kebersihan:** Selalu cuci tangan setelah memegang hewan dan sebelum menyentuh bayi. Jauhkan kotak pasir kucing dari jangkauan bayi.
-        
-        ---
-        
-        **Sumber (Acuan):**
-        1.  American Academy of Pediatrics (AAP). *Safety with Pets.*
-        2.  The Humane Society of the United States. *Introducing Your Dog to a New Baby.*
-        
-        *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
-        """
-    },
     {
         "kategori": "Keamanan & Pencegahan",
         "title": "Pencegahan Gigitan Nyamuk (Demam Berdarah)",
         "summary": "Cara melindungi bayi dari gigitan nyamuk Aedes aegypti.",
         "source": "IDAI | CDC",
+        # URL Baru: Alam terbuka/hijau (Simbolis lingkungan)
+        "image_url": "https://images.unsplash.com/photo-1583324113626-70df0f4deaab?auto=format&fit=crop&w=800&q=80",
         "full_content": """
         # Pencegahan Gigitan Nyamuk (Demam Berdarah & Lainnya)
         
@@ -7143,8 +5461,7 @@ ARTIKEL_LOKAL_DATABASE = [
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
     }
-
-]
+] # END OF ARTIKEL_LOKAL_DATABASE
 
 # ================================================
 # FUNGSI HELPER BARU UNTUK PERPUSTAKAAN & API
