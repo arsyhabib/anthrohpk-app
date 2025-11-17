@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════
-# .gitignore for AnthroHPK v3.0
+# .gitignore for AnthroHPK v3.2.3
 # Production-ready configuration for Python/Gradio/FastAPI deployment
 # ═══════════════════════════════════════════════════════════════════
 
@@ -98,122 +98,39 @@ coverage.xml
 
 # ───────────────────────────────────────────────────────────────────
 # MyPy Type Checker
-# ───────────────────────────────────────────────────────────────────
 .mypy_cache/
 .dmypy.json
 dmypy.json
 
 # ───────────────────────────────────────────────────────────────────
-# Pytype Static Analyzer
+# Application Specific
 # ───────────────────────────────────────────────────────────────────
-.pytype/
+# Generated files
+outputs/
+static/generated/
+*.pdf
+*.png
+*.jpg
+*.jpeg
 
-# ───────────────────────────────────────────────────────────────────
-# ⚠️ OUTPUTS - Dynamic Generated Files (Don't commit user data!)
-# ───────────────────────────────────────────────────────────────────
-outputs/*.pdf
-outputs/*.csv
-outputs/*.xlsx
-outputs/*.zip
+# Local development
+.local/
+development/
 
-# But KEEP the outputs folder structure itself
-!outputs/.gitkeep
-
-# ───────────────────────────────────────────────────────────────────
-# ⚠️ STATIC - Generated Stickers (Downloaded at runtime)
-# ───────────────────────────────────────────────────────────────────
-static/sticker_*.png
-static/*.tmp
-
-# But KEEP the static folder structure
-!static/.gitkeep
-
-# ───────────────────────────────────────────────────────────────────
-# ✅ EXCEPTIONS - Files That MUST Be Committed
-# ───────────────────────────────────────────────────────────────────
-
-# CRITICAL: Keep WHO reference tables (required for calculator)
-!pygrowup/tables/*.csv
-!pygrowup/tables/*.txt
-!pygrowup/*.py
-
-# CRITICAL: Keep essential config files
-!requirements.txt
-!python-version.txt
-!app.py
-!README.md
-!LICENSE
-
-# ───────────────────────────────────────────────────────────────────
-# Matplotlib Temp Files
-# ───────────────────────────────────────────────────────────────────
-matplotlib-*
-*.png.tmp
-
-# ───────────────────────────────────────────────────────────────────
-# Gradio Cache & Temp
-# ───────────────────────────────────────────────────────────────────
-gradio_cached_examples/
-flagged/
-*.gradio
-
-# ───────────────────────────────────────────────────────────────────
-# FastAPI / Uvicorn
-# ───────────────────────────────────────────────────────────────────
-*.sock
-
-# ───────────────────────────────────────────────────────────────────
-# Database Files (if you add DB later)
-# ───────────────────────────────────────────────────────────────────
-*.db
-*.sqlite
-*.sqlite3
-*.db-journal
-
-# ───────────────────────────────────────────────────────────────────
-# Backup Files
-# ───────────────────────────────────────────────────────────────────
-*.bak
+# Backup files
 *.backup
-*_backup
-*.old
+*.bak
 
-# ───────────────────────────────────────────────────────────────────
-# Compressed Files (unless intentional)
-# ───────────────────────────────────────────────────────────────────
-*.zip
-*.tar.gz
-*.rar
-*.7z
+# Temporary analysis files
+temp/
+tmp/
 
-# EXCEPTION: Keep the pygrowup package if distributed as .tar.gz
-!pygrowup*.tar.gz
+# Data files (if any)
+data/
+*.csv
+*.xlsx
+*.json
 
-# ───────────────────────────────────────────────────────────────────
-# Security & Credentials (CRITICAL!)
-# ───────────────────────────────────────────────────────────────────
-secrets.json
-credentials.json
-*.pem
-*.key
-*.crt
-.ssh/
-
-# ───────────────────────────────────────────────────────────────────
-# Documentation Build
-# ───────────────────────────────────────────────────────────────────
-docs/_build/
-site/
-
-# ───────────────────────────────────────────────────────────────────
-# Package Manager Locks (optional - include if you want reproducibility)
-# ───────────────────────────────────────────────────────────────────
-# Uncomment if you want to ignore lock files:
-# poetry.lock
-# Pipfile.lock
-# yarn.lock
-# package-lock.json
-
-# ═══════════════════════════════════════════════════════════════════
-# END OF .gitignore
-# ═══════════════════════════════════════════════════════════════════
+# Updated for v3.2.3 - Perpustakaan Ibu Balita image cache
+image_cache/
+*.cache
