@@ -4066,7 +4066,7 @@ ARTIKEL_LOKAL_DATABASE = [
         
         *Artikel ini adalah rangkuman edukasi yang disintesis oleh Tim PeduliGiziBalita (Author: Habib Arsy) berdasarkan panduan nasional dan internasional.*
         """
-    }
+    },
     # ----- BATAS BAGIAN 1 (LANJUT KE BAGIAN 2) -----
 {
         "kategori": "Tumbuh Kembang",
