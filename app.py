@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-#==============================================================================#
 #          AnthroHPK v3.2.3 - Liquid Glass Research Edition (iOS 26)           #
 #       Integrasi Penuh: WHO Calculator, Kejar Tumbuh, Library, Export         #
-#==============================================================================#
 """
 
 import sys
