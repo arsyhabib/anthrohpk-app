@@ -1,12 +1,52 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-#          AnthroHPK v3.2.3 - Liquid Glass Research Edition (iOS 26)           #
-#       Integrasi Penuh: WHO Calculator, Kejar Tumbuh, Library, Export         #
+#==============================================================================#
+#                         PeduliGiziBalita v3.2 - PRODUCTION                   #
+#                  Aplikasi Pemantauan Pertumbuhan Anak Profesional            #
+#                                                                              #
+#  Author:   Habib Arsy                                                       #
+#  Version:  3.2.0 (NEW FEATURES UPDATE)                                      #
+#  Standards: WHO Child Growth Standards 2006 + Permenkes RI No. 2 Tahun 2020 #
+#  License:  Educational & Healthcare Use                                      #
+#==============================================================================#
+
+NEW IN v3.2:
+✅ Mode Mudah - Quick reference untuk range normal
+✅ Perpustakaan Updated - Link valid & terverifikasi (50+ artikel)
+✅ Kalkulator Target Kejar Tumbuh - Growth velocity monitoring profesional
+✅ Bug Fix - HTML rendering di checklist wizard
+
+PREVIOUS v3.1 FEATURES:
+✅ YouTube video education links integrated (KPSP & MP-ASI)
+✅ Dark mode optimization for better contrast  
+✅ Reminder slider changed from minutes to hours
+✅ 50 curated Indonesian articles (now replaced by v3.2 library)
+✅ Article previews with expandable summaries
+
+PREVIOUS v3.0 FEATURES:
+✅ Optimized code structure with proper error handling
+✅ Enhanced UI/UX with better flow and feedback
+✅ Memory management for matplotlib figures
+✅ Robust WHO calculator integration
+✅ Professional PDF reports with QR codes
+✅ Comprehensive checklist wizard with KPSP
+✅ Deployment-optimized for Render.com
+
+RUN: uvicorn app:app --host 0.0.0.0 --port $PORT
 """
+
+# ===============================================================================
+# SECTION 1: IMPORTS & ENVIRONMENT SETUP
+# ===============================================================================
 
 import sys
 import os
+
+# Ensure local modules are importable
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+# Core Python
 import io
 import csv
 import math
@@ -19,241 +59,3156 @@ from functools import lru_cache
 from typing import Dict, List, Tuple, Optional, Any, Union
 from pydantic import BaseModel
 
-# --- 1. SYSTEM SETUP & IMPORTS ---
 
-# Tambahkan path lokal untuk folder pygrowup
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-# Suppress warnings
+# Suppress warnings for cleaner logs
 warnings.filterwarnings('ignore')
 
-# Scientific & Viz
+# WHO Growth Calculator
+try:
+    from pygrowup import Calculator
+    print("✅ WHO Growth Calculator (pygrowup) loaded successfully")
+except ImportError as e:
+    print(f"❌ CRITICAL: pygrowup module not found! Error: {e}")
+    print("   Please ensure pygrowup package is in the same directory")
+    sys.exit(1)
+
+# Scientific Computing
 import numpy as np
 from scipy.special import erf
 import pandas as pd
+
+# Visualization
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg')  # Non-interactive backend for server
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from scipy.interpolate import make_interp_spline # Untuk grafik smooth
+plt.ioff()  # Disable interactive mode
+plt.rcParams.update({
+    'figure.max_open_warning': 0,  # Prevent memory leak warnings
+    'figure.dpi': 100,
+    'savefig.dpi': 150,
+    'savefig.bbox': 'tight',
+})
 
-# Image & PDF
+# Image Processing
 from PIL import Image
 import qrcode
+
+# PDF Generation
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from reportlab.lib import colors as rl_colors
+from reportlab.lib.units import cm
 
 # Web Framework
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request, Query
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+
+# Gradio UI
 import gradio as gr
 
-# --- 2. WHO CALCULATOR INITIALIZATION ---
+# HTTP Requests
+import requests
 
-try:
-    from pygrowup import Calculator
-    # Konfigurasi Calculator
-    CALC_CONFIG = {
-        'adjust_height_data': False,
-        'adjust_weight_scores': False,
-        'include_cdc': False,
-        'log_level': 'ERROR'
-    }
-    calc = Calculator(**CALC_CONFIG)
-    print("✅ WHO Calculator (Local) initialized successfully")
-except ImportError as e:
-    print(f"❌ CRITICAL: pygrowup module not found! Error: {e}")
-    print("   Pastikan folder 'pygrowup' ada di direktori yang sama dengan app.py")
-    calc = None
-except Exception as e:
-    print(f"❌ CRITICAL: Calculator init error: {e}")
-    calc = None
+print("✅ All imports successful")
 
-# --- 3. GLOBAL CONFIGURATION & CSS ---
+# ===============================================================================
+# SECTION 2: GLOBAL CONFIGURATION
+# ===============================================================================
 
-APP_TITLE = "AnthroHPK - Research Edition"
-APP_VERSION = "3.2.3"
+# Application Metadata
+APP_VERSION = "3.2.3" # MODIFIED (Perpustakaan Fix)
+APP_TITLE = "PeduliGiziBalita - Monitor Pertumbuhan Anak Profesional" # MODIFIED
+APP_DESCRIPTION = "Aplikasi berbasis WHO Child Growth Standards untuk pemantauan antropometri anak 0-60 bulan" # MODIFIED
 CONTACT_WA = "6285888858160"
-BASE_URL = "https://anthrohpk-app.onrender.com"
+BASE_URL = "https://anthrohpk-app.onrender.com" # Note: Base URL (domain) di-hardcode, ganti jika perlu
 
-# Directories
+# Premium Packages Configuration
+PREMIUM_PACKAGES = {
+    "silver": {
+        "name": "Silver",
+        "price": 10000,
+        "features": [
+            "🚫 Bebas Iklan",
+            "📊 Semua fitur dasar",
+            "💾 Export unlimited"
+        ],
+        "color": "#C0C0C0"
+    },
+    "gold": {
+        "name": "Gold",
+        "price": 50000,
+        "features": [
+            "🚫 Bebas Iklan",
+            "🔔 Notifikasi Browser Customizable",
+            "💬 3x Konsultasi 30 menit via WhatsApp dengan Ahli Gizi",
+            "📊 Semua fitur dasar",
+            "💾 Export unlimited",
+            "⭐ Priority support"
+        ],
+        "color": "#FFD700"
+    }
+}
+
+# Notification Templates
+NOTIFICATION_TEMPLATES = {
+    "monthly_checkup": {
+        "title": "🩺 Waktunya Pemeriksaan Bulanan!",
+        "body": "Sudah 30 hari sejak pemeriksaan terakhir. Yuk cek pertumbuhan {child_name}!",
+        "icon": "📊"
+    },
+    "immunization": {
+        "title": "💉 Jadwal Imunisasi",
+        "body": "Jangan lupa! {child_name} perlu imunisasi {vaccine_name} hari ini.",
+        "icon": "💉"
+    },
+    "milestone": {
+        "title": "🎯 Milestone Alert",
+        "body": "{child_name} sekarang {age} bulan! Cek milestone perkembangan.",
+        "icon": "🌟"
+    },
+    "nutrition": {
+        "title": "🍽️ Reminder Nutrisi",
+        "body": "Waktunya memberi makan {child_name}. Menu hari ini: {menu}",
+        "icon": "🥗"
+    },
+    "custom": {
+        "title": "🔔 Pengingat Custom",
+        "body": "{message}",
+        "icon": "⏰"
+    }
+}
+
+# Directories Setup
 STATIC_DIR = "static"
 OUTPUTS_DIR = "outputs"
-for d in [STATIC_DIR, OUTPUTS_DIR]:
-    os.makedirs(d, exist_ok=True)
+PYGROWUP_DIR = "pygrowup"
 
-# LIQUID GLASS CSS (iOS 26 Style + Earth Tones)
-LIQUID_GLASS_CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+# Create necessary directories
+for directory in [STATIC_DIR, OUTPUTS_DIR]:
+    os.makedirs(directory, exist_ok=True)
+    print(f"✅ Directory ensured: {directory}")
 
-:root {
-    /* Palette from HTML Reference */
-    --primary-brown: #8B4513;
-    --secondary-orange: #D2691E;
-    --accent-gold: #CD853F;
-    --light-accent: #DEB887;
-    --text-dark: #2C3E50;
-    --text-light: #5D6D7E;
-    --bg-color: #FEFEFE;
+# WHO Calculator Configuration
+CALC_CONFIG = {
+    'adjust_height_data': False,
+    'adjust_weight_scores': False,
+    'include_cdc': False,
+    'logger_name': 'who_calculator',
+    'log_level': 'ERROR'
+}
+
+# Anthropometric Measurement Bounds (WHO Standards)
+BOUNDS = {
+    'wfa': (1.0, 30.0),      # Weight-for-Age (kg)
+    'hfa': (45.0, 125.0),    # Height-for-Age (cm)
+    'hcfa': (30.0, 55.0),    # Head Circumference-for-Age (cm)
+    'wfl_w': (1.0, 30.0),    # Weight-for-Length: weight range
+    'wfl_l': (45.0, 110.0)   # Weight-for-Length: length range
+}
+
+# Age grid for smooth curve generation (0-60 months, step 0.25)
+AGE_GRID = np.arange(0.0, 60.25, 0.25)
+
+# UI Themes (Pastel Professional)
+UI_THEMES = {
+    "pink_pastel": {
+        "name": "Pink Pastel (Default)",
+        "primary": "#ff6b9d",
+        "secondary": "#4ecdc4",
+        "accent": "#ffe66d",
+        "bg": "#fff5f8",
+        "card": "#ffffff",
+        "text": "#2c3e50",
+        "border": "#ffd4e0",
+        "shadow": "rgba(255, 107, 157, 0.1)",
+        "gradient": "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)"
+    },
+    "mint_pastel": {
+        "name": "Mint Pastel",
+        "primary": "#4ecdc4",
+        "secondary": "#a8e6cf",
+        "accent": "#ffd93d",
+        "bg": "#f0fffa",
+        "card": "#ffffff",
+        "text": "#2c3e50",
+        "border": "#b7f0e9",
+        "shadow": "rgba(78, 205, 196, 0.1)",
+        "gradient": "linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)"
+    },
+    "lavender_pastel": {
+        "name": "Lavender Pastel",
+        "primary": "#b19cd9",
+        "secondary": "#d6b3ff",
+        "accent": "#ffb3ba",
+        "bg": "#f5f0ff",
+        "card": "#ffffff",
+        "text": "#2c3e50",
+        "border": "#e0d4ff",
+        "shadow": "rgba(177, 156, 217, 0.1)",
+        "gradient": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+    }
+}
+
+# ===============================================================================
+# SECTION 2B: YOUTUBE VIDEO LIBRARY & EDUCATIONAL CONTENT (from v3.1)
+# ===============================================================================
+
+# YouTube Videos for KPSP Screening Guide
+KPSP_YOUTUBE_VIDEOS = [
+    {
+        "title": "🎥 Panduan Skrining KPSP Mandiri untuk Orang Tua",
+        "url": "https://www.youtube.com/watch?v=ooAYe5asbKY",
+        "description": "Tutorial lengkap cara melakukan KPSP di rumah",
+        "duration": "10:15"
+    },
+    {
+        "title": "🎥 KPSP: Deteksi Dini Perkembangan Anak",
+        "url": "https://www.youtube.com/watch?v=q3NkI8go1yQ",
+        "description": "Penjelasan komprehensif tentang KPSP dari ahli",
+        "duration": "12:30"
+    },
+    {
+        "title": "🎥 Cara Melakukan KPSP untuk Balita",
+        "url": "https://www.youtube.com/watch?v=3DoPpSIx3i0",
+        "description": "Panduan praktis KPSP untuk usia 12 bulan",
+        "duration": "8:45"
+    }
+]
+
+# YouTube Videos for MP-ASI by Month (0-24 months)
+MPASI_YOUTUBE_VIDEOS = {
+    6: [
+        {
+            "title": "🥕 Resep MPASI 6 Bulan Pertama",
+            "url": "https://www.youtube.com/results?search_query=mpasi+6+bulan+pertama+resep",
+            "description": "Menu MPASI perdana: bubur saring, tekstur halus",
+            "duration": "15:00"
+        },
+        {
+            "title": "🍚 MPASI 6 Bulan: Panduan Lengkap",
+            "url": "https://www.youtube.com/results?search_query=panduan+mpasi+6+bulan+WHO",
+            "description": "Standar WHO untuk MPASI awal",
+            "duration": "18:20"
+        }
+    ],
+    7: [
+        {
+            "title": "🥗 Menu MPASI 7 Bulan Variatif",
+            "url": "https://www.youtube.com/results?search_query=mpasi+7+bulan+menu",
+            "description": "Variasi menu dan tekstur lebih kasar",
+            "duration": "12:45"
+        }
+    ],
+    8: [
+        {
+            "title": "🍖 MPASI 8 Bulan: Protein Tinggi",
+            "url": "https://www.youtube.com/results?search_query=mpasi+8+bulan+protein+hewani",
+            "description": "Fokus protein hewani untuk cegah stunting",
+            "duration": "14:30"
+        }
+    ],
+    9: [
+        {
+            "title": "🍚 MPASI 9 Bulan: Tekstur Kasar",
+            "url": "https://www.youtube.com/results?search_query=mpasi+9+bulan+tekstur+kasar",
+            "description": "Transisi ke makanan bertekstur kasar",
+            "duration": "11:15"
+        }
+    ],
+    10: [
+        {
+            "title": "🥘 MPASI 10 Bulan: Menu Keluarga",
+            "url": "https://www.youtube.com/results?search_query=mpasi+10+bulan+menu+keluarga",
+            "description": "Mengenalkan makanan keluarga",
+            "duration": "13:00"
+        }
+    ],
+    11: [
+        {
+            "title": "🍲 MPASI 11 Bulan: Finger Food",
+            "url": "https://www.youtube.com/results?search_query=mpasi+11+bulan+finger+food",
+            "description": "Makanan yang bisa digenggam sendiri",
+            "duration": "10:30"
+        }
+    ],
+    12: [
+        {
+            "title": "🍱 MPASI 12 Bulan: Makan Mandiri",
+            "url": "https://www.youtube.com/results?search_query=mpasi+12+bulan+menu",
+            "description": "Melatih anak makan sendiri",
+            "duration": "16:00"
+        }
+    ],
+    18: [
+        {
+            "title": "🍽️ Menu 18 Bulan: Makanan Keluarga",
+            "url": "https://www.youtube.com/results?search_query=menu+makan+anak+18+bulan",
+            "description": "Sudah bisa makan seperti orang dewasa",
+            "duration": "12:00"
+        }
+    ],
+    24: [
+        {
+            "title": "🥗 Menu 24 Bulan: Gizi Seimbang",
+            "url": "https://www.youtube.com/results?search_query=menu+balita+2+tahun+gizi+seimbang",
+            "description": "Menu lengkap dengan gizi seimbang",
+            "duration": "14:45"
+        }
+    ]
+}
+
+# Educational Content (Original v3.0)
+MOTIVATIONAL_QUOTES = [
+    "💕 'Seorang ibu adalah penjelajah yang tak pernah lelah, selalu menemukan jalan cinta untuk anaknya.'",
+    "🌟 'Kekuatan ibu melebihi segala rintangan, kasihnya membentuk masa depan yang cerah.'",
+    "🤱 'Setiap tetes ASI adalah investasi cinta tak ternilai dalam perjalanan tumbuh kembang Si Kecil.'",
+    "💪 'Kamu kuat, kamu cukup, dan kamu melakukan yang terbaik untuk Si Kecil! Jangan menyerah!'",
+    "🌈 'Pertumbuhan anak bukan kompetisi, tapi perjalanan cinta. Setiap langkah kecil adalah pencapaian besar.'",
+    "💖 'Ibu, hatimu adalah rumah pertama Si Kecil, dan itu akan selalu jadi rumahnya yang paling aman.'",
+    "🎯 'Fokus pada kemajuan, bukan kesempurnaan. Setiap anak tumbuh dengan kecepatannya sendiri.'",
+    "🌸 'Nutrisi terbaik bukan hanya soal makanan, tapi kasih sayang yang kamu berikan setiap hari.'"
+]
+
+# Indonesian Immunization Schedule (Permenkes)
+IMMUNIZATION_SCHEDULE = {
+    0: ["HB-0 (< 24 jam)", "BCG", "Polio 0 (OPV)"],
+    1: ["HB-1", "Polio 1", "DPT-HB-Hib 1", "PCV 1", "Rotavirus 1"],
+    2: ["Polio 2", "DPT-HB-Hib 2", "PCV 2", "Rotavirus 2"],
+    3: ["Polio 3", "DPT-HB-Hib 3", "PCV 3", "Rotavirus 3"],
+    4: ["Polio 4", "DPT-HB-Hib 4"],
+    9: ["Campak/MR 1"],
+    12: ["Campak Booster", "PCV Booster"],
+    15: ["Influenza (opsional)"],
+    18: ["DPT-HB-Hib Booster", "Polio Booster"],
+    24: ["Campak Rubella (MR) 2", "Japanese Encephalitis (daerah endemis)"]
+}
+
+# KPSP (Kuesioner Pra Skrining Perkembangan) by Age
+KPSP_QUESTIONS = {
+    3: [
+        "Apakah anak dapat mengangkat kepalanya 45° saat tengkurap?",
+        "Apakah anak tersenyum saat diajak bicara atau tersenyum sendiri?",
+        "Apakah anak mengeluarkan suara-suara (mengoceh)?",
+        "Apakah anak dapat menatap dan mengikuti wajah ibu/pengasuh?",
+        "Apakah anak berusaha meraih benda atau mainan yang ditunjukkan?"
+    ],
+    6: [
+        "Apakah anak dapat duduk dengan bantuan (bersandar)?",
+        "Apakah anak dapat memindahkan mainan dari tangan satu ke tangan lain?",
+        "Apakah anak mengeluarkan suara vokal seperti 'a-u-o'?",
+        "Apakah anak tertawa keras saat bermain atau diajak bercanda?",
+        "Apakah anak mengenal orang asing (tampak malu atau marah)?"
+    ],
+    9: [
+        "Apakah anak dapat duduk sendiri tanpa bantuan minimal 1 menit?",
+        "Apakah anak dapat merangkak maju (bukan mundur)?",
+        "Apakah anak mengucapkan 'mama' atau 'papa' (meski berlebihan)?",
+        "Apakah anak dapat meraih benda kecil dengan jempol dan telunjuk?",
+        "Apakah anak dapat menirukan gerakan tepuk tangan?"
+    ],
+    12: [
+        "Apakah anak dapat berdiri sendiri minimal 5 detik tanpa berpegangan?",
+        "Apakah anak dapat berjalan berpegangan pada furniture?",
+        "Apakah anak dapat mengucapkan 2-3 kata yang bermakna?",
+        "Apakah anak dapat minum dari cangkir sendiri?",
+        "Apakah anak dapat menunjuk benda yang diinginkannya?"
+    ],
+    15: [
+        "Apakah anak dapat berjalan sendiri dengan stabil minimal 5 langkah?",
+        "Apakah anak dapat minum dari gelas tanpa tumpah?",
+        "Apakah anak dapat mengucapkan 4-6 kata dengan jelas?",
+        "Apakah anak dapat menumpuk 2 kubus dengan stabil?",
+        "Apakah anak dapat membantu melepas sepatunya sendiri?"
+    ],
+    18: [
+        "Apakah anak dapat berlari minimal 5 langkah berturut-turut?",
+        "Apakah anak dapat naik tangga dengan bantuan pegangan?",
+        "Apakah anak dapat mengucapkan 10-15 kata yang berbeda?",
+        "Apakah anak dapat makan sendiri dengan sendok?",
+        "Apakah anak dapat menunjuk minimal 2 bagian tubuhnya?"
+    ],
+    21: [
+        "Apakah anak dapat menendang bola ke depan tanpa jatuh?",
+        "Apakah anak dapat naik tangga dengan 1 kaki bergantian?",
+        "Apakah anak dapat mengucapkan kalimat 2-3 kata?",
+        "Apakah anak dapat membalik halaman buku satu per satu?",
+        "Apakah anak dapat mengikuti perintah sederhana 2 tahap?"
+    ],
+    24: [
+        "Apakah anak dapat melompat dengan 2 kaki bersamaan?",
+        "Apakah anak dapat naik-turun tangga tanpa pegangan?",
+        "Apakah anak dapat membuat kalimat 3-4 kata yang runtut?",
+        "Apakah anak dapat menggambar garis vertikal setelah dicontohkan?",
+        "Apakah anak dapat mengikuti perintah kompleks 3 tahap?"
+    ]
+}
+
+# ===============================================================================
+# SECTION 2C: PERPUSTAKAAN IBU BALITA (REPLACED by v3.2)
+# ===============================================================================
+
+# Variabel PERPUSTAKAAN_IBU_BALITA (v3.1) yang lama DIHAPUS
+# dan digantikan oleh `PERPUSTAKAAN_IBU_BALITA_UPDATED` dari v3.2
+# Fungsi-fungsi helper untuk perpustakaan juga dipindahkan ke Section 10B
+
+print(f"✅ Configuration loaded (v3.1 base):")
+print(f"   - {len(KPSP_YOUTUBE_VIDEOS)} KPSP videos")
+print(f"   - {sum(len(v) for v in MPASI_YOUTUBE_VIDEOS.values())} MP-ASI videos across {len(MPASI_YOUTUBE_VIDEOS)} age groups")
+print(f"   - {len(IMMUNIZATION_SCHEDULE)} immunization schedules")
+print(f"   - {len(KPSP_QUESTIONS)} KPSP question sets")
+print(f"   - {len(UI_THEMES)} UI themes")
+print("   - ℹ️ Old v3.1 Library removed, will be replaced by v3.2 Library")
+
+# ===============================================================================
+# SECTION 3: WHO CALCULATOR INITIALIZATION
+# ===============================================================================
+
+# Initialize WHO Growth Calculator
+calc = None
+
+try:
+    calc = Calculator(**CALC_CONFIG)
+    print("✅ WHO Calculator initialized successfully")
+    print(f"   - Height adjustment: {CALC_CONFIG['adjust_height_data']}")
+    print(f"   - Weight scores adjustment: {CALC_CONFIG['adjust_weight_scores']}")
+    print(f"   - CDC standards: {CALC_CONFIG['include_cdc']}")
+except Exception as e:
+    print(f"❌ CRITICAL: WHO Calculator initialization failed!")
+    print(f"   Error: {e}")
+    print(f"   Traceback: {traceback.format_exc()}")
+    calc = None
+
+if calc is None:
+    print("⚠️  WARNING: Application will run with limited functionality")
+
+print("=" * 80)
+print(f"🚀 {APP_TITLE} v{APP_VERSION} - Configuration Complete")
+print("=" * 80)
+
+
+# ===============================================================================
+# SECTION 4: UTILITY FUNCTIONS (from v3.0)
+# ===============================================================================
+
+def as_float(x: Any) -> Optional[float]:
+    """
+    Safely convert any input to float
     
-    /* Glass Effect Vars */
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.5);
-    --glass-shadow: 0 8px 32px 0 rgba(139, 69, 19, 0.1);
-    --glass-blur: blur(12px);
-}
+    Args:
+        x: Input value (can be string, number, Decimal, etc)
+        
+    Returns:
+        Float value or None if conversion fails
+    """
+    if x is None:
+        return None
+    if isinstance(x, (int, float)):
+        return float(x)
+    try:
+        # Handle comma as decimal separator (Indonesian format)
+        clean_str = str(x).replace(",", ".").strip()
+        return float(clean_str)
+    except (ValueError, AttributeError):
+        return None
 
-body {
-    font-family: 'Inter', sans-serif !important;
-    background-color: #fdfbf7;
-    background-image: 
-        radial-gradient(at 10% 10%, rgba(222, 184, 135, 0.15) 0px, transparent 50%),
-        radial-gradient(at 90% 0%, rgba(139, 69, 19, 0.08) 0px, transparent 50%),
-        radial-gradient(at 50% 90%, rgba(210, 105, 30, 0.1) 0px, transparent 50%);
-    background-attachment: fixed;
-    color: var(--text-dark);
-}
 
-/* Typography */
-h1, h2, h3, h4, .header-title {
-    font-family: 'Crimson Text', serif !important;
-    color: var(--primary-brown) !important;
-}
+def parse_date(date_str: str) -> Optional[date]:
+    """
+    Parse date string in multiple formats
+    
+    Supported formats:
+        - YYYY-MM-DD (ISO 8601)
+        - DD/MM/YYYY (Indonesian format)
+    
+    Args:
+        date_str: Date string to parse
+        
+    Returns:
+        datetime.date object or None if parsing fails
+    """
+    if not date_str or str(date_str).strip() == "":
+        return None
+    
+    s = str(date_str).strip()
+    
+    # Try ISO format (YYYY-MM-DD)
+    try:
+        parts = s.split("-")
+        if len(parts) == 3:
+            y, m, d = int(parts[0]), int(parts[1]), int(parts[2])
+            return date(y, m, d)
+    except (ValueError, IndexError):
+        pass
+    
+    # Try Indonesian format (DD/MM/YYYY)
+    try:
+        parts = s.split("/")
+        if len(parts) == 3:
+            d, m, y = int(parts[0]), int(parts[1]), int(parts[2])
+            return date(y, m, d)
+    except (ValueError, IndexError):
+        pass
+    
+    return None
 
-/* Gradio Container Overrides */
-.gradio-container {
-    max-width: 1200px !important;
-}
 
-/* Liquid Glass Panels */
-.gr-block, .gr-panel, .gr-box, .gr-form {
-    background: var(--glass-bg) !important;
-    backdrop-filter: var(--glass-blur) !important;
-    -webkit-backdrop-filter: var(--glass-blur) !important;
-    border: var(--glass-border) !important;
-    border-radius: 20px !important;
-    box-shadow: var(--glass-shadow) !important;
-}
+def calculate_age_from_dates(dob: date, dom: date) -> Tuple[Optional[float], Optional[int]]:
+    """
+    Calculate age in months and days from dates
+    
+    Args:
+        dob: Date of birth
+        dom: Date of measurement
+        
+    Returns:
+        Tuple of (age_months, age_days) or (None, None) if invalid
+    """
+    try:
+        if dom < dob:
+            return None, None
+        
+        delta = dom - dob
+        days = delta.days
+        
+        if days < 0:
+            return None, None
+        
+        # Use average month length (365.25 days / 12 months)
+        months = days / 30.4375
+        
+        return round(months, 2), days
+    except Exception as e:
+        print(f"Age calculation error: {e}")
+        return None, None
 
-/* Inputs (Floating Style) */
-.gr-input, .gr-textbox input, .gr-number input, .gr-dropdown, .gr-radio {
-    background: rgba(255, 255, 255, 0.6) !important;
-    border: 1px solid rgba(139, 69, 19, 0.2) !important;
-    border-radius: 12px !important;
-    transition: all 0.3s ease;
-}
-.gr-input:focus, .gr-textbox input:focus {
-    background: white !important;
-    border-color: var(--secondary-orange) !important;
-    box-shadow: 0 0 0 3px rgba(210, 105, 30, 0.15) !important;
-}
 
-/* Buttons (Liquid Gradient) */
-.gr-button-primary {
-    background: linear-gradient(135deg, var(--primary-brown), var(--secondary-orange)) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: 50px !important;
-    font-family: 'Inter', sans-serif !important;
-    font-weight: 600 !important;
-    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3) !important;
-    transition: transform 0.2s, box-shadow 0.2s !important;
-}
-.gr-button-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4) !important;
-}
-.gr-button-secondary {
-    background: rgba(255,255,255,0.8) !important;
-    color: var(--primary-brown) !important;
-    border: 1px solid var(--primary-brown) !important;
-    border-radius: 50px !important;
-}
+@lru_cache(maxsize=2048)
+def z_to_percentile(z_score: Optional[float]) -> Optional[float]:
+    """
+    Convert Z-score to percentile using standard normal CDF
+    
+    Args:
+        z_score: Z-score value
+        
+    Returns:
+        Percentile (0-100) or None if invalid
+    """
+    if z_score is None:
+        return None
+    
+    try:
+        z = float(z_score)
+        if math.isnan(z) or math.isinf(z):
+            return None
+        
+        # Standard normal cumulative distribution function
+        # Φ(z) = 0.5 * (1 + erf(z/√2))
+        percentile = 0.5 * (1.0 + erf(z / math.sqrt(2.0))) * 100.0
+        
+        return round(percentile, 1)
+    except Exception:
+        return None
 
-/* Custom HTML Elements (Matching provided HTML) */
-.custom-header {
-    background: linear-gradient(135deg, var(--primary-brown), var(--secondary-orange));
-    color: white;
-    padding: 60px 20px;
-    text-align: center;
-    border-radius: 0 0 30px 30px;
-    margin-bottom: 40px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(139, 69, 19, 0.2);
-}
-.custom-header::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-    opacity: 0.3;
-}
-.custom-header h1 { color: white !important; margin-bottom: 10px; font-size: 2.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
-.custom-header p { color: rgba(255,255,255,0.9) !important; font-size: 1.1rem; }
 
-/* Statistic Cards (Finding Card) */
-.finding-card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-.finding-card {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    border-bottom: 4px solid var(--primary-brown);
-    transition: transform 0.3s;
-}
-.finding-card:hover { transform: translateY(-5px); }
-.finding-card .number { font-size: 2.5rem; font-weight: 700; color: var(--primary-brown); margin-bottom: 5px; font-family: 'Crimson Text', serif; }
-.finding-card .label { font-size: 0.9rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
+def format_zscore(z: Optional[float], decimals: int = 2) -> str:
+    """
+    Format Z-score for display with proper sign
+    
+    Args:
+        z: Z-score value
+        decimals: Number of decimal places
+        
+    Returns:
+        Formatted string like "+2.34" or "-1.23" or "—" for invalid
+    """
+    if z is None:
+        return "—"
+    
+    try:
+        z_float = float(z)
+        if math.isnan(z_float) or math.isinf(z_float):
+            return "—"
+        
+        # Add explicit + sign for positive values
+        sign = "+" if z_float >= 0 else ""
+        return f"{sign}{z_float:.{decimals}f}"
+    except Exception:
+        return "—"
 
-/* Article Cards (Library) */
-.library-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 25px;
-}
-.article-card {
-    background: white;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    transition: all 0.3s;
-    border: 1px solid #eee;
-    display: flex;
-    flex-direction: column;
-}
-.article-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-.article-img { height: 160px; background-size: cover; background-position: center; }
-.article-content { padding: 20px; flex-grow: 1; }
-.article-tag { display: inline-block; padding: 4px 10px; background: #FFF3E0; color: var(--primary-brown); border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 10px; }
-.article-title { font-family: 'Crimson Text', serif; font-size: 1.2rem; font-weight: 700; color: var(--text-dark); margin-bottom: 10px; line-height: 1.3; }
-.article-desc { font-size: 0.9rem; color: var(--text-light); line-height: 1.5; }
 
-/* Tables */
-.custom-table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-.custom-table th { background: var(--primary-brown); color: white; padding: 12px; text-align: left; font-family: 'Crimson Text', serif; }
-.custom-table td { padding: 10px; border-bottom: 1px solid #eee; background: white; }
-.custom-table tr:nth-child(even) td { background: #f9f9f9; }
+def validate_anthropometry(age_mo: Optional[float], 
+                          weight: Optional[float], 
+                          height: Optional[float], 
+                          head_circ: Optional[float]) -> Tuple[List[str], List[str]]:
+    """
+    Validate anthropometric measurements against WHO plausibility ranges
+    
+    Args:
+        age_mo: Age in months
+        weight: Weight in kg
+        height: Height/length in cm
+        head_circ: Head circumference in cm
+        
+    Returns:
+        Tuple of (errors, warnings) - lists of validation messages
+    """
+    errors = []
+    warnings = []
+    
+    # Age validation
+    if age_mo is not None:
+        if age_mo < 0:
+            errors.append("❌ Usia tidak boleh negatif")
+        elif age_mo > 60:
+            warnings.append("ℹ️ Aplikasi dioptimalkan untuk usia 0-60 bulan (WHO standards)")
+    
+    # Weight validation (WHO plausibility ranges)
+    if weight is not None:
+        if weight < 1.0 or weight > 30.0:
+            errors.append(f"❌ Berat badan {weight:.1f} kg di luar rentang plausibel (1-30 kg)")
+        elif weight < 2.0:
+            warnings.append(f"⚠️ Berat badan {weight:.1f} kg sangat rendah - verifikasi ulang pengukuran")
+        elif weight > 25.0:
+            warnings.append(f"⚠️ Berat badan {weight:.1f} kg tidak umum - verifikasi ulang pengukuran")
+    
+    # Height validation (WHO plausibility ranges)
+    if height is not None:
+        if height < 35 or height > 130:
+            errors.append(f"❌ Panjang/tinggi {height:.1f} cm di luar rentang plausibel (35-130 cm)")
+        elif height < 45:
+            warnings.append(f"⚠️ Panjang/tinggi {height:.1f} cm sangat pendek - verifikasi pengukuran")
+        elif height > 120:
+            warnings.append(f"⚠️ Tinggi {height:.1f} cm tidak umum untuk balita - verifikasi pengukuran")
+    
+    # Head circumference validation (WHO standards)
+    if head_circ is not None:
+        if head_circ < 20 or head_circ > 60:
+            errors.append(f"❌ Lingkar kepala {head_circ:.1f} cm di luar rentang plausibel (20-60 cm)")
+        elif head_circ < 30:
+            warnings.append(f"⚠️ Lingkar kepala {head_circ:.1f} cm sangat kecil - konsultasi dokter anak")
+        elif head_circ > 55:
+            warnings.append(f"⚠️ Lingkar kepala {head_circ:.1f} cm sangat besar - konsultasi dokter anak")
+    
+    return errors, warnings
 
-/* Tab Styling */
-.tabs { border: none !important; background: transparent !important; gap: 8px; }
-.tab-nav { display: flex; justify-content: center; background: rgba(255,255,255,0.5); padding: 8px; border-radius: 50px; backdrop-filter: blur(5px); margin-bottom: 20px; }
-button.selected { background: var(--primary-brown) !important; color: white !important; border-radius: 20px !important; box-shadow: 0 2px 5px rgba(139,69,19,0.2); }
 
+def get_random_quote() -> str:
+    """Get random motivational quote for parents"""
+    return random.choice(MOTIVATIONAL_QUOTES)
+
+
+# ===============================================================================
+# SECTION 5: WHO Z-SCORE CALCULATIONS (from v3.0)
+# ===============================================================================
+
+def _safe_z_calc(calc_func, *args) -> Optional[float]:
+    """
+    Safely call WHO calculator function with error handling
+    
+    Args:
+        calc_func: Calculator method to call
+        *args: Arguments to pass to the calculator
+        
+    Returns:
+        Z-score float or None if calculation fails
+    """
+    if calc is None:
+        return None
+    
+    try:
+        z = calc_func(*args)
+        
+        if z is None:
+            return None
+        
+        z_float = float(z)
+        
+        # Check for invalid values (NaN or Inf)
+        if math.isnan(z_float) or math.isinf(z_float):
+            return None
+        
+        return z_float
+    except Exception as e:
+        # Silent failure for robustness
+        return None
+
+
+def calculate_all_zscores(sex: str, 
+                          age_months: float, 
+                          weight: Optional[float], 
+                          height: Optional[float], 
+                          head_circ: Optional[float]) -> Dict[str, Optional[float]]:
+    """
+    Calculate all WHO z-scores for a child
+    
+    Args:
+        sex: 'M' (male) or 'F' (female)
+        age_months: Age in months
+        weight: Weight in kg
+        height: Height/length in cm
+        head_circ: Head circumference in cm
+        
+    Returns:
+        Dictionary with keys:
+            - waz: Weight-for-Age Z-score
+            - haz: Height-for-Age Z-score (or LAZ if < 24 months)
+            - whz: Weight-for-Height Z-score (or WFL if < 24 months)
+            - baz: BMI-for-Age Z-score
+            - hcz: Head Circumference-for-Age Z-score
+    """
+    results = {
+        'waz': None,
+        'haz': None,
+        'whz': None,
+        'baz': None,
+        'hcz': None
+    }
+    
+    if calc is None:
+        return results
+    
+    # Weight-for-Age (WAZ)
+    if weight is not None:
+        results['waz'] = _safe_z_calc(calc.wfa, weight, age_months, sex)
+    
+    # Height-for-Age (HAZ) / Length-for-Age (LAZ)
+    if height is not None:
+        results['haz'] = _safe_z_calc(calc.lhfa, height, age_months, sex)
+    
+    # Weight-for-Height (WHZ) / Weight-for-Length (WFL)
+    if weight is not None and height is not None:
+        results['whz'] = _safe_z_calc(calc.wfl, weight, age_months, sex, height)
+    
+    # BMI-for-Age (BAZ)
+    if weight is not None and height is not None and height > 0:
+        bmi = weight / ((height / 100) ** 2)
+        results['baz'] = _safe_z_calc(calc.bmifa, bmi, age_months, sex)
+    
+    # Head Circumference-for-Age (HCZ)
+    if head_circ is not None:
+        results['hcz'] = _safe_z_calc(calc.hcfa, head_circ, age_months, sex)
+    
+    return results
+
+
+def classify_permenkes_2020(z_scores: Dict[str, Optional[float]]) -> Dict[str, str]:
+    """
+    Classify nutritional status according to Permenkes RI No. 2 Tahun 2020
+    
+    Args:
+        z_scores: Dictionary of z-scores from calculate_all_zscores()
+        
+    Returns:
+        Dictionary with Permenkes classifications for each index
+    """
+    classifications = {}
+    
+    # Weight-for-Age (BB/U)
+    waz = z_scores.get('waz')
+    if waz is not None and not math.isnan(waz):
+        if waz < -3:
+            classifications['waz'] = "Berat Badan Sangat Kurang"
+        elif waz < -2:
+            classifications['waz'] = "Berat Badan Kurang"
+        elif waz <= 2:
+            classifications['waz'] = "Berat Badan Normal"
+        else:
+            classifications['waz'] = "Risiko Berat Badan Lebih"
+    else:
+        classifications['waz'] = "Data Tidak Tersedia"
+    
+    # Height-for-Age (TB/U)
+    haz = z_scores.get('haz')
+    if haz is not None and not math.isnan(haz):
+        if haz < -3:
+            classifications['haz'] = "Sangat Pendek (Severely Stunted)"
+        elif haz < -2:
+            classifications['haz'] = "Pendek (Stunted)"
+        elif haz <= 3:
+            classifications['haz'] = "Tinggi Badan Normal"
+        else:
+            classifications['haz'] = "Tinggi Badan Berlebih"
+    else:
+        classifications['haz'] = "Data Tidak Tersedia"
+    
+    # Weight-for-Height (BB/TB)
+    whz = z_scores.get('whz')
+    if whz is not None and not math.isnan(whz):
+        if whz < -3:
+            classifications['whz'] = "Gizi Buruk (Severely Wasted)"
+        elif whz < -2:
+            classifications['whz'] = "Gizi Kurang (Wasted)"
+        elif whz <= 2:
+            classifications['whz'] = "Gizi Baik (Normal)"
+        elif whz <= 3:
+            classifications['whz'] = "Berisiko Gizi Lebih (Possible Risk of Overweight)"
+        else:
+            classifications['whz'] = "Gizi Lebih (Overweight)"
+    else:
+        classifications['whz'] = "Data Tidak Tersedia"
+    
+    # BMI-for-Age (IMT/U)
+    baz = z_scores.get('baz')
+    if baz is not None and not math.isnan(baz):
+        if baz < -3:
+            classifications['baz'] = "Gizi Buruk (Severely Wasted)"
+        elif baz < -2:
+            classifications['baz'] = "Gizi Kurang (Wasted)"
+        elif baz <= 1:
+            classifications['baz'] = "Gizi Baik (Normal)"
+        elif baz <= 2:
+            classifications['baz'] = "Berisiko Gizi Lebih (Possible Risk of Overweight)"
+        elif baz <= 3:
+            classifications['baz'] = "Gizi Lebih (Overweight)"
+        else:
+            classifications['baz'] = "Obesitas (Obese)"
+    else:
+        classifications['baz'] = "Data Tidak Tersedia"
+    
+    # Head Circumference-for-Age (LK/U)
+    hcz = z_scores.get('hcz')
+    if hcz is not None and not math.isnan(hcz):
+        if abs(hcz) <= 2:
+            classifications['hcz'] = "Normal"
+        elif hcz < -2:
+            classifications['hcz'] = "Mikrosefali (perlu evaluasi)"
+        else:
+            classifications['hcz'] = "Makrosefali (perlu evaluasi)"
+    else:
+        classifications['hcz'] = "Data Tidak Tersedia"
+    
+    return classifications
+
+
+def classify_who_standards(z_scores: Dict[str, Optional[float]]) -> Dict[str, str]:
+    """
+    Classify nutritional status according to WHO Child Growth Standards
+    
+    Args:
+        z_scores: Dictionary of z-scores from calculate_all_zscores()
+        
+    Returns:
+        Dictionary with WHO classifications for each index
+    """
+    classifications = {}
+    
+    # Weight-for-Age
+    waz = z_scores.get('waz')
+    if waz is not None and not math.isnan(waz):
+        if waz < -3:
+            classifications['waz'] = "Severely underweight"
+        elif waz < -2:
+            classifications['waz'] = "Underweight"
+        elif waz <= 2:
+            classifications['waz'] = "Normal weight"
+        else:
+            classifications['waz'] = "Overweight"
+    else:
+        classifications['waz'] = "N/A"
+    
+    # Height-for-Age
+    haz = z_scores.get('haz')
+    if haz is not None and not math.isnan(haz):
+        if haz < -3:
+            classifications['haz'] = "Severely stunted"
+        elif haz < -2:
+            classifications['haz'] = "Stunted"
+        elif haz <= 3:
+            classifications['haz'] = "Normal height"
+        else:
+            classifications['haz'] = "Tall"
+    else:
+        classifications['haz'] = "N/A"
+    
+    # Weight-for-Height
+    whz = z_scores.get('whz')
+    if whz is not None and not math.isnan(whz):
+        if whz < -3:
+            classifications['whz'] = "Severely wasted"
+        elif whz < -2:
+            classifications['whz'] = "Wasted"
+        elif whz <= 2:
+            classifications['whz'] = "Normal"
+        elif whz <= 3:
+            classifications['whz'] = "Risk of overweight"
+        else:
+            classifications['whz'] = "Overweight"
+    else:
+        classifications['whz'] = "N/A"
+    
+    # BMI-for-Age
+    baz = z_scores.get('baz')
+    if baz is not None and not math.isnan(baz):
+        if baz < -3:
+            classifications['baz'] = "Severely wasted"
+        elif baz < -2:
+            classifications['baz'] = "Wasted"
+        elif baz <= 1:
+            classifications['baz'] = "Normal"
+        elif baz <= 2:
+            classifications['baz'] = "Risk of overweight"
+        elif baz <= 3:
+            classifications['baz'] = "Overweight"
+        else:
+            classifications['baz'] = "Obese"
+    else:
+        classifications['baz'] = "N/A"
+    
+    # Head Circumference-for-Age
+    hcz = z_scores.get('hcz')
+    if hcz is not None and not math.isnan(hcz):
+        if abs(hcz) <= 2:
+            classifications['hcz'] = "Normal"
+        elif hcz < -2:
+            classifications['hcz'] = "Microcephaly"
+        else:
+            classifications['hcz'] = "Macrocephaly"
+    else:
+        classifications['hcz'] = "N/A"
+    
+    return classifications
+
+
+def validate_zscores(z_scores: Dict[str, Optional[float]]) -> Tuple[List[str], List[str]]:
+    """
+    Validate z-scores for extreme values that need attention
+    
+    Args:
+        z_scores: Dictionary of z-scores
+        
+    Returns:
+        Tuple of (errors, warnings)
+    """
+    errors = []
+    warnings = []
+    
+    warn_threshold = 3
+    critical_threshold = 5
+    
+    for key, z in z_scores.items():
+        if z is None or math.isnan(z):
+            continue
+        
+        name = {
+            'waz': 'WAZ (BB/U)',
+            'haz': 'HAZ (TB/U)',
+            'whz': 'WHZ (BB/TB)',
+            'baz': 'BAZ (IMT/U)',
+            'hcz': 'HCZ (LK/U)'
+        }.get(key, key)
+        
+        abs_z = abs(z)
+        
+        if abs_z > critical_threshold:
+            errors.append(
+                f"🚨 {name} = {format_zscore(z)} sangat ekstrem (|Z| > {critical_threshold}). "
+                f"PENTING: Verifikasi ulang semua pengukuran dan konsultasi dokter anak."
+            )
+        elif abs_z > warn_threshold:
+            warnings.append(
+                f"⚠️ {name} = {format_zscore(z)} di luar rentang umum (|Z| > {warn_threshold}). "
+                f"Verifikasi ulang pengukuran atau konsultasi tenaga kesehatan."
+            )
+    
+    return errors, warnings
+
+
+print("✅ Section 4-5 loaded: Utility functions & WHO z-score calculations")
+
+# ===============================================================================
+# SECTION 6: GROWTH CURVE GENERATION (from v3.0/v3.1)
+# ===============================================================================
+
+def brentq_rootfind(f, a: float, b: float, xtol: float = 1e-6, maxiter: int = 100) -> float:
+    """
+    Brent's method for root finding (scipy-free implementation)
+    
+    Args:
+        f: Function to find root of
+        a, b: Bracket endpoints [a, b]
+        xtol: Tolerance for convergence
+        maxiter: Maximum iterations
+        
+    Returns:
+        Root approximation
+    """
+    fa = f(a)
+    fb = f(b)
+    
+    if fa is None or fb is None:
+        return (a + b) / 2.0
+    
+    if abs(fa) < 1e-10:
+        return a
+    if abs(fb) < 1e-10:
+        return b
+    
+    # Ensure bracket is valid
+    if fa * fb > 0:
+        return (a + b) / 2.0
+    
+    for iteration in range(maxiter):
+        m = 0.5 * (a + b)
+        fm = f(m)
+        
+        if fm is None:
+            return m
+        
+        if abs(fm) < 1e-10 or (b - a) / 2 < xtol:
+            return m
+        
+        if fa * fm < 0:
+            b, fb = m, fm
+        else:
+            a, fa = m, fm
+    
+    return 0.5 * (a + b)
+
+
+def invert_zscore_function(z_func, target_z: float, lo: float, hi: float, samples: int = 150) -> float:
+    """
+    Invert z-score function to find measurement value that produces target z-score
+    
+    Uses grid scan + Brent's method for robustness
+    
+    Args:
+        z_func: Function that takes measurement and returns z-score
+        target_z: Target z-score to achieve
+        lo, hi: Search bounds for measurement
+        samples: Number of grid points to scan
+        
+    Returns:
+        Measurement value that gives target_z
+    """
+    xs = np.linspace(lo, hi, samples)
+    last_x, last_f = None, None
+    best_x, best_abs = None, float('inf')
+    
+    # Grid scan phase
+    for x in xs:
+        z = z_func(x)
+        f = None if z is None else (z - target_z)
+        
+        if f is not None:
+            af = abs(f)
+            if af < best_abs:
+                best_x, best_abs = x, af
+            
+            # Check for sign change (indicates root bracket)
+            if last_f is not None and f * last_f < 0:
+                try:
+                    # Refine with Brent's method
+                    root = brentq_rootfind(
+                        lambda t: (z_func(t) or 0.0) - target_z,
+                        last_x,
+                        x,
+                        xtol=1e-5
+                    )
+                    return float(root)
+                except Exception:
+                    pass
+            
+            last_x, last_f = x, f
+    
+    # Return best approximation if no bracket found
+    return float(best_x if best_x is not None else (lo + hi) / 2.0)
+
+
+@lru_cache(maxsize=128)
+def generate_wfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Generate Weight-for-Age WHO curve for given z-score
+    
+    Args:
+        sex: 'M' or 'F'
+        z_score: Z-score line to generate (-3 to +3 typically)
+        
+    Returns:
+        Tuple of (age_array, weight_array)
+    """
+    lo, hi = BOUNDS['wfa']
+    
+    def z_func(weight, age):
+        return _safe_z_calc(calc.wfa, weight, age, sex)
+    
+    weights = []
+    for age in AGE_GRID:
+        weight = invert_zscore_function(
+            lambda w: z_func(w, age),
+            z_score,
+            lo,
+            hi
+        )
+        weights.append(weight)
+    
+    return AGE_GRID.copy(), np.array(weights)
+
+
+@lru_cache(maxsize=128)
+def generate_hfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Generate Height-for-Age WHO curve for given z-score
+    
+    Args:
+        sex: 'M' or 'F'
+        z_score: Z-score line to generate
+        
+    Returns:
+        Tuple of (age_array, height_array)
+    """
+    lo, hi = BOUNDS['hfa']
+    
+    def z_func(height, age):
+        return _safe_z_calc(calc.lhfa, height, age, sex)
+    
+    heights = []
+    for age in AGE_GRID:
+        height = invert_zscore_function(
+            lambda h: z_func(h, age),
+            z_score,
+            lo,
+            hi
+        )
+        heights.append(height)
+    
+    return AGE_GRID.copy(), np.array(heights)
+
+
+@lru_cache(maxsize=128)
+def generate_hcfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Generate Head Circumference-for-Age WHO curve for given z-score
+    
+    Args:
+        sex: 'M' or 'F'
+        z_score: Z-score line to generate
+        
+    Returns:
+        Tuple of (age_array, head_circ_array)
+    """
+    lo, hi = BOUNDS['hcfa']
+    
+    def z_func(hc, age):
+        return _safe_z_calc(calc.hcfa, hc, age, sex)
+    
+    head_circs = []
+    for age in AGE_GRID:
+        hc = invert_zscore_function(
+            lambda h: z_func(h, age),
+            z_score,
+            lo,
+            hi
+        )
+        head_circs.append(hc)
+    
+    return AGE_GRID.copy(), np.array(head_circs)
+
+
+@lru_cache(maxsize=128)
+def generate_wfl_curve(sex: str, age_months: float, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Generate Weight-for-Length WHO curve for given z-score
+    
+    Args:
+        sex: 'M' or 'F'
+        age_months: Child's age (needed for WHO calculation)
+        z_score: Z-score line to generate
+        
+    Returns:
+        Tuple of (length_array, weight_array)
+    """
+    lengths = np.arange(BOUNDS['wfl_l'][0], BOUNDS['wfl_l'][1] + 0.5, 0.5)
+    lo_w, hi_w = BOUNDS['wfl_w']
+    
+    def z_func(weight, length):
+        return _safe_z_calc(calc.wfl, weight, age_months, sex, length)
+    
+    weights = []
+    for length in lengths:
+        weight = invert_zscore_function(
+            lambda w: z_func(w, length),
+            z_score,
+            lo_w,
+            hi_w
+        )
+        weights.append(weight)
+    
+    return lengths, np.array(weights)
+
+
+print("✅ Section 6 loaded: Growth curve generation with caching")
+
+
+# ===============================================================================
+# SECTION 7: MATPLOTLIB PLOTTING FUNCTIONS (from v3.0/v3.1)
+# ===============================================================================
+
+def apply_matplotlib_theme(theme_name: str = "pink_pastel") -> Dict[str, str]:
+    """
+    Apply custom theme to matplotlib
+    
+    Args:
+        theme_name: One of 'pink_pastel', 'mint_pastel', 'lavender_pastel'
+        
+    Returns:
+        Theme dictionary
+    """
+    theme = UI_THEMES.get(theme_name, UI_THEMES["pink_pastel"])
+    
+    plt.style.use('default')
+    plt.rcParams.update({
+        "axes.facecolor": theme["card"],
+        "figure.facecolor": theme["bg"],
+        "savefig.facecolor": theme["bg"],
+        "text.color": theme["text"],
+        "axes.labelcolor": theme["text"],
+        "axes.edgecolor": theme["border"],
+        "xtick.color": theme["text"],
+        "ytick.color": theme["text"],
+        "grid.color": theme["border"],
+        "grid.alpha": 0.35,
+        "grid.linestyle": "--",
+        "grid.linewidth": 0.8,
+        "legend.framealpha": 1.0,
+        "legend.fancybox": True,
+        "legend.edgecolor": theme["border"],
+        "legend.shadow": True,
+        "font.size": 10,
+        "axes.titlesize": 13,
+        "axes.titleweight": "bold",
+        "axes.labelsize": 11,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "legend.fontsize": 9,
+        "axes.linewidth": 1.5,
+    })
+    
+    return theme
+
+
+def _fill_zone_between_curves(ax, x: np.ndarray, lower: np.ndarray, upper: np.ndarray, 
+                              color: str, alpha: float, label: str):
+    """Helper to fill colored zones between SD curves"""
+    try:
+        ax.fill_between(
+            x, lower, upper,
+            color=color,
+            alpha=alpha,
+            zorder=1,
+            label=label,
+            linewidth=0,
+            edgecolor='none'
+        )
+    except Exception as e:
+        print(f"Fill zone warning: {e}")
+
+
+def plot_weight_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figure:
+    """
+    Plot Weight-for-Age growth chart with child's data point
+    
+    Args:
+        payload: Data dict containing sex, age_mo, weight, z-scores, etc
+        theme_name: Theme to apply
+        
+    Returns:
+        Matplotlib Figure object
+    """
+    theme = apply_matplotlib_theme(theme_name)
+    
+    sex = payload['sex']
+    age = payload['age_mo']
+    weight = payload.get('w')
+    
+    # SD lines to plot
+    sd_lines = {
+        -3: ('#DC143C', '-', 2.0),  # Dark red, solid
+        -2: ('#FF6347', '-', 2.5),  # Tomato, solid
+        -1: (theme['primary'], '--', 1.5),  # Theme color, dashed
+        0: (theme['secondary'], '-', 2.5),  # Median, solid, thick
+        1: (theme['primary'], '--', 1.5),  # Theme color, dashed
+        2: ('#FF6347', '-', 2.5),  # Tomato, solid
+        3: ('#DC143C', '-', 2.0)   # Dark red, solid
+    }
+    
+    # Generate curves
+    curves = {z: generate_wfa_curve(sex, z) for z in sd_lines.keys()}
+    
+    fig, ax = plt.subplots(figsize=(12, 7.5))
+    
+    x = curves[0][0]
+    
+    # Fill nutritional status zones
+    _fill_zone_between_curves(ax, x, curves[-3][1], curves[-2][1], '#FFE6E6', 0.4, 'Gizi Buruk')
+    _fill_zone_between_curves(ax, x, curves[-2][1], curves[-1][1], '#FFEBCC', 0.35, 'Gizi Kurang')
+    _fill_zone_between_curves(ax, x, curves[-1][1], curves[1][1],  '#E8F5E9', 0.45, 'Normal')
+    _fill_zone_between_curves(ax, x, curves[1][1],  curves[2][1],  '#FFF3CD', 0.35, 'Risiko Lebih')
+    _fill_zone_between_curves(ax, x, curves[2][1],  curves[3][1],  '#F8D7DA', 0.4, 'Gizi Lebih')
+    
+    # Plot SD lines
+    for z, (color, linestyle, linewidth) in sd_lines.items():
+        label = "Median (WHO)" if z == 0 else f"{z:+d} SD"
+        ax.plot(
+            curves[z][0], curves[z][1],
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            label=label,
+            zorder=5,
+            alpha=0.9
+        )
+    
+    # Plot child's data point
+    if weight is not None:
+        z_waz = payload['z'].get('waz')
+        
+        # Color based on z-score severity
+        if z_waz is not None:
+            if abs(z_waz) > 3:
+                point_color = '#8B0000'  # Dark red for extreme
+                point_size = 500
+            elif abs(z_waz) > 2:
+                point_color = '#DC143C'  # Red for severe
+                point_size = 450
+            elif abs(z_waz) > 1:
+                point_color = theme['primary']
+                point_size = 400
+            else:
+                point_color = theme['secondary']
+                point_size = 400
+        else:
+            point_color = theme['secondary']
+            point_size = 400
+        
+        ax.scatter(
+            [age], [weight],
+            s=point_size,
+            c=point_color,
+            edgecolors='white',
+            linewidths=3,
+            label=f"Data Anak ({weight:.1f} kg)",
+            zorder=10,
+            marker='o',
+            alpha=1.0
+        )
+        
+        # Add annotation
+        ax.annotate(
+            f"{weight:.1f} kg\nZ: {format_zscore(z_waz)}",
+            (age, weight),
+            xytext=(10, 10),
+            textcoords='offset points',
+            fontsize=10,
+            fontweight='bold',
+            bbox=dict(
+                boxstyle='round,pad=0.6',
+                facecolor=point_color,
+                edgecolor='white',
+                linewidth=2,
+                alpha=0.9
+            ),
+            color='white',
+            zorder=11
+        )
+    
+    # Styling
+    ax.set_xlabel("Usia (bulan)", fontsize=12, fontweight='bold')
+    ax.set_ylabel("Berat Badan (kg)", fontsize=12, fontweight='bold')
+    ax.set_title(
+        f"Grafik Berat Badan menurut Umur (BB/U) - WHO Standards\n"
+        f"{'Laki-laki' if sex == 'M' else 'Perempuan'} | Usia: {age:.1f} bulan",
+        fontsize=14,
+        fontweight='bold',
+        pad=15
+    )
+    
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
+    ax.legend(
+        loc='upper left',
+        framealpha=0.95,
+        edgecolor=theme['border'],
+        fancybox=True,
+        shadow=True,
+        fontsize=9
+    )
+    
+    ax.set_xlim(-1, 62)
+    ax.set_ylim(0, None)
+    
+    plt.tight_layout()
+    
+    return fig
+
+
+def plot_height_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figure:
+    """
+    Plot Height-for-Age growth chart with child's data point
+    
+    Args:
+        payload: Data dict containing sex, age_mo, height, z-scores, etc
+        theme_name: Theme to apply
+        
+    Returns:
+        Matplotlib Figure object
+    """
+    theme = apply_matplotlib_theme(theme_name)
+    
+    sex = payload['sex']
+    age = payload['age_mo']
+    height = payload.get('h')
+    
+    # SD lines
+    sd_lines = {
+        -3: ('#DC143C', '-', 2.0),
+        -2: ('#FF6347', '-', 2.5),
+        -1: (theme['primary'], '--', 1.5),
+        0: (theme['secondary'], '-', 2.5),
+        1: (theme['primary'], '--', 1.5),
+        2: ('#FF6347', '-', 2.5),
+        3: ('#DC143C', '-', 2.0)
+    }
+    
+    curves = {z: generate_hfa_curve(sex, z) for z in sd_lines.keys()}
+    
+    fig, ax = plt.subplots(figsize=(12, 7.5))
+    
+    x = curves[0][0]
+    
+    # Fill zones
+    _fill_zone_between_curves(ax, x, curves[-3][1], curves[-2][1], '#FFE6E6', 0.4, 'Sangat Pendek')
+    _fill_zone_between_curves(ax, x, curves[-2][1], curves[-1][1], '#FFEBCC', 0.35, 'Pendek')
+    _fill_zone_between_curves(ax, x, curves[-1][1], curves[1][1],  '#E8F5E9', 0.45, 'Normal')
+    _fill_zone_between_curves(ax, x, curves[1][1],  curves[2][1],  '#FFF3CD', 0.35, 'Tinggi')
+    
+    # Plot SD lines
+    for z, (color, linestyle, linewidth) in sd_lines.items():
+        label = "Median (WHO)" if z == 0 else f"{z:+d} SD"
+        ax.plot(
+            curves[z][0], curves[z][1],
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            label=label,
+            zorder=5,
+            alpha=0.9
+        )
+    
+    # Plot child's data
+    if height is not None:
+        z_haz = payload['z'].get('haz')
+        
+        if z_haz is not None:
+            if abs(z_haz) > 3:
+                point_color = '#8B0000'
+                point_size = 500
+            elif abs(z_haz) > 2:
+                point_color = '#DC143C'
+                point_size = 450
+            elif abs(z_haz) > 1:
+                point_color = theme['primary']
+                point_size = 400
+            else:
+                point_color = theme['secondary']
+                point_size = 400
+        else:
+            point_color = theme['secondary']
+            point_size = 400
+        
+        ax.scatter(
+            [age], [height],
+            s=point_size,
+            c=point_color,
+            edgecolors='white',
+            linewidths=3,
+            label=f"Data Anak ({height:.1f} cm)",
+            zorder=10,
+            marker='o',
+            alpha=1.0
+        )
+        
+        ax.annotate(
+            f"{height:.1f} cm\nZ: {format_zscore(z_haz)}",
+            (age, height),
+            xytext=(10, 10),
+            textcoords='offset points',
+            fontsize=10,
+            fontweight='bold',
+            bbox=dict(
+                boxstyle='round,pad=0.6',
+                facecolor=point_color,
+                edgecolor='white',
+                linewidth=2,
+                alpha=0.9
+            ),
+            color='white',
+            zorder=11
+        )
+    
+    measurement_type = "Panjang Badan" if age < 24 else "Tinggi Badan"
+    ax.set_xlabel("Usia (bulan)", fontsize=12, fontweight='bold')
+    ax.set_ylabel(f"{measurement_type} (cm)", fontsize=12, fontweight='bold')
+    ax.set_title(
+        f"Grafik {measurement_type} menurut Umur (TB/U) - WHO Standards\n"
+        f"{'Laki-laki' if sex == 'M' else 'Perempuan'} | Usia: {age:.1f} bulan",
+        fontsize=14,
+        fontweight='bold',
+        pad=15
+    )
+    
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
+    ax.legend(loc='upper left', framealpha=0.95, fancybox=True, shadow=True, fontsize=9)
+    ax.set_xlim(-1, 62)
+    ax.set_ylim(40, None)
+    
+    plt.tight_layout()
+    
+    return fig
+
+
+def plot_head_circumference_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figure:
+    """
+    Plot Head Circumference-for-Age growth chart
+    
+    Args:
+        payload: Data dict
+        theme_name: Theme to apply
+        
+    Returns:
+        Matplotlib Figure object
+    """
+    theme = apply_matplotlib_theme(theme_name)
+    
+    sex = payload['sex']
+    age = payload['age_mo']
+    head_circ = payload.get('hc')
+    
+    if head_circ is None:
+        # Return empty figure with message
+        fig, ax = plt.subplots(figsize=(12, 7.5))
+        ax.text(
+            0.5, 0.5,
+            "Data lingkar kepala tidak tersedia",
+            ha='center', va='center',
+            transform=ax.transAxes,
+            fontsize=14,
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        )
+        ax.set_title("Grafik Lingkar Kepala menurut Umur (LK/U)")
+        return fig
+    
+    sd_lines = {
+        -3: ('#DC143C', '-', 2.0),
+        -2: ('#FF6347', '-', 2.5),
+        -1: (theme['primary'], '--', 1.5),
+        0: (theme['secondary'], '-', 2.5),
+        1: (theme['primary'], '--', 1.5),
+        2: ('#FF6347', '-', 2.5),
+        3: ('#DC143C', '-', 2.0)
+    }
+    
+    curves = {z: generate_hcfa_curve(sex, z) for z in sd_lines.keys()}
+    
+    fig, ax = plt.subplots(figsize=(12, 7.5))
+    
+    x = curves[0][0]
+    
+    # Fill zones
+    _fill_zone_between_curves(ax, x, curves[-3][1], curves[-2][1], '#FFE6E6', 0.4, 'Mikrosefali')
+    _fill_zone_between_curves(ax, x, curves[-2][1], curves[2][1],  '#E8F5E9', 0.45, 'Normal')
+    _fill_zone_between_curves(ax, x, curves[2][1],  curves[3][1],  '#FFE6E6', 0.4, 'Makrosefali')
+    
+    # Plot SD lines
+    for z, (color, linestyle, linewidth) in sd_lines.items():
+        label = "Median (WHO)" if z == 0 else f"{z:+d} SD"
+        ax.plot(
+            curves[z][0], curves[z][1],
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            label=label,
+            zorder=5,
+            alpha=0.9
+        )
+    
+    # Plot child's data
+    z_hcz = payload['z'].get('hcz')
+    
+    if z_hcz is not None:
+        if abs(z_hcz) > 2:
+            point_color = '#DC143C'
+            point_size = 500
+        elif abs(z_hcz) > 1:
+            point_color = theme['primary']
+            point_size = 450
+        else:
+            point_color = theme['secondary']
+            point_size = 400
+    else:
+        point_color = theme['secondary']
+        point_size = 400
+    
+    ax.scatter(
+        [age], [head_circ],
+        s=point_size,
+        c=point_color,
+        edgecolors='white',
+        linewidths=3,
+        label=f"Data Anak ({head_circ:.1f} cm)",
+        zorder=10,
+        marker='o',
+        alpha=1.0
+    )
+    
+    ax.annotate(
+        f"{head_circ:.1f} cm\nZ: {format_zscore(z_hcz)}",
+        (age, head_circ),
+        xytext=(10, 10),
+        textcoords='offset points',
+        fontsize=10,
+        fontweight='bold',
+        bbox=dict(
+            boxstyle='round,pad=0.6',
+            facecolor=point_color,
+            edgecolor='white',
+            linewidth=2,
+            alpha=0.9
+        ),
+        color='white',
+        zorder=11
+    )
+    
+    ax.set_xlabel("Usia (bulan)", fontsize=12, fontweight='bold')
+    ax.set_ylabel("Lingkar Kepala (cm)", fontsize=12, fontweight='bold')
+    ax.set_title(
+        f"Grafik Lingkar Kepala menurut Umur (LK/U) - WHO Standards\n"
+        f"{'Laki-laki' if sex == 'M' else 'Perempuan'} | Usia: {age:.1f} bulan",
+        fontsize=14,
+        fontweight='bold',
+        pad=15
+    )
+    
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
+    ax.legend(loc='upper left', framealpha=0.95, fancybox=True, shadow=True, fontsize=9)
+    ax.set_xlim(-1, 62)
+    ax.set_ylim(28, None)
+    
+    plt.tight_layout()
+    
+    return fig
+
+
+print("✅ Section 7 loaded: Matplotlib plotting functions (WFA, HFA, HCFA)")
+
+
+def plot_weight_for_length(payload: Dict, theme_name: str = "pink_pastel") -> Figure:
+    """
+    Plot Weight-for-Length growth chart
+    
+    Args:
+        payload: Data dict
+        theme_name: Theme to apply
+        
+    Returns:
+        Matplotlib Figure object
+    """
+    theme = apply_matplotlib_theme(theme_name)
+    
+    sex = payload['sex']
+    age = payload['age_mo']
+    weight = payload.get('w')
+    height = payload.get('h')
+    
+    if weight is None or height is None:
+        fig, ax = plt.subplots(figsize=(12, 7.5))
+        ax.text(
+            0.5, 0.5,
+            "Data berat dan tinggi badan diperlukan untuk grafik BB/TB",
+            ha='center', va='center',
+            transform=ax.transAxes,
+            fontsize=14,
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        )
+        ax.set_title("Grafik Berat Badan menurut Tinggi Badan (BB/TB)")
+        return fig
+    
+    sd_lines = {
+        -3: ('#DC143C', '-', 2.0),
+        -2: ('#FF6347', '-', 2.5),
+        -1: (theme['primary'], '--', 1.5),
+        0: (theme['secondary'], '-', 2.5),
+        1: (theme['primary'], '--', 1.5),
+        2: ('#FF6347', '-', 2.5),
+        3: ('#DC143C', '-', 2.0)
+    }
+    
+    curves = {z: generate_wfl_curve(sex, age, z) for z in sd_lines.keys()}
+    
+    fig, ax = plt.subplots(figsize=(12, 7.5))
+    
+    lengths = curves[0][0]
+    
+    # Fill zones
+    _fill_zone_between_curves(ax, lengths, curves[-3][1], curves[-2][1], '#FFE6E6', 0.4, 'Gizi Buruk')
+    _fill_zone_between_curves(ax, lengths, curves[-2][1], curves[-1][1], '#FFEBCC', 0.35, 'Gizi Kurang')
+    _fill_zone_between_curves(ax, lengths, curves[-1][1], curves[1][1],  '#E8F5E9', 0.45, 'Normal')
+    _fill_zone_between_curves(ax, lengths, curves[1][1],  curves[2][1],  '#FFF3CD', 0.35, 'Risiko Lebih')
+    _fill_zone_between_curves(ax, lengths, curves[2][1],  curves[3][1],  '#F8D7DA', 0.4, 'Gizi Lebih')
+    
+    # Plot SD lines
+    for z, (color, linestyle, linewidth) in sd_lines.items():
+        label = "Median (WHO)" if z == 0 else f"{z:+d} SD"
+        ax.plot(
+            curves[z][0], curves[z][1],
+            color=color,
+            linestyle=linestyle,
+            linewidth=linewidth,
+            label=label,
+            zorder=5,
+            alpha=0.9
+        )
+    
+    # Plot child's data
+    z_whz = payload['z'].get('whz')
+    
+    if z_whz is not None:
+        if abs(z_whz) > 3:
+            point_color = '#8B0000'
+            point_size = 500
+        elif abs(z_whz) > 2:
+            point_color = '#DC143C'
+            point_size = 450
+        elif abs(z_whz) > 1:
+            point_color = theme['primary']
+            point_size = 400
+        else:
+            point_color = theme['secondary']
+            point_size = 400
+    else:
+        point_color = theme['secondary']
+        point_size = 400
+    
+    ax.scatter(
+        [height], [weight],
+        s=point_size,
+        c=point_color,
+        edgecolors='white',
+        linewidths=3,
+        label=f"Data Anak ({weight:.1f} kg)",
+        zorder=10,
+        marker='o',
+        alpha=1.0
+    )
+    
+    ax.annotate(
+        f"{weight:.1f} kg / {height:.1f} cm\nZ: {format_zscore(z_whz)}",
+        (height, weight),
+        xytext=(10, 10),
+        textcoords='offset points',
+        fontsize=10,
+        fontweight='bold',
+        bbox=dict(
+            boxstyle='round,pad=0.6',
+            facecolor=point_color,
+            edgecolor='white',
+            linewidth=2,
+            alpha=0.9
+        ),
+        color='white',
+        zorder=11
+    )
+    
+    measurement_type = "Panjang Badan" if age < 24 else "Tinggi Badan"
+    ax.set_xlabel(f"{measurement_type} (cm)", fontsize=12, fontweight='bold')
+    ax.set_ylabel("Berat Badan (kg)", fontsize=12, fontweight='bold')
+    ax.set_title(
+        f"Grafik Berat Badan menurut {measurement_type} (BB/TB) - WHO Standards\n"
+        f"{'Laki-laki' if sex == 'M' else 'Perempuan'} | Usia: {age:.1f} bulan",
+        fontsize=14,
+        fontweight='bold',
+        pad=15
+    )
+    
+    ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
+    ax.legend(loc='upper left', framealpha=0.95, fancybox=True, shadow=True, fontsize=9)
+    ax.set_xlim(BOUNDS['wfl_l'][0] - 2, BOUNDS['wfl_l'][1] + 2)
+    ax.set_ylim(0, None)
+    
+    plt.tight_layout()
+    
+    return fig
+
+
+def plot_zscore_summary_bars(payload: Dict, theme_name: str = "pink_pastel") -> Figure:
+    """
+    Plot bar chart summarizing all z-scores
+    
+    Args:
+        payload: Data dict with z-scores
+        theme_name: Theme to apply
+        
+    Returns:
+        Matplotlib Figure object
+    """
+    theme = apply_matplotlib_theme(theme_name)
+    
+    z_scores = payload.get('z', {})
+    
+    # Prepare data
+    indices = []
+    values = []
+    colors = []
+    labels_text = []
+    
+    for key, label in [('waz', 'BB/U'), ('haz', 'TB/U'), ('whz', 'BB/TB'), 
+                       ('baz', 'IMT/U'), ('hcz', 'LK/U')]:
+        z = z_scores.get(key)
+        if z is not None and not math.isnan(z):
+            indices.append(label)
+            values.append(z)
+            labels_text.append(format_zscore(z))
+            
+            # Color based on severity
+            if abs(z) > 3:
+                colors.append('#8B0000')  # Dark red
+            elif abs(z) > 2:
+                colors.append('#DC143C')  # Red
+            elif abs(z) > 1:
+                colors.append('#FFA500')  # Orange
+            else:
+                colors.append('#28a745')  # Green
+    
+    if not indices:
+        fig, ax = plt.subplots(figsize=(12, 6))
+        ax.text(
+            0.5, 0.5,
+            "Tidak ada data z-score tersedia",
+            ha='center', va='center',
+            transform=ax.transAxes,
+            fontsize=14
+        )
+        return fig
+    
+    fig, ax = plt.subplots(figsize=(12, 7))
+    
+    bars = ax.bar(indices, values, color=colors, edgecolor='white', linewidth=2, alpha=0.85)
+    
+    # Add value labels on bars
+    for bar, val, txt in zip(bars, values, labels_text):
+        height = bar.get_height()
+        y_offset = 0.3 if height > 0 else -0.5
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            height + y_offset,
+            txt,
+            ha='center',
+            va='bottom' if height > 0 else 'top',
+            fontsize=12,
+            fontweight='bold',
+            color='black'
+        )
+    
+    # Reference lines
+    ax.axhline(y=-3, color='#DC143C', linestyle='--', linewidth=1.5, alpha=0.6, label='-3 SD')
+    ax.axhline(y=-2, color='#FF6347', linestyle='--', linewidth=1.5, alpha=0.6, label='-2 SD')
+    ax.axhline(y=0, color=theme['secondary'], linestyle='-', linewidth=2, alpha=0.7, label='Median')
+    ax.axhline(y=2, color='#FF6347', linestyle='--', linewidth=1.5, alpha=0.6, label='+2 SD')
+    ax.axhline(y=3, color='#DC143C', linestyle='--', linewidth=1.5, alpha=0.6, label='+3 SD')
+    
+    # Shaded zones
+    ax.axhspan(-3, -2, facecolor='#FFE6E6', alpha=0.3, zorder=0)
+    ax.axhspan(-2, 2, facecolor='#E8F5E9', alpha=0.3, zorder=0)
+    ax.axhspan(2, 3, facecolor='#FFF3CD', alpha=0.3, zorder=0)
+    
+    ax.set_xlabel("Indeks Antropometri", fontsize=12, fontweight='bold')
+    ax.set_ylabel("Z-Score", fontsize=12, fontweight='bold')
+    ax.set_title(
+        "Ringkasan Z-Score Semua Indeks WHO\n"
+        f"Anak: {payload.get('name_child', 'N/A')} | "
+        f"{'Laki-laki' if payload['sex'] == 'M' else 'Perempuan'} | "
+        f"Usia: {payload['age_mo']:.1f} bulan",
+        fontsize=14,
+        fontweight='bold',
+        pad=15
+    )
+    
+    ax.grid(True, alpha=0.3, axis='y', linestyle='--', linewidth=0.7)
+    ax.legend(loc='upper right', framealpha=0.95, fancybox=True, shadow=True, fontsize=9)
+    ax.set_ylim(-4, 4)
+    
+    plt.tight_layout()
+    
+    return fig
+
+
+def cleanup_matplotlib_figures(figures: Union[Figure, List[Figure]]):
+    """
+    Properly cleanup matplotlib figures to prevent memory leaks.
+
+    Args:
+        figures: Bisa satu Figure, atau list[Figure].
+    """
+    from matplotlib.figure import Figure as _Fig
+
+    if figures is None:
+        return
+
+    # Kalau yang dikirim satu Figure → jadikan list
+    if isinstance(figures, _Fig):
+        figures = [figures]
+
+    for fig in figures:
+        if fig is not None:
+            plt.close(fig)
+
+
+
+print("✅ Section 7B loaded: WFL plotting, bar chart & figure cleanup")
+
+
+# ===============================================================================
+# SECTION 8: EXPORT FUNCTIONS (PDF & CSV) (from v3.0/v3.1)
+# ===============================================================================
+
+def generate_qr_code(text: str = None) -> Optional[io.BytesIO]:
+    """
+    Generate QR code for WhatsApp contact or sharing
+    
+    Args:
+        text: Text to encode in QR (defaults to WhatsApp contact)
+        
+    Returns:
+        BytesIO buffer with PNG image or None
+    """
+    if text is None:
+        text = f"https://wa.me/{CONTACT_WA}?text=Halo%20PeduliGiziBalita,%20saya%20tertarik%20dengan%20aplikasi%20ini"
+    
+    try:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=4,
+            border=3
+        )
+        qr.add_data(text)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        buf.seek(0)
+        
+        return buf
+    except Exception as e:
+        print(f"QR code generation error: {e}")
+        return None
+
+
+def export_to_csv(payload: Dict, filename: str) -> Optional[str]:
+    """
+    Export analysis results to CSV format
+    
+    Args:
+        payload: Analysis data dictionary
+        filename: Output filename
+        
+    Returns:
+        Filepath if successful, None otherwise
+    """
+    try:
+        filepath = os.path.join(OUTPUTS_DIR, filename)
+        
+        with open(filepath, 'w', newline='', encoding='utf-8-sig') as f:
+            writer = csv.writer(f)
+            
+            # Header
+            writer.writerow(['==========================================================='])
+            writer.writerow(['PeduliGiziBalita - LAPORAN ANALISIS PERTUMBUHAN ANAK']) # MODIFIED
+            writer.writerow(['Based on WHO Child Growth Standards 2006 & Permenkes RI 2020'])
+            writer.writerow(['==========================================================='])
+            writer.writerow([])
+            
+            # Child information
+            writer.writerow(['=== INFORMASI ANAK ==='])
+            writer.writerow(['Nama Anak', payload.get('name_child', '-')])
+            writer.writerow(['Nama Orang Tua/Wali', payload.get('name_parent', '-')])
+            writer.writerow(['Jenis Kelamin', payload.get('sex_text', '-')])
+            writer.writerow(['Usia (bulan)', f"{payload.get('age_mo', 0):.2f}"])
+            writer.writerow(['Usia (hari)', payload.get('age_days', 0)])
+            writer.writerow(['Tanggal Lahir', payload.get('dob', '-')])
+            writer.writerow(['Tanggal Pengukuran', payload.get('dom', '-')])
+            writer.writerow([])
+            
+            # Anthropometric measurements
+            writer.writerow(['=== PENGUKURAN ANTROPOMETRI ==='])
+            writer.writerow(['Berat Badan (kg)', f"{payload.get('w', 0):.2f}"])
+            writer.writerow(['Panjang/Tinggi Badan (cm)', f"{payload.get('h', 0):.2f}"])
+            hc = payload.get('hc')
+            writer.writerow(['Lingkar Kepala (cm)', f"{hc:.2f}" if hc else '-'])
+            
+            # BMI calculation
+            w = payload.get('w', 0)
+            h = payload.get('h', 0)
+            if w > 0 and h > 0:
+                bmi = w / ((h / 100) ** 2)
+                writer.writerow(['Indeks Massa Tubuh (BMI)', f"{bmi:.2f}"])
+            writer.writerow([])
+            
+            # Analysis results
+            writer.writerow(['=== HASIL ANALISIS Z-SCORE ==='])
+            writer.writerow(['Indeks', 'Z-Score', 'Persentil (%)', 'Kategori (Permenkes)', 'Kategori (WHO)'])
+            
+            z_scores = payload.get('z', {})
+            percentiles = payload.get('percentiles', {})
+            permenkes = payload.get('permenkes', {})
+            who = payload.get('who', {})
+            
+            for key, label in [('waz', 'WAZ (BB/U)'), ('haz', 'HAZ (TB/U)'), 
+                               ('whz', 'WHZ (BB/TB)'), ('baz', 'BAZ (IMT/U)'), 
+                               ('hcz', 'HCZ (LK/U)')]:
+                z_val = format_zscore(z_scores.get(key))
+                pct = percentiles.get(key)
+                pct_str = f"{pct:.1f}" if pct is not None else "—"
+                perm_cat = permenkes.get(key, "—")
+                who_cat = who.get(key, "—")
+                
+                writer.writerow([label, z_val, pct_str, perm_cat, who_cat])
+            
+            writer.writerow([])
+            
+            # Metadata
+            writer.writerow(['=== METADATA ==='])
+            writer.writerow(['Tanggal Export', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+            writer.writerow(['Versi Aplikasi', APP_VERSION])
+            writer.writerow(['Sumber Data', 'WHO Child Growth Standards 2006'])
+            writer.writerow(['Referensi', 'Permenkes RI No. 2 Tahun 2020'])
+            writer.writerow(['URL Aplikasi', BASE_URL])
+            writer.writerow(['Kontak', f'+{CONTACT_WA}'])
+        
+        print(f"✅ CSV exported: {filepath}")
+        return filepath
+        
+    except Exception as e:
+        print(f"❌ CSV export error: {e}")
+        traceback.print_exc()
+        return None
+
+
+def export_to_pdf(payload: Dict, figures: List[Figure], filename: str) -> Optional[str]:
+    """
+    Export comprehensive PDF report with all charts and analysis
+    
+    Args:
+        payload: Analysis data dictionary
+        figures: List of matplotlib figures [WFA, HFA, HCFA, WFL, Bars]
+        filename: Output filename
+        
+    Returns:
+        Filepath if successful, None otherwise
+    """
+    try:
+        filepath = os.path.join(OUTPUTS_DIR, filename)
+        c = canvas.Canvas(filepath, pagesize=A4)
+        W, H = A4
+        
+        theme = UI_THEMES.get(payload.get('theme', 'pink_pastel'), UI_THEMES['pink_pastel'])
+        
+        # ========= PAGE 1: SUMMARY & DATA =========
+        
+        # Header bar
+        c.setFillColorRGB(0.965, 0.647, 0.753)  # Pink
+        c.rect(0, H - 55, W, 55, stroke=0, fill=1)
+        
+        c.setFillColor(rl_colors.white)
+        c.setFont("Helvetica-Bold", 18)
+        c.drawString(30, H - 30, "PeduliGiziBalita - Laporan Analisis Pertumbuhan Anak") # MODIFIED
+        
+        c.setFont("Helvetica", 10)
+        c.drawRightString(W - 30, H - 30, datetime.now().strftime("%d %B %Y, %H:%M WIB"))
+        
+        # Child info section
+        y = H - 85
+        c.setFillColor(rl_colors.black)
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(30, y, "INFORMASI ANAK")
+        
+        # Draw info box
+        c.setStrokeColorRGB(0.9, 0.9, 0.9)
+        c.setLineWidth(0.5)
+        c.rect(25, y - 90, W - 50, 85, stroke=1, fill=0)
+        
+        y -= 20
+        c.setFont("Helvetica", 11)
+        
+        if payload.get('name_child'):
+            c.drawString(35, y, f"Nama: {payload['name_child']}")
+            y -= 16
+        
+        if payload.get('name_parent'):
+            c.drawString(35, y, f"Orang Tua/Wali: {payload['name_parent']}")
+            y -= 16
+        
+        c.drawString(35, y, f"Jenis Kelamin: {payload['sex_text']}")
+        y -= 16
+        c.drawString(35, y, f"Usia: {payload['age_mo']:.1f} bulan (≈ {payload['age_days']} hari)")
+        y -= 16
+        
+        if payload.get('dob'):
+            c.drawString(35, y, f"Tanggal Lahir: {payload['dob']}")
+            y -= 16
+        
+        if payload.get('dom'):
+            c.drawString(35, y, f"Tanggal Pengukuran: {payload['dom']}")
+        
+        # Anthropometric data section
+        y -= 40
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(30, y, "DATA ANTROPOMETRI")
+        
+        c.rect(25, y - 70, W - 50, 65, stroke=1, fill=0)
+        
+        y -= 20
+        c.setFont("Helvetica", 11)
+        c.drawString(35, y, f"Berat Badan: {payload['w']:.2f} kg")
+        y -= 16
+        c.drawString(35, y, f"Panjang/Tinggi: {payload['h']:.2f} cm")
+        y -= 16
+        
+        if payload.get('hc'):
+            c.drawString(35, y, f"Lingkar Kepala: {payload['hc']:.2f} cm")
+            y -= 16
+        
+        # Calculate BMI
+        w = payload['w']
+        h = payload['h']
+        if w > 0 and h > 0:
+            bmi = w / ((h / 100) ** 2)
+            c.drawString(35, y, f"Indeks Massa Tubuh (BMI): {bmi:.2f} kg/m²")
+        
+        # Results table
+        y -= 35
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(30, y, "HASIL ANALISIS Z-SCORE")
+        y -= 20
+        
+        # Table header
+        c.setFont("Helvetica-Bold", 9)
+        c.drawString(35, y, "Indeks")
+        c.drawString(110, y, "Z-Score")
+        c.drawString(165, y, "Persentil")
+        c.drawString(230, y, "Status (Permenkes)")
+        c.drawString(420, y, "Status (WHO)")
+        
+        y -= 3
+        c.line(30, y, W - 30, y)
+        y -= 14
+        
+        # Table rows
+        c.setFont("Helvetica", 9)
+        
+        z_scores = payload.get('z', {})
+        percentiles = payload.get('percentiles', {})
+        permenkes = payload.get('permenkes', {})
+        who = payload.get('who', {})
+        
+        for key, label in [('waz', 'WAZ (BB/U)'), ('haz', 'HAZ (TB/U)'), 
+                           ('whz', 'WHZ (BB/TB)'), ('baz', 'BAZ (IMT/U)'), 
+                           ('hcz', 'HCZ (LK/U)')]:
+            z_val = format_zscore(z_scores.get(key))
+            pct = percentiles.get(key)
+            pct_str = f"{pct:.1f}%" if pct is not None else "—"
+            perm_cat = permenkes.get(key, "—")[:35]
+            who_cat = who.get(key, "—")[:25]
+            
+            c.drawString(35, y, label)
+            
+            # Color-code z-score
+            z = z_scores.get(key)
+            if z is not None and not math.isnan(z):
+                if abs(z) > 3:
+                    c.setFillColorRGB(0.545, 0, 0)  # Dark red
+                elif abs(z) > 2:
+                    c.setFillColorRGB(0.863, 0.078, 0.235)  # Red
+                elif abs(z) > 1:
+                    c.setFillColorRGB(1, 0.647, 0)  # Orange
+                else:
+                    c.setFillColorRGB(0.157, 0.655, 0.271)  # Green
+            
+            c.drawString(110, y, z_val)
+            c.setFillColor(rl_colors.black)
+            
+            c.drawString(165, y, pct_str)
+            c.drawString(230, y, perm_cat)
+            c.drawString(420, y, who_cat)
+            y -= 14
+        
+        # QR Code
+        qr_buf = generate_qr_code()
+        if qr_buf:
+            try:
+                c.drawImage(ImageReader(qr_buf), W - 85, 40, width=55, height=55)
+                c.setFont("Helvetica-Oblique", 7)
+                c.drawRightString(W - 30, 30, "Scan untuk info lebih lanjut")
+            except Exception as e:
+                print(f"QR code insertion error: {e}")
+        
+        # Footer
+        c.setFont("Helvetica-Oblique", 8)
+        c.drawString(30, 20, f"WHO Child Growth Standards 2006 | Permenkes RI No. 2/2020")
+        c.drawRightString(W - 30, 20, "Hal. 1")
+        
+        c.showPage()
+        
+        # ========= PAGES 2-6: CHARTS =========
+        
+        chart_titles = [
+            "Grafik Berat Badan menurut Umur (BB/U)",
+            "Grafik Panjang/Tinggi Badan menurut Umur (TB/U)",
+            "Grafik Lingkar Kepala menurut Umur (LK/U)",
+            "Grafik Berat menurut Panjang/Tinggi (BB/TB)",
+            "Ringkasan Z-Score Semua Indeks"
+        ]
+        
+        for page_num, (title, fig) in enumerate(zip(chart_titles, figures), start=2):
+            if fig is None:
+                continue
+            
+            # Header
+            c.setFillColorRGB(0.965, 0.647, 0.753)
+            c.rect(0, H - 45, W, 45, stroke=0, fill=1)
+            c.setFillColor(rl_colors.white)
+            c.setFont("Helvetica-Bold", 14)
+            c.drawString(30, H - 26, title)
+            
+            # Save figure to buffer
+            buf = io.BytesIO()
+            try:
+                fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='white')
+                buf.seek(0)
+                
+                # Insert chart
+                c.drawImage(ImageReader(buf), 30, 80, width=W - 60, height=H - 150)
+                
+            except Exception as e:
+                print(f"Chart insertion error for {title}: {e}")
+                c.setFont("Helvetica", 11)
+                c.drawString(100, H / 2, f"Error rendering chart: {str(e)[:50]}")
+            finally:
+                buf.close()
+            
+            # Footer
+            c.setFillColor(rl_colors.black)
+            c.setFont("Helvetica-Oblique", 8)
+            c.drawString(30, 50, f"Anak: {payload.get('name_child', 'N/A')} | "
+                                f"{'Laki-laki' if payload['sex'] == 'M' else 'Perempuan'} | "
+                                f"Usia: {payload['age_mo']:.1f} bulan")
+            c.drawRightString(W - 30, 50, f"Hal. {page_num}")
+            
+            c.showPage()
+        
+        # Save PDF
+        c.save()
+        
+        print(f"✅ PDF exported: {filepath}")
+        return filepath
+        
+    except Exception as e:
+        print(f"❌ PDF export error: {e}")
+        traceback.print_exc()
+        return None
+
+
+print("✅ Section 8 loaded: Export functions (PDF & CSV with QR codes)")
+
+# ===============================================================================
+# SECTION 9: ANALYSIS HANDLER & INTERPRETATION (from v3.0/v3.1)
+# ===============================================================================
+
+def create_interpretation_text(payload: Dict) -> str:
+    """
+    Create detailed interpretation text from analysis results
+    
+    Args:
+        payload: Analysis data dictionary with z-scores and classifications
+        
+    Returns:
+        Formatted markdown interpretation string
+    """
+    lines = []
+    
+    z_scores = payload.get('z', {})
+    permenkes = payload.get('permenkes', {})
+    who = payload.get('who', {})
+    percentiles = payload.get('percentiles', {})
+    
+    # Header
+    lines.append(f"## 📊 Interpretasi Hasil Analisis")
+    lines.append(f"")
+    lines.append(f"**Nama**: {payload.get('name_child', 'N/A')}")
+    lines.append(f"**Jenis Kelamin**: {payload.get('sex_text', 'N/A')}")
+    lines.append(f"**Usia**: {payload.get('age_mo', 0):.1f} bulan (~{payload.get('age_days', 0)} hari)")
+    lines.append(f"")
+    lines.append(f"---")
+    lines.append(f"")
+    
+    # WAZ (Weight-for-Age) Analysis
+    waz = z_scores.get('waz')
+    if waz is not None and not math.isnan(waz):
+        pct = percentiles.get('waz')
+        pct_text = f"persentil ke-{pct:.1f}" if pct else "N/A"
+        
+        lines.append(f"### 🔹 Berat Badan menurut Umur (BB/U)")
+        lines.append(f"")
+        lines.append(f"**Z-Score**: {format_zscore(waz)} ({pct_text})")
+        lines.append(f"**Status (Permenkes)**: {permenkes.get('waz', 'N/A')}")
+        lines.append(f"**Status (WHO)**: {who.get('waz', 'N/A')}")
+        lines.append(f"")
+        
+        # Interpretation and recommendations
+        if waz < -3:
+            lines.append(f"⚠️ **PERHATIAN SERIUS**: Anak mengalami kekurangan berat badan sangat parah.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏥 Segera konsultasi ke dokter anak atau puskesmas")
+            lines.append(f"- 💊 Mungkin memerlukan suplementasi gizi khusus")
+            lines.append(f"- 📝 Evaluasi pola makan dan frekuensi pemberian makan")
+            lines.append(f"- 🔍 Periksa kemungkinan penyakit penyerta (infeksi, malabsorpsi)")
+        elif waz < -2:
+            lines.append(f"⚠️ **PERHATIAN**: Anak mengalami kekurangan berat badan.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏥 Konsultasi ke tenaga kesehatan")
+            lines.append(f"- 🍽️ Tingkatkan asupan kalori dan protein")
+            lines.append(f"- 📊 Monitoring rutin setiap bulan")
+            lines.append(f"- 🥗 Berikan makanan bergizi seimbang")
+        elif waz <= 2:
+            lines.append(f"✅ **BAIK**: Berat badan anak berada dalam rentang normal.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 👍 Pertahankan pola makan sehat dan seimbang")
+            lines.append(f"- 📆 Lanjutkan pemantauan rutin tiap 3 bulan")
+            lines.append(f"- 🎯 Pastikan ASI eksklusif hingga 6 bulan (jika bayi)")
+        else:
+            lines.append(f"⚠️ **PERHATIAN**: Risiko berat badan berlebih.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏥 Konsultasi ahli gizi untuk evaluasi pola makan")
+            lines.append(f"- 🏃 Tingkatkan aktivitas fisik sesuai usia")
+            lines.append(f"- 🍎 Batasi makanan tinggi gula dan lemak")
+            lines.append(f"- 💧 Perbanyak konsumsi sayur dan buah")
+        
+        lines.append(f"")
+    
+    # HAZ (Height-for-Age) Analysis  
+    haz = z_scores.get('haz')
+    if haz is not None and not math.isnan(haz):
+        pct = percentiles.get('haz')
+        pct_text = f"persentil ke-{pct:.1f}" if pct else "N/A"
+        
+        lines.append(f"### 🔹 Tinggi/Panjang Badan menurut Umur (TB/U)")
+        lines.append(f"")
+        lines.append(f"**Z-Score**: {format_zscore(haz)} ({pct_text})")
+        lines.append(f"**Status (Permenkes)**: {permenkes.get('haz', 'N/A')}")
+        lines.append(f"**Status (WHO)**: {who.get('haz', 'N/A')}")
+        lines.append(f"")
+        
+        if haz < -3:
+            lines.append(f"⚠️ **STUNTING BERAT**: Anak mengalami gangguan pertumbuhan linear parah.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏥 **URGENT**: Konsultasi ke dokter spesialis anak")
+            lines.append(f"- 🧬 Evaluasi hormon pertumbuhan dan penyakit kronis")
+            lines.append(f"- 🍽️ Program gizi intensif dengan suplementasi")
+            lines.append(f"- 📚 Stimulasi tumbuh kembang komprehensif")
+            lines.append(f"- 💊 Pertimbangkan vitamin D dan kalsium")
+        elif haz < -2:
+            lines.append(f"⚠️ **STUNTING**: Anak mengalami gangguan pertumbuhan linear (pendek).")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏥 Konsultasi ke puskesmas atau dokter anak")
+            lines.append(f"- 🥛 Tingkatkan asupan protein, kalsium, zinc")
+            lines.append(f"- 🌞 Paparan sinar matahari pagi untuk vitamin D")
+            lines.append(f"- 📊 Monitoring ketat setiap bulan")
+            lines.append(f"- 🔍 Cek riwayat penyakit infeksi berulang")
+        elif haz <= 3:
+            lines.append(f"✅ **BAIK**: Tinggi badan anak normal sesuai usia.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 👍 Pertahankan asupan gizi seimbang")
+            lines.append(f"- 🏃 Aktivitas fisik teratur untuk mendukung pertumbuhan")
+            lines.append(f"- 😴 Tidur cukup (10-12 jam untuk balita)")
+        else:
+            lines.append(f"ℹ️ **INFORMASI**: Tinggi badan di atas rata-rata (tinggi).")
+            lines.append(f"")
+            lines.append(f"**Catatan**: Umumnya normal, terutama jika orang tua juga tinggi.")
+            lines.append(f"Jika sangat ekstrem, konsultasi dokter untuk evaluasi.")
+        
+        lines.append(f"")
+    
+    # WHZ (Weight-for-Height) Analysis
+    whz = z_scores.get('whz')
+    if whz is not None and not math.isnan(whz):
+        pct = percentiles.get('whz')
+        pct_text = f"persentil ke-{pct:.1f}" if pct else "N/A"
+        
+        lines.append(f"### 🔹 Berat Badan menurut Tinggi Badan (BB/TB)")
+        lines.append(f"")
+        lines.append(f"**Z-Score**: {format_zscore(whz)} ({pct_text})")
+        lines.append(f"**Status (Permenkes)**: {permenkes.get('whz', 'N/A')}")
+        lines.append(f"**Status (WHO)**: {who.get('whz', 'N/A')}")
+        lines.append(f"")
+        
+        if whz < -3:
+            lines.append(f"🚨 **GIZI BURUK (WASTING BERAT)**: Kondisi kritis!")
+            lines.append(f"")
+            lines.append(f"**TINDAKAN SEGERA**:")
+            lines.append(f"- 🏥 Rujuk ke rumah sakit SEGERA")
+            lines.append(f"- 💉 Mungkin perlu rawat inap dan terapi khusus")
+            lines.append(f"- 🍼 Program Makanan Tambahan (PMT)")
+            lines.append(f"- 💊 Evaluasi infeksi dan penyakit penyerta")
+        elif whz < -2:
+            lines.append(f"⚠️ **GIZI KURANG (WASTING)**: Perlu perhatian intensif.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏥 Konsultasi ke tenaga kesehatan segera")
+            lines.append(f"- 🍽️ Tingkatkan frekuensi makan (5-6x/hari)")
+            lines.append(f"- 🥛 Tambahkan makanan padat energi")
+            lines.append(f"- 📊 Timbang setiap minggu")
+        elif whz <= 2:
+            lines.append(f"✅ **GIZI BAIK**: Status gizi akut anak normal.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 👍 Pertahankan pola makan seimbang")
+            lines.append(f"- 🎯 Variasi menu untuk mencegah bosan")
+        elif whz <= 3:
+            lines.append(f"⚠️ **RISIKO GIZI LEBIH**: Waspadai obesitas.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏃 Tingkatkan aktivitas fisik")
+            lines.append(f"- 🍎 Batasi camilan manis dan gorengan")
+            lines.append(f"- 💧 Cukupi kebutuhan cairan (air putih)")
+        else:
+            lines.append(f"⚠️ **OBESITAS**: Kelebihan berat badan signifikan.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏥 Konsultasi ahli gizi anak")
+            lines.append(f"- 📉 Program penurunan berat badan terkontrol")
+            lines.append(f"- 🏃 Aktivitas fisik teratur minimal 60 menit/hari")
+            lines.append(f"- 🍽️ Porsi makan terkontrol, hindari fast food")
+        
+        lines.append(f"")
+    
+    # HCZ (Head Circumference) Analysis
+    hcz = z_scores.get('hcz')
+    if hcz is not None and not math.isnan(hcz):
+        pct = percentiles.get('hcz')
+        pct_text = f"persentil ke-{pct:.1f}" if pct else "N/A"
+        
+        lines.append(f"### 🔹 Lingkar Kepala menurut Umur (LK/U)")
+        lines.append(f"")
+        lines.append(f"**Z-Score**: {format_zscore(hcz)} ({pct_text})")
+        lines.append(f"**Status**: {permenkes.get('hcz', 'N/A')}")
+        lines.append(f"")
+        
+        if abs(hcz) > 3:
+            lines.append(f"🚨 **PERHATIAN KHUSUS**: Lingkar kepala sangat tidak normal.")
+            lines.append(f"")
+            lines.append(f"**TINDAKAN**:")
+            lines.append(f"- 🏥 **SEGERA** konsultasi ke dokter spesialis anak")
+            lines.append(f"- 🧠 Evaluasi neurologis lengkap")
+            lines.append(f"- 📊 Pemeriksaan penunjang (USG kepala, CT scan jika perlu)")
+            lines.append(f"- 👨‍⚕️ Kemungkinan rujukan ke ahli saraf anak")
+        elif abs(hcz) > 2:
+            lines.append(f"⚠️ **PERLU EVALUASI**: Lingkar kepala di luar normal.")
+            lines.append(f"")
+            lines.append(f"**Rekomendasi**:")
+            lines.append(f"- 🏥 Konsultasi dokter anak untuk evaluasi")
+            lines.append(f"- 📏 Monitoring ketat lingkar kepala tiap bulan")
+            lines.append(f"- 🧬 Pertimbangkan faktor genetik (bandingkan dengan orang tua)")
+        else:
+            lines.append(f"✅ **NORMAL**: Lingkar kepala dalam batas normal.")
+            lines.append(f"")
+            lines.append(f"**Catatan**: Terus pantau perkembangan neurologis anak.")
+        
+        lines.append(f"")
+    
+    # Overall summary
+    lines.append(f"---")
+    lines.append(f"")
+    lines.append(f"### 💡 Catatan Penting")
+    lines.append(f"")
+    lines.append(f"1. **Hasil ini adalah skrining awal**, bukan diagnosis medis")
+    lines.append(f"2. **Konsultasikan dengan tenaga kesehatan** untuk evaluasi lengkap")
+    lines.append(f"3. **Pantau pertumbuhan secara rutin** minimal setiap 3 bulan")
+    lines.append(f"4. **Perhatikan milestone perkembangan** sesuai usia")
+    lines.append(f"5. **Gizi seimbang + stimulasi** = kunci tumbuh kembang optimal")
+    lines.append(f"")
+    lines.append(f"🔗 **Butuh konsultasi?** Hubungi: [WhatsApp +{CONTACT_WA}](https://wa.me/{CONTACT_WA})")
+    
+    return "\n".join(lines)
+
+
+def run_comprehensive_analysis(
+    name_child: str,
+    name_parent: str,
+    sex_choice: str,
+    age_mode: str,
+    dob_str: str,
+    dom_str: str,
+    age_months_manual: float,
+    weight: float,
+    height: float,
+    head_circ: Optional[float],
+    theme_name: str
+) -> Tuple:
+    """
+    Main analysis function that orchestrates all calculations and outputs
+    
+    Args:
+        name_child: Child's name
+        name_parent: Parent/guardian name
+        sex_choice: "Laki-laki" or "Perempuan"
+        age_mode: "Tanggal" or "Usia (bulan)"
+        dob_str: Date of birth string
+        dom_str: Date of measurement string
+        age_months_manual: Manual age input in months
+        weight: Weight in kg
+        height: Height/length in cm
+        head_circ: Head circumference in cm (optional)
+        theme_name: UI theme choice
+        
+    Returns:
+        Tuple of (
+            interpretation_text,
+            wfa_plot, hfa_plot, hcfa_plot, wfl_plot, bars_plot,
+            pdf_file, csv_file,
+            state_payload
+        )
+    """
+    try:
+        # Initialize error collection
+        all_errors = []
+        all_warnings = []
+        
+        # Parse sex
+        sex = 'M' if sex_choice == "Laki-laki" else 'F'
+        sex_text = sex_choice
+        
+        # Calculate age
+        age_mo = None
+        age_days = None
+        dob = None
+        dom = None
+        
+        if age_mode == "Tanggal":
+            dob = parse_date(dob_str)
+            dom = parse_date(dom_str)
+            
+            if dob is None:
+                all_errors.append("❌ Format tanggal lahir tidak valid. Gunakan format YYYY-MM-DD atau DD/MM/YYYY")
+            if dom is None:
+                all_errors.append("❌ Format tanggal pengukuran tidak valid. Gunakan format YYYY-MM-DD atau DD/MM/YYYY")
+            
+            if dob and dom:
+                age_mo, age_days = calculate_age_from_dates(dob, dom)
+                if age_mo is None:
+                    all_errors.append("❌ Tanggal pengukuran harus setelah tanggal lahir")
+        else:
+            age_mo = as_float(age_months_manual)
+            if age_mo is None or age_mo < 0:
+                all_errors.append("❌ Usia harus berupa angka positif")
+            else:
+                age_days = int(age_mo * 30.4375)
+        
+        # Parse measurements
+        w = as_float(weight)
+        h = as_float(height)
+        hc = as_float(head_circ) if head_circ else None
+        
+        if w is None:
+            all_errors.append("❌ Berat badan harus diisi dengan angka valid")
+        if h is None:
+            all_errors.append("❌ Tinggi/panjang badan harus diisi dengan angka valid")
+        
+        # If critical errors, return early
+        if all_errors:
+            error_msg = "## ❌ Error dalam Input\n\n" + "\n".join(all_errors)
+            return (
+                error_msg,
+                None, None, None, None, None,
+                gr.update(visible=False), gr.update(visible=False),
+                {}
+            )
+        
+        # Validate anthropometry
+        validation_errors, validation_warnings = validate_anthropometry(age_mo, w, h, hc)
+        all_errors.extend(validation_errors)
+        all_warnings.extend(validation_warnings)
+        
+        if validation_errors:
+            error_msg = "## ❌ Error Validasi Pengukuran\n\n" + "\n".join(all_errors)
+            if validation_warnings:
+                error_msg += "\n\n### ⚠️ Peringatan\n\n" + "\n".join(validation_warnings)
+            return (
+                error_msg,
+                None, None, None, None, None,
+                gr.update(visible=False), gr.update(visible=False),
+                {}
+            )
+        
+        # Calculate all z-scores
+        z_scores = calculate_all_zscores(sex, age_mo, w, h, hc)
+        
+        # Validate z-scores
+        zscore_errors, zscore_warnings = validate_zscores(z_scores)
+        all_warnings.extend(zscore_warnings)
+        
+        # Calculate percentiles
+        percentiles = {
+            key: z_to_percentile(z)
+            for key, z in z_scores.items()
+        }
+        
+        # Classifications
+        permenkes_class = classify_permenkes_2020(z_scores)
+        who_class = classify_who_standards(z_scores)
+        
+        # Build payload
+        payload = {
+            'name_child': name_child or "Si Kecil",
+            'name_parent': name_parent or "",
+            'sex': sex,
+            'sex_text': sex_text,
+            'age_mo': age_mo,
+            'age_days': age_days,
+            'dob': dob.isoformat() if dob else None,
+            'dom': dom.isoformat() if dom else None,
+            'w': w,
+            'h': h,
+            'hc': hc,
+            'z': z_scores,
+            'percentiles': percentiles,
+            'permenkes': permenkes_class,
+            'who': who_class,
+            'theme': theme_name,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        # Generate interpretation
+        interpretation = create_interpretation_text(payload)
+        
+        # Add warnings if any
+        if all_warnings:
+            warning_section = "\n\n### ⚠️ Peringatan\n\n" + "\n".join(all_warnings)
+            interpretation = warning_section + "\n\n---\n\n" + interpretation
+        
+        # Generate plots
+        try:
+            fig_wfa = plot_weight_for_age(payload, theme_name)
+            fig_hfa = plot_height_for_age(payload, theme_name)
+            fig_hcfa = plot_head_circumference_for_age(payload, theme_name)
+            fig_wfl = plot_weight_for_length(payload, theme_name)
+            fig_bars = plot_zscore_summary_bars(payload, theme_name)
+        except Exception as e:
+            print(f"❌ Plotting error: {e}")
+            traceback.print_exc()
+            return (
+                f"## ❌ Error saat membuat grafik\n\n{str(e)}",
+                None, None, None, None, None,
+                gr.update(visible=False), gr.update(visible=False),
+                {}
+            )
+        
+        # Generate export files
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        child_safe_name = "".join(c for c in (name_child or "anak") if c.isalnum() or c in (' ', '_')).strip().replace(' ', '_')
+        
+        pdf_filename = f"PeduliGiziBalita_{child_safe_name}_{timestamp}.pdf" # MODIFIED
+        csv_filename = f"PeduliGiziBalita_{child_safe_name}_{timestamp}.csv" # MODIFIED
+        
+        figures_list = [fig_wfa, fig_hfa, fig_hcfa, fig_wfl, fig_bars]
+        
+        pdf_path = export_to_pdf(payload, figures_list, pdf_filename)
+        csv_path = export_to_csv(payload, csv_filename)
+        
+        # Cleanup figures to prevent memory leaks
+        cleanup_matplotlib_figures(figures_list)
+        
+        # Prepare file outputs
+        pdf_output = gr.update(value=pdf_path, visible=True) if pdf_path else gr.update(visible=False)
+        csv_output = gr.update(value=csv_path, visible=True) if csv_path else gr.update(visible=False)
+        
+        print(f"✅ Analysis completed for {name_child}")
+        
+        return (
+            interpretation,
+            fig_wfa, fig_hfa, fig_hcfa, fig_wfl, fig_bars,
+            pdf_output, csv_output,
+            payload
+        )
+        
+    except Exception as e:
+        print(f"❌ Critical error in analysis: {e}")
+        traceback.print_exc()
+        
+        error_msg = f"""
+## ❌ Error Sistem
+
+Terjadi kesalahan saat memproses data:
+{str(e)}
+Silakan:
+1. Periksa kembali semua input Anda
+2. Pastikan format tanggal benar (YYYY-MM-DD)
+3. Pastikan angka menggunakan titik (.) bukan koma (,)
+4. Refresh halaman dan coba lagi
+
+Jika masalah berlanjut, hubungi: +{CONTACT_WA}
 """
+        
+        return (
+            error_msg,
+            None, None, None, None, None,
+            gr.update(visible=False), gr.update(visible=False),
+            {}
+        )
 
-# --- 4. DATABASE ARTIKEL (FULL CONTENT) ---
-# Menggunakan konten edukasi yang relevan dengan tema
+
+print("✅ Section 9 loaded: Analysis handler & interpretation engine")
+
+# ===============================================================================
+# SECTION 10: CHECKLIST & KPSP FUNCTIONS (from v3.1)
+# ===============================================================================
+
+# --- Helper functions (from v3.1, still required) ---
+
+def get_immunization_for_month(month: int) -> List[str]:
+    """Get immunization schedule for specific month"""
+    return IMMUNIZATION_SCHEDULE.get(month, [])
+
+
+def get_kpsp_questions_for_month(month: int) -> List[str]:
+    """Get KPSP questions for specific month (nearest available)"""
+    # Find nearest month with KPSP questions
+    available_months = sorted(KPSP_QUESTIONS.keys())
+    nearest = min(available_months, key=lambda x: abs(x - month))
+    return KPSP_QUESTIONS.get(nearest, [])
+
+# --- Video Helper functions (from v3.1) ---
+# NOTE: This function is kept from v3.1 because it handles a LIST of videos
+# The v3.2 `render_video_card_fixed` is for a SINGLE video and used elsewhere.
+
+def generate_video_links_html(videos: List[Dict]) -> str:
+    """Generate HTML for video links with cards"""
+    if not videos:
+        return "<p>Tidak ada video tersedia untuk usia ini.</p>"
+    
+    html = "<div style='display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin: 20px 0;'>"
+    
+    for video in videos:
+        html += f"""
+        <div class='video-card'>
+            <div class='video-title'>{video['title']}</div>
+            <div class='video-description'>{video['description']}</div>
+            <div class='video-duration'>⏱️ Durasi: {video['duration']}</div>
+            <div style='margin-top: 10px;'>
+                <a href='{video['url']}' target='_blank' 
+                   style='display: inline-block; background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);
+                          color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none;
+                          font-weight: 600; font-size: 13px;'>
+                    ▶️ Tonton Video
+                </a>
+            </div>
+        </div>
+        """
+    
+    html += "</div>"
+    return html
+
+# --- Main Checklist Function (from v3.1) ---
+
+def generate_checklist_with_videos(month: int, payload: Dict) -> str:
+    """
+    Generate checklist with integrated YouTube videos (from v3.1)
+    NOTE: The bug fix for this is changing the Gradio component to gr.HTML
+    
+    Args:
+        month: Month number (0-24)
+        payload: Analysis payload with z-scores
+        
+    Returns:
+        HTML formatted recommendations (as a string)
+    """
+    lines = []
+    
+    lines.append(f"<h2> 📋 Checklist Bulan ke-{month}</h2>")
+    lines.append(f"")
+    
+    # Get nutritional status
+    z_scores = payload.get('z', {}) if payload else {}
+    waz = z_scores.get('waz', 0)
+    haz = z_scores.get('haz', 0)
+    whz = z_scores.get('whz', 0)
+    
+    # === ADD YOUTUBE VIDEOS ===
+    lines.append(f"<h3> 🎥 Video Edukasi untuk Usia {month} Bulan</h3>")
+    lines.append(f"")
+    
+    # KPSP Videos
+    if KPSP_YOUTUBE_VIDEOS:
+        lines.append(f"<strong>📊 Panduan Skrining KPSP:</strong>")
+        lines.append(f"")
+        video_html = generate_video_links_html(KPSP_YOUTUBE_VIDEOS)
+        lines.append(video_html)
+        lines.append(f"")
+    
+    # MP-ASI Videos for this month
+    # Find nearest month with videos
+    mpasi_age_key = min(MPASI_YOUTUBE_VIDEOS.keys(), key=lambda x: abs(x - month) if x <= month else float('inf'))
+    
+    if month >= 6 and MPASI_YOUTUBE_VIDEOS.get(mpasi_age_key):
+        lines.append(f"<strong>🍽️ Panduan MP-ASI (relevan untuk {mpasi_age_key} bulan):</strong>")
+        lines.append(f"")
+        mpasi_video_html = generate_video_links_html(MPASI_YOUTUBE_VIDEOS[mpasi_age_key])
+        lines.append(mpasi_video_html)
+        lines.append(f"")
+    
+    lines.append(f"<hr>")
+    lines.append(f"")
+    
+    # === EXISTING CHECKLIST CONTENT ===
+    lines.append(f"<h3> 🎯 Target Perkembangan</h3>")
+    lines.append(f"")
+    
+    if month < 3:
+        lines.append(f"<ul><li>✅ Mengangkat kepala saat tengkurap</li>")
+        lines.append(f"<li>✅ Tersenyum saat diajak bicara</li>")
+        lines.append(f"<li>✅ Mengikuti objek dengan mata</li></ul>")
+    elif month < 6:
+        lines.append(f"<ul><li>✅ Berguling dari telentang ke tengkurap</li>")
+        lines.append(f"<li>✅ Duduk dengan bantuan</li>")
+        lines.append(f"<li>✅ Mengoceh (ba-ba, ma-ma)</li></ul>")
+    elif month < 9:
+        lines.append(f"<ul><li>✅ Duduk sendiri tanpa bantuan</li>")
+        lines.append(f"<li>✅ Merangkak atau bergerak</li>")
+        lines.append(f"<li>✅ Memindahkan mainan antar tangan</li></ul>")
+    elif month < 12:
+        lines.append(f"<ul><li>✅ Berdiri berpegangan</li>")
+        lines.append(f"<li>✅ Mengucapkan 1-2 kata</li>")
+        lines.append(f"<li>✅ Melambaikan tangan</li></ul>")
+    elif month < 18:
+        lines.append(f"<ul><li>✅ Berjalan sendiri</li>")
+        lines.append(f"<li>✅ Mengucapkan 3-6 kata</li>")
+        lines.append(f"<li>✅ Minum dari gelas sendiri</li></ul>")
+    else:
+        lines.append(f"<ul><li>✅ Berlari dan melompat</li>")
+        lines.append(f"<li>✅ Membuat kalimat 2-3 kata</li>")
+        lines.append(f"<li>✅ Menggambar garis</li></ul>")
+    
+    lines.append(f"")
+    
+    # Nutrition recommendations
+    lines.append(f"<h3> 🍽️ Rekomendasi Gizi</h3>")
+    lines.append(f"")
+    
+    if whz < -2 or waz < -2:
+        lines.append(f"<p>⚠️ <strong>PRIORITAS TINGGI</strong>: Perbaikan status gizi</p>")
+        lines.append(f"<ul><li>🥛 Tingkatkan frekuensi makan 5-6x/hari</li>")
+        lines.append(f"<li>🍖 Tambahkan protein hewani (telur, daging, ikan)</li>")
+        lines.append(f"<li>🥑 Makanan padat energi (alpukat, kacang)</li>")
+        lines.append(f"<li>💊 Konsultasi suplemen dengan dokter</li></ul>")
+    elif month < 6:
+        lines.append(f"<ul><li>🤱 ASI eksklusif on demand</li>")
+        lines.append(f"<li>💧 Tidak perlu air atau makanan lain</li>")
+        lines.append(f"<li>😴 Tidur dekat ibu untuk bonding</li></ul>")
+    elif month < 12:
+        lines.append(f"<ul><li>🥕 MPASI bertahap sesuai usia</li>")
+        lines.append(f"<li>🤱 Lanjutkan ASI hingga 2 tahun</li>")
+        lines.append(f"<li>🍚 Tekstur makanan disesuaikan</li>")
+        lines.append(f"<li>💊 Suplemen zat besi jika perlu</li></ul>")
+    else:
+        lines.append(f"<ul><li>🍽️ Makanan keluarga dengan tekstur lembut</li>")
+        lines.append(f"<li>🥗 Variasi menu 4 bintang</li>")
+        lines.append(f"<li>🤱 ASI dilanjutkan sebagai pelengkap</li>")
+        lines.append(f"<li>💧 Air putih cukup (600-1000ml/hari)</li></ul>")
+    
+    lines.append(f"")
+    
+    # Immunization schedule
+    imm = get_immunization_for_month(month)
+    if imm:
+        lines.append(f"<h3> 💉 Jadwal Imunisasi Bulan Ini</h3>")
+        lines.append(f"")
+        lines.append("<ul>")
+        for vaccine in imm:
+            lines.append(f"<li>💉 {vaccine}</li>")
+        lines.append("</ul>")
+        lines.append(f"")
+    
+    # KPSP questions
+    kpsp = get_kpsp_questions_for_month(month)
+    if kpsp:
+        lines.append(f"<h3> 🧠 Skrining Perkembangan (KPSP)</h3>")
+        lines.append(f"")
+        lines.append(f"<p>Jawab YA/TIDAK untuk setiap pertanyaan:</p>")
+        lines.append(f"<ol>")
+        for q in kpsp:
+            lines.append(f"<li>{q}</li>")
+        lines.append(f"</ol>")
+        lines.append(f"<p><strong>Interpretasi</strong>: Jika ada ≥2 jawaban TIDAK, konsultasi ke tenaga kesehatan.</p>")
+    
+    lines.append(f"")
+    lines.append(f"<hr>")
+    lines.append(f"")
+    lines.append(f"<blockquote>💡 <strong>Motivasi</strong>: {get_random_quote()}</blockquote>")
+    
+    # Return as a single HTML string
+    return "\n".join(lines)
+
+# ===============================================================================
+# SECTION 10B: NEW FEATURES v3.2 (Termasuk Modifikasi Perpustakaan Lokal v3.2.2)
+# ===============================================================================
+
+# --- FITUR 1: MODE MUDAH (Dipertahankan dari v3.2) ---
+
+def get_normal_ranges_by_age(age_months: float, gender: str) -> Dict[str, Tuple[float, float]]:
+    """
+    Mendapatkan range normal (batas bawah dan atas) untuk BB, TB/PB, dan LK
+    berdasarkan usia dan jenis kelamin menggunakan WHO standards (Z-score -2 SD hingga +2 SD).
+    """
+    gender_code = 'M' if gender == "Laki-laki" else 'F'
+    
+    try:
+        if calc is None:
+            raise Exception("Kalkulator WHO (pygrowup) tidak terinisialisasi.")
+        
+        age_lookup = round(age_months * 2) / 2
+        if age_lookup > 60: age_lookup = 60.0 # Batas atas tabel
+        if age_lookup < 0: age_lookup = 0.0 # Batas bawah tabel
+            
+        wfa_range = calc.wfa_table[gender_code].get(age_lookup, None)
+        hfa_range = calc.lhfa_table[gender_code].get(age_lookup, None)
+        hcfa_range = calc.hcfa_table[gender_code].get(age_lookup, None)
+        
+        if wfa_range and hfa_range and hcfa_range:
+            return {
+                'weight': (wfa_range.get('SD2neg', 0), wfa_range.get('SD2', 0)),
+                'height': (hfa_range.get('SD2neg', 0), hfa_range.get('SD2', 0)),
+                'head_circ': (hcfa_range.get('SD2neg', 0), hcfa_range.get('SD2', 0))
+            }
+        else:
+            raise Exception(f"Data tidak ditemukan untuk usia {age_lookup} bulan")
+            
+    except Exception as e:
+        print(f"Error di get_normal_ranges_by_age (akan fallback): {e}")
+        # Fallback: Approximate values
+        if gender == "Laki-laki":
+            weight_base = 3.3 + (age_months * 0.5)
+            height_base = 50 + (age_months * 1.5)
+            head_base = 34.5 + (age_months * 0.35)
+        else:
+            weight_base = 3.2 + (age_months * 0.45)
+            height_base = 49 + (age_months * 1.45)
+            head_base = 33.9 + (age_months * 0.33)
+        
+        return {
+            'weight': (round(weight_base - 2, 1), round(weight_base + 2, 1)),
+            'height': (round(height_base - 5, 1), round(height_base + 5, 1)),
+            'head_circ': (round(head_base - 1.5, 1), round(head_base + 1.5, 1))
+        }
+
+
+def mode_mudah_handler(age_months: int, gender: str) -> str:
+    """
+    Handler untuk Mode Mudah - menampilkan range normal dengan UI yang friendly.
+    """
+    if age_months is None or age_months < 0 or age_months > 60:
+        return """
+        <div style='padding: 20px; background: #fff3cd; border-left: 5px solid #ffc107; border-radius: 8px;'>
+            <h3 style='color: #856404; margin-top: 0;'⚠️ Input Tidak Valid</h3>
+            <p>Mohon masukkan usia antara 0-60 bulan.</p>
+        </div>
+        """
+    
+    ranges = get_normal_ranges_by_age(float(age_months), gender)
+    check_date = datetime.now().strftime("%d %B %Y")
+    postur = "Berbaring (PB)" if age_months < 24 else "Berdiri (TB)"
+    
+    html_output = f"""
+    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                padding: 30px; border-radius: 20px; color: white; margin-bottom: 20px;
+                box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);'>
+        <h2 style='margin: 0 0 10px 0; font-size: 28px;'>
+            🎯 Mode Mudah - Referensi Cepat
+        </h2>
+        <p style='margin: 0; opacity: 0.9; font-size: 14px;'>
+            Standar WHO 2006 | Tanggal: {check_date}
+        </p>
+    </div>
+    <div style='background: white; padding: 25px; border-radius: 15px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;'>
+        <h3 style='color: #667eea; margin-top: 0; display: flex; align-items: center;'>
+            👶 Informasi Anak
+        </h3>
+        <div style='display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;'>
+            <div style='padding: 15px; background: #f8f9ff; border-radius: 10px;'>
+                <div style='font-size: 13px; color: #666; margin-bottom: 5px;'>Usia</div>
+                <div style='font-size: 24px; font-weight: bold; color: #667eea;'>{age_months} Bulan</div>
+            </div>
+            <div style='padding: 15px; background: #fff8f8; border-radius: 10px;'>
+                <div style='font-size: 13px; color: #666; margin-bottom: 5px;'>Jenis Kelamin</div>
+                <div style='font-size: 24px; font-weight: bold; color: #e91e63;'>
+                    {'👦 Laki-laki' if gender == 'Laki-laki' else '👧 Perempuan'}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style='background: white; padding: 25px; border-radius: 15px; 
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px;'>
+        <h3 style='color: #667eea; margin-top: 0;'>📊 Rentang Normal (Z-score: -2 SD hingga +2 SD)</h3>
+        <p style='color: #666; font-size: 14px; margin-bottom: 20px;'>
+            Nilai di bawah ini adalah <strong>rentang normal</strong> sesuai standar WHO. 
+            Anak dianggap <strong>normal</strong> jika pengukurannya berada dalam rentang ini.
+        </p>
+        
+        <div style='margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+                    border-radius: 12px; box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);'>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                <div>
+                    <h4 style='margin: 0 0 10px 0; color: white; font-size: 18px;'>
+                        ⚖️ Berat Badan (BB)
+                    </h4>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Bawah Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['weight'][0]:.1f} kg
+                        </div>
+                    </div>
+                </div>
+                <div style='font-size: 40px; color: rgba(255,255,255,0.5);'>→</div>
+                <div>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Atas Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['weight'][1]:.1f} kg
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style='margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.15); 
+                        border-radius: 8px; font-size: 13px; color: white;'>
+                💡 <strong>Interpretasi:</strong> Jika BB anak Anda berada di antara {ranges['weight'][0]:.1f} - {ranges['weight'][1]:.1f} kg, 
+                maka berat badan anak tergolong <strong>normal</strong>.
+            </div>
+        </div>
+        
+        <div style='margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); 
+                    border-radius: 12px; box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);'>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                <div>
+                    <h4 style='margin: 0 0 10px 0; color: white; font-size: 18px;'>
+                        📏 Panjang/Tinggi Badan ({postur})
+                    </h4>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Bawah Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['height'][0]:.1f} cm
+                        </div>
+                    </div>
+                </div>
+                <div style='font-size: 40px; color: rgba(255,255,255,0.5);'>→</div>
+                <div>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Atas Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['height'][1]:.1f} cm
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style='margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.15); 
+                        border-radius: 8px; font-size: 13px; color: white;'>
+                💡 <strong>Interpretasi:</strong> Jika TB/PB anak Anda berada di antara {ranges['height'][0]:.1f} - {ranges['height'][1]:.1f} cm, 
+                maka tinggi badan anak tergolong <strong>normal</strong>.
+            </div>
+        </div>
+        
+        <div style='margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); 
+                    border-radius: 12px; box-shadow: 0 4px 15px rgba(250, 112, 154, 0.3);'>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                <div>
+                    <h4 style='margin: 0 0 10px 0; color: white; font-size: 18px;'>
+                        🎩 Lingkar Kepala (LK)
+                    </h4>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Bawah Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['head_circ'][0]:.1f} cm
+                        </div>
+                    </div>
+                </div>
+                <div style='font-size: 40px; color: rgba(255,255,255,0.5);'>→</div>
+                <div>
+                    <div style='background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;'>
+                        <div style='font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 8px;'>Batas Atas Normal:</div>
+                        <div style='font-size: 28px; font-weight: bold; color: white;'>
+                            {ranges['head_circ'][1]:.1f} cm
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style='margin-top: 15px; padding: 12px; background: rgba(255,255,255,0.15); 
+                        border-radius: 8px; font-size: 13px; color: white;'>
+                💡 <strong>Interpretasi:</strong> Jika LK anak Anda berada di antara {ranges['head_circ'][0]:.1f} - {ranges['head_circ'][1]:.1f} cm, 
+                maka lingkar kepala anak tergolong <strong>normal</strong>.
+            </div>
+        </div>
+    </div>
+    <div style='background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 5px solid #2196f3;'>
+        <h4 style='color: #1976d2; margin-top: 0;'>📋 Catatan Penting:</h4>
+        <ul style='color: #555; line-height: 1.8; margin: 10px 0; padding-left: 20px;'>
+            <li><strong>Rentang Normal:</strong> Nilai antara -2 SD dan +2 SD dianggap normal menurut WHO</li>
+            <li><strong>Di Bawah Batas:</strong> Jika pengukuran &lt; batas bawah, anak mungkin mengalami malnutrisi/stunting</li>
+            <li><strong>Di Atas Batas:</strong> Jika pengukuran &gt; batas atas, anak mungkin mengalami overweight/makrosefali</li>
+            <li><strong>Konsultasi:</strong> Jika nilai anak di luar rentang, <strong>segera konsultasi ke dokter/ahli gizi</strong></li>
+            <li><strong>Monitoring Rutin:</strong> Lakukan pemeriksaan antropometri minimal 1 bulan sekali</li>
+        </ul>
+    </div>
+    <div style='background: #fff9e6; padding: 15px; border-radius: 10px; margin-top: 20px;
+                border: 2px dashed #ffc107; text-align: center;'>
+        <p style='margin: 0; color: #856404; font-weight: 500;'>
+            🌟 <strong>Tips:</strong> Untuk analisis yang lebih akurat, gunakan 
+            <strong>"Kalkulator Gizi WHO"</strong> di tab utama untuk menghitung Z-score lengkap!
+        </p>
+    </div>
+    """
+    
+    return html_output
+
+# ===============================================================================
+# SECTION 10B: NEW FEATURES v3.2 (Termasuk Modifikasi Perpustakaan Lokal v3.2.2)
+# ===============================================================================
+
+# --- FITUR 1: MODE MUDAH (Dipertahankan dari v3.2) ---
+# ... (Semua kode Mode Mudah dan Kejar Tumbuh Anda tetap di sini) ...
+# ... (Fungsi get_normal_ranges_by_age, mode_mudah_handler, dll. TIDAK BERUBAH) ...
+
+
+# --- FITUR 2: PERPUSTAKAAN LOKAL (PENGGANTI v3.2) ---
+# Database artikel lokal baru dengan total 40 artikel
+# ================================================================
+# MULAI REVISI DI SINI
+# ================================================================
+
+# ==============================================================================
+# DATABASE ARTIKEL ANTHROHPK (REVISED IMAGE URLS)
+# File ini berisi konten artikel untuk fitur Perpustakaan Ibu Balita.
+# URL Gambar telah diperbarui agar kompatibel dengan Render & Gradio.
+# ==============================================================================
+
 ARTIKEL_LOKAL_DATABASE = [
     # ============================================================
     # KATEGORI: NUTRISI & MPASI
@@ -2508,379 +5463,2656 @@ ARTIKEL_LOKAL_DATABASE = [
     }
 ] # END OF ARTIKEL_LOKAL_DATABASE
 
+# ================================================
+# FUNGSI HELPER BARU UNTUK PERPUSTAKAAN & API
+# (Tambahkan ini di SECTION 10B, setelah database artikel)
+# ================================================
 
-# --- 5. UTILITY FUNCTIONS ---
-
-def as_float(x: Any) -> Optional[float]:
-    if x is None: return None
-    try:
-        return float(str(x).replace(",", ".").strip())
-    except:
-        return None
-
-def parse_date(date_str: str) -> Optional[date]:
-    if not date_str: return None
-    for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"]:
-        try:
-            return datetime.strptime(date_str, fmt).date()
-        except: continue
-    return None
-
-def calculate_age(dob: str, dom: str) -> Tuple[Optional[float], Optional[int]]:
-    d_dob, d_dom = parse_date(dob), parse_date(dom)
-    if not d_dob or not d_dom: return None, None
-    days = (d_dom - d_dob).days
-    if days < 0: return None, None
-    return round(days / 30.4375, 2), days
-
-def format_zscore(z):
-    if z is None: return "—"
-    return f"{z:+.2f}"
-
-def get_random_quote():
-    quotes = [
-        "Nutrisi 1000 HPK adalah investasi masa depan.",
-        "Setiap suapan bergizi mencegah stunting.",
-        "Anak sehat, Indonesia kuat.",
-        "Pantau tumbuh kembang secara rutin."
-    ]
-    return random.choice(quotes)
-
-# --- 6. CORE LOGIC: CALCULATIONS & PLOTTING ---
-
-def run_analysis(name, parent, sex, age_mode, dob, dom, age_manual, w, h, hc):
-    # 1. Hitung Usia
-    age_mo = as_float(age_manual) if age_mode == "Usia (bulan)" else None
-    age_days = None
-    
-    if age_mode == "Tanggal":
-        age_mo, age_days = calculate_age(dob, dom)
-    
-    if age_mo is None:
-        return "❌ Error: Data usia tidak valid.", None, None, None, None, None, gr.update(visible=False)
-
-    sex_code = 'M' if sex == "Laki-laki" else 'F'
-    w, h, hc = as_float(w), as_float(h), as_float(hc)
-    
-    # 2. Hitung Z-Scores (Menggunakan Local PyGrowUp)
-    z = {'waz': None, 'haz': None, 'whz': None, 'hcz': None}
-    if calc:
-        try:
-            if w: z['waz'] = float(calc.wfa(w, age_mo, sex_code))
-            if h: z['haz'] = float(calc.lhfa(h, age_mo, sex_code))
-            if w and h: z['whz'] = float(calc.wfl(w, age_mo, sex_code, h))
-            if hc: z['hcz'] = float(calc.hcfa(hc, age_mo, sex_code))
-        except Exception as e:
-            print(f"Calc error: {e}")
-
-    # 3. Interpretasi HTML (Sesuai Desain HTML User)
-    status_color = "#27ae60" if z['waz'] and abs(z['waz']) <= 2 else "#e74c3c"
-    
-    html_res = f"""
-    <div class="finding-card-grid">
-        <div class="finding-card">
-            <div class="number">{format_zscore(z['waz'])}</div>
-            <div class="label">BB/U (WAZ)</div>
-        </div>
-        <div class="finding-card">
-            <div class="number">{format_zscore(z['haz'])}</div>
-            <div class="label">TB/U (HAZ)</div>
-        </div>
-        <div class="finding-card">
-            <div class="number">{format_zscore(z['whz'])}</div>
-            <div class="label">BB/TB (WHZ)</div>
-        </div>
-    </div>
-    
-    <div style='background: #f9f9f9; padding: 20px; border-radius: 15px; border-left: 5px solid {status_color};'>
-        <h3 style='margin-top:0;'>📋 Interpretasi Singkat</h3>
-        <p>Anak <strong>{name}</strong> (Usia {age_mo} bln) memiliki status gizi berdasarkan Z-score WHO.</p>
-        <p>Pastikan untuk selalu berkonsultasi dengan dokter spesialis anak untuk diagnosis klinis.</p>
-    </div>
+def get_local_library_filters():
     """
-
-    # 4. Generate Plots (Matplotlib dengan Tema Earth Tones)
-    plots = []
-    # Definisi fungsi plot internal sederhana untuk brevity
-    def make_plot(title, z_val, measure_val, age_val):
-        fig = Figure(figsize=(8, 5), facecolor='#fdfbf7')
-        ax = fig.add_subplot(111)
-        ax.set_facecolor('white')
-        
-        # Draw zones
-        ax.axhspan(-2, 2, color='#E8F5E9', alpha=0.5) # Normal zone
-        ax.axhspan(2, 3, color='#FFF3E0', alpha=0.5)
-        ax.axhspan(-3, -2, color='#FFF3E0', alpha=0.5)
-        
-        # Plot point
-        if z_val is not None:
-            ax.scatter([age_val], [z_val], color='#D2691E', s=150, zorder=10, edgecolors='white', linewidth=2)
-            ax.annotate(f"Z: {z_val:.2f}", (age_val, z_val), xytext=(0, 10), textcoords='offset points', ha='center', color='#8B4513', fontweight='bold')
-        
-        ax.set_title(title, color='#8B4513', fontweight='bold')
-        ax.set_ylabel("Z-Score", color='#5D6D7E')
-        ax.set_xlabel("Usia (bulan)", color='#5D6D7E')
-        ax.grid(True, linestyle='--', alpha=0.3)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_color('#DEB887')
-        ax.spines['left'].set_color('#DEB887')
-        
-        return fig
-
-    plots.append(make_plot("Berat Badan menurut Umur (BB/U)", z['waz'], w, age_mo))
-    plots.append(make_plot("Tinggi Badan menurut Umur (TB/U)", z['haz'], h, age_mo))
-    plots.append(make_plot("Berat Badan menurut Tinggi (BB/TB)", z['whz'], w, age_mo))
-    plots.append(make_plot("Lingkar Kepala (LK/U)", z['hcz'], hc, age_mo))
-    
-    # Bar chart summary
-    fig_bar = Figure(figsize=(8, 4), facecolor='#fdfbf7')
-    ax_bar = fig_bar.add_subplot(111)
-    indices = ['WAZ', 'HAZ', 'WHZ', 'HCZ']
-    vals = [z['waz'] or 0, z['haz'] or 0, z['whz'] or 0, z['hcz'] or 0]
-    colors = ['#27ae60' if abs(v)<=2 else '#e74c3c' for v in vals]
-    ax_bar.bar(indices, vals, color=colors)
-    ax_bar.axhline(0, color='black', linewidth=0.5)
-    ax_bar.set_title("Ringkasan Status Gizi", color='#8B4513', fontweight='bold')
-    plots.append(fig_bar)
-
-    # 5. PDF Generation (Simple Version)
-    pdf_path = os.path.join(OUTPUTS_DIR, f"Laporan_{name}_{int(datetime.now().timestamp())}.pdf")
-    c = canvas.Canvas(pdf_path, pagesize=A4)
-    c.setFont("Helvetica-Bold", 16)
-    c.setFillColorRGB(0.545, 0.27, 0.07) # SaddleBrown
-    c.drawString(50, 800, "Laporan Analisis Pertumbuhan Anak")
-    c.setFont("Helvetica", 12)
-    c.setFillColorRGB(0,0,0)
-    c.drawString(50, 770, f"Nama: {name}")
-    c.drawString(50, 750, f"Usia: {age_mo} bulan")
-    c.drawString(50, 730, f"Berat: {w} kg | Tinggi: {h} cm")
-    c.save()
-
-    return html_res, plots[0], plots[1], plots[2], plots[3], plots[4], gr.update(value=pdf_path, visible=True)
-
-# --- 7. LOGIC: KEJAR TUMBUH ---
-
-def kejar_tumbuh_handler(data_list, gender):
-    # Dummy implementation for Kejar Tumbuh visual
-    # In real app, parse data_list containing historical measurements
-    if not data_list:
-        return "<p>Belum ada data pengukuran.</p>", None
-    
-    # Simulasi data
-    html = """
-    <table class='custom-table'>
-        <tr><th>Bulan</th><th>BB (kg)</th><th>Kenaikan</th><th>Status</th></tr>
-        <tr><td>0</td><td>3.2</td><td>-</td><td>Lahir</td></tr>
-        <tr><td>1</td><td>4.5</td><td>+1.3 kg</td><td>✅ Baik</td></tr>
-    </table>
+    (FUNGSI BARU - MEMPERBAIKI BUG API)
+    Helper untuk mengambil kategori & sumber unik dari DB lokal.
     """
-    fig = Figure(figsize=(8, 4), facecolor='#fdfbf7')
-    ax = fig.add_subplot(111)
-    ax.plot([0, 1, 2], [3.2, 4.5, 5.8], marker='o', color='#D2691E', label='Anak')
-    ax.plot([0, 1, 2], [3.3, 4.5, 5.6], '--', color='gray', label='Median WHO')
-    ax.legend()
-    ax.set_title("Trend Pertumbuhan")
-    
-    plot_path = os.path.join(OUTPUTS_DIR, "kejar_tumbuh.png")
-    fig.savefig(plot_path)
-    return html, plot_path
-
-# --- 8. LOGIC: PERPUSTAKAAN & MODE MUDAH ---
-
-def update_library(search, cat):
-    html = "<div class='library-grid'>"
+    categories = set()
+    sources = set()
     for art in ARTIKEL_LOKAL_DATABASE:
-        if (cat == "Semua Kategori" or art['kategori'] == cat) and \
-           (search.lower() in art['title'].lower() or search == ""):
-            html += f"""
-            <div class="article-card">
-                <div class="article-img" style="background-image: url('{art['image_url']}');"></div>
-                <div class="article-content">
-                    <span class="article-tag">{art['kategori']}</span>
-                    <div class="article-title">{art['title']}</div>
-                    <div class="article-desc">{art['summary']}</div>
-                </div>
+        if art.get("kategori"):
+            categories.add(art.get("kategori"))
+        if art.get("source"):
+            for s in art.get("source").split("|"):
+                s = s.strip()
+                if s:
+                    sources.add(s)
+    # Mengembalikan list kategori yang unik dan sudah diurutkan
+    return sorted(list(categories)), sorted(list(sources))
+
+def get_library_categories_list():
+    """ (FUNGSI BARU) Mengambil daftar kategori untuk dropdown Gradio """
+    categories, _ = get_local_library_filters()
+    return ["Semua Kategori"] + categories
+
+# ===================================================================
+# GANTI FUNGSI 'update_library_display' & 'load_initial_articles'
+# DI SECTION 10B DENGAN KODE BARU INI
+# ===================================================================
+
+def update_library_display(search_term: str, category: str):
+    """
+    (REVISI UI v3.2.5 - MEMPERBAIKI INDEKS CSS)
+    Fungsi ini sekarang menggunakan 'idx' ASLI dari database.
+    """
+    search_term = search_term.lower().strip()
+    
+    # --- PERBAIKAN DATABASE DUPLIKAT ---
+    # Kita hanya ambil 40 artikel pertama untuk menghindari duplikat
+    # Dan kita enumerate DATABASE ASLI
+    articles_to_process = ARTIKEL_LOKAL_DATABASE[:40] 
+    
+    filtered_articles = []
+    
+    # Gunakan enumerate PADA DATABASE ASLI
+    for idx, art in enumerate(articles_to_process): 
+        
+        # --- MULAI FILTER ---
+        if category != "Semua Kategori" and art.get("kategori") != category:
+            continue
+        
+        title = art.get("title", "").lower()
+        summary = art.get("summary", "").lower()
+        content = art.get("full_content", "").lower()
+        
+        if search_term and not (search_term in title or search_term in summary or search_term in content):
+            continue
+        # --- AKHIR FILTER ---
+            
+        # Simpan artikel DAN INDEKS ASLINYA
+        filtered_articles.append((idx, art)) 
+
+    if not filtered_articles:
+        return "<div style='padding: 20px; text-align: center;'><h3>🔍 Tidak ada artikel ditemukan</h3><p>Coba ganti kata kunci pencarian atau filter kategori Anda.</p></div>"
+
+    html_output_list = []
+    html_output_list.append(f"<p style='text-align:center; font-weight:bold; color:#333;'>Menampilkan {len(filtered_articles)} artikel:</p>")
+    html_output_list.append("<div class='library-grid-container'>")
+    
+    # Loop melalui artikel yang sudah difilter
+    # 'idx' di sini adalah INDEKS ASLI (0-39)
+    for idx, art in filtered_articles:
+        
+        title_safe = art.get('title', 'Tanpa Judul').replace('<', '&lt;').replace('>', '&gt;')
+        summary_safe = art.get('summary', '').replace('<', '&lt;').replace('>', '&gt;')
+        kategori_safe = art.get('kategori', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
+        source_safe = art.get('source', 'N/A').replace('<', '&lt;').replace('>', '&gt;')
+        
+        # --- PERBAIKAN KONTEN HTML (REGEX FIX) ---
+        content_html = art.get('full_content', 'Konten tidak tersedia.')
+        content_html = content_html.replace('\n\n', '</p><p>')
+        content_html = content_html.replace('---', '<hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">')
+        content_html = content_html.replace('\n', '<br>')
+        content_html = content_html.replace('# ', '<h2>')
+        content_html = content_html.replace('## ', '<h3>')
+        content_html = content_html.replace('### ', '<h4>')
+        
+        import re
+        content_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', content_html)
+        
+        # Perbaikan regex list (lebih kuat)
+        # Ubah baris yang dimulai dengan '* ' menjadi <li>...</li>
+        content_html = re.sub(r'(<br>|^)\* (.*?)(<br>|$)', r'\1<li>\2</li>', content_html)
+        # Hapus <br> ekstra di antara <li>
+        content_html = content_html.replace('</li><br><li>', '</li><li>') 
+        # Bungkus grup <li> dengan <ul>
+        content_html = re.sub(r'(<li>.*?</li>)', r'<ul>\1</ul>', content_html, flags=re.DOTALL)
+        # Bersihkan <ul> ganda
+        content_html = content_html.replace('</ul><br><ul>', '')
+        content_html = content_html.replace('</p><br><ul>', '</p><ul>')
+        content_html = content_html.replace('</ul><br><p>', '</ul><p>')
+
+        
+        html_output_list.append(f"""
+        <div class="article-card-v3-2-3">
+            
+            <div class="article-image article-img-{idx}"></div>
+            
+            <div class="article-summary-content">
+                <span class="article-category">{kategori_safe}</span>
+                <h3 class="article-title">{title_safe}</h3>
+                <p class="article-summary">{summary_safe}</p>
             </div>
-            """
+            
+            <details class="article-details-dropdown">
+                <summary class="article-details-toggle">Baca Selengkapnya</summary>
+                <div class="article-full-content-wrapper">
+                    {content_html}
+                    <span class="article-source">Sumber: {source_safe}</span>
+                </div>
+            </details>
+            
+        </div>
+        """)
+
+    html_output_list.append("</div>")
+    return "".join(html_output_list)
+
+
+def load_initial_articles():
+    """ (PERBAIKAN #4) Memuat semua artikel (versi perbaikan indeks) """
+    return update_library_display(search_term="", category="Semua Kategori")
+
+
+def load_initial_articles():
+    """ (PERBAIKAN #3) Memuat semua artikel sebagai string HTML """
+    # Fungsi ini tidak perlu diubah, karena sudah memanggil update_library_display
+    return update_library_display(search_term="", category="Semua Kategori")
+
+
+
+
+print(f"✅ Section 10B v3.2.2 loaded: 40 Artikel Lokal (Internal) siap digunakan.")
+
+
+
+    
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+# =========================================
+# SECTION 10B – Perpustakaan Ibu Balita
+# Styling global (CSS saja, tanpa JS bridge)
+# =========================================
+
+
+
+
+
+
+    
+
+    
+    
+
+
+# ===============================================================================
+# ===============================================================================
+# SECTION 11: GRADIO UI (REVISI TOTAL - Perbaikan Perpustakaan)
+# ===============================================================================
+
+# UPDATED Custom CSS (v3.2.3)
+# CSS Perpustakaan lama (penyebab error) telah dihapus.
+CUSTOM_CSS = """
+/* ===================================================================
+   GLOBAL STYLES
+   =================================================================== */
+
+.gradio-container {
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+}
+
+/* ===================================================================
+   DARK MODE OPTIMIZATION - HIGH CONTRAST (v3.1)
+   =================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    .gradio-container { color: #f0f0f0 !important; }
+    h1, h2, h3, h4, h5, h6 { color: #ffffff !important; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    p, span, div, label { color: #e8e8e8 !important; }
+    .gr-input, .gr-textbox, .gr-box, .gr-form { background-color: #2d2d2d !important; color: #ffffff !important; border-color: #505050 !important; }
+    .gr-input::placeholder { color: #999999 !important; }
+    .gr-button { background-color: #404040 !important; color: #ffffff !important; border-color: #606060 !important; }
+    .gr-button:hover { background-color: #505050 !important; border-color: #707070 !important; }
+    .gr-button-primary { background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
+    .gr-button-secondary { background: linear-gradient(135deg, #4ecdc4 0%, #6de0d9 100%) !important; color: #ffffff !important; font-weight: 600 !important; border: none !important; }
+    
+    /* Perbaikan Dark Mode untuk Accordion (Perpustakaan Baru) */
+    .gr-panel, .gr-box, .gr-accordion { background-color: #2a2a2a !important; border-color: #505050 !important; color: #e8e8e8 !important; }
+    .gr-accordion .label-wrap { background-color: #3a3a3a !important; }
+    .gr-accordion .label-wrap:hover { background-color: #4a4a4a !important; }
+    
+    .gr-tab { background-color: #333333 !important; color: #ffffff !important; border-color: #505050 !important; }
+    .gr-tab.selected { background-color: #ff6b9d !important; color: #ffffff !important; font-weight: 600 !important; }
+    .markdown-body { color: #e8e8e8 !important; }
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #ffffff !important; border-bottom-color: #505050 !important; }
+    .markdown-body a { color: #6db4ff !important; }
+    .markdown-body code { background-color: #1e1e1e !important; color: #d4d4d4 !important; border-color: #404040 !important; }
+    .markdown-body pre { background-color: #1e1e1e !important; border-color: #404040 !important; }
+    .status-success { color: #5cff5c !important; }
+    .status-warning { color: #ffd45c !important; }
+    .status-error { color: #ff5c5c !important; }
+    .premium-gold { background: linear-gradient(135deg, #b8860b 0%, #daa520 100%) !important; color: #ffffff !important; border: 2px solid #b8860b !important; }
+    .premium-silver { background: linear-gradient(135deg, #787878 0%, #a0a0a0 100%) !important; color: #ffffff !important; border: 2px solid #787878 !important; }
+    .article-card { background-color: #2a2a2a !important; border: 1px solid #505050 !important; color: #e8e8e8 !important; }
+    .article-card:hover { background-color: #353535 !important; border-color: #606060 !important; box-shadow: 0 4px 12px rgba(255,255,255,0.1) !important; }
+    .article-title { color: #ffffff !important; }
+    .article-meta { color: #b0b0b0 !important; }
+    
+    /* CSS Perpustakaan lama (penyebab error) telah dihapus */
+}
+
+/* ===================================================================
+   LIGHT MODE (Default)
+   =================================================================== */
+
+.status-success { color: #28a745 !important; font-weight: 600; }
+.status-warning { color: #ffc107 !important; font-weight: 600; }
+.status-error { color: #dc3545 !important; font-weight: 600; }
+
+.big-button {
+    font-size: 18px !important; padding: 20px 40px !important; margin: 15px 0 !important;
+    border-radius: 12px !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease !important;
+}
+.big-button:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 12px rgba(0,0,0,0.15) !important; }
+
+.premium-silver {
+    background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%) !important; color: #333 !important;
+    border: 2px solid #A0A0A0 !important; font-weight: bold !important; padding: 15px 30px !important;
+    border-radius: 10px !important; transition: all 0.3s ease !important;
+}
+.premium-gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important; color: #000 !important;
+    border: 2px solid #DAA520 !important; font-weight: bold !important; padding: 15px 30px !important;
+    border-radius: 10px !important; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4) !important;
+    transition: all 0.3s ease !important;
+}
+.premium-gold:hover { transform: scale(1.05) !important; box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6) !important; }
+
+/* ===================================================================
+   VIDEO CARDS (v3.1)
+   =================================================================== */
+
+.video-card {
+    background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); border: 2px solid #ffd4e0;
+    border-radius: 12px; padding: 15px; margin: 10px 0; transition: all 0.3s ease;
+}
+.video-card:hover { transform: scale(1.02); box-shadow: 0 6px 15px rgba(255, 107, 157, 0.2); border-color: #ff6b9d; }
+.video-title { font-size: 16px; font-weight: 700; color: #ff6b9d; margin-bottom: 8px; }
+.video-description { font-size: 13px; color: #666; margin-bottom: 10px; }
+.video-duration { font-size: 12px; color: #999; font-style: italic; }
+
+/* ===================================================================
+   PERPUSTAKAAN INTERAKTIF (BARU v3.2.3) - DIHAPUS
+   =================================================================== */
+/* Semua CSS .library-filter-bar, .article-card-v3, dll. telah dihapus */
+
+
+/* ===================================================================
+   OTHER COMPONENTS
+   =================================================================== */
+
+.gr-input, .gr-textbox {
+    border-radius: 8px !important; border: 2px solid #e8e8e8 !important;
+    transition: border-color 0.3s ease !important;
+}
+.gr-input:focus, .gr-textbox:focus {
+    border-color: #ff6b9d !important;
+    box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1) !important;
+}
+.gr-panel, .gr-box {
+    border-radius: 12px !important; border: 1px solid #e8e8e8 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
+}
+.gr-tab { border-radius: 8px 8px 0 0 !important; font-weight: 600 !important; }
+.gr-plot {
+    border-radius: 12px !important; overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
+blockquote {
+    background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%);
+    border-left: 6px solid #ff6b9d; padding: 20px; margin: 20px 0;
+    border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.notification-panel {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px; border-radius: 15px; color: white; margin: 15px 0;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+.notification-enabled {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    padding: 15px; border-radius: 10px; color: white;
+    text-align: center; font-weight: bold; margin: 10px 0;
+}
+# ===============================================================================
+# SECTION 11: GRADIO UI (REVISI TOTAL - Perbaikan Perpustakaan)
+# ===============================================================================
+
+# ... (Pastikan semua CSS Anda yang ada sebelumnya tetap di sini) ...
+# ... (Termasuk .gradio-container, DARK MODE, .video-card, dll.) ...
+
+# TAMBAHKAN BLOK CSS BARU INI
+# ===================================================================
+# PERPUSTAKAAN v3.2.3 (MODERN UI REVISION - DENGAN GAMBAR)
+# ===================================================================
+.library-grid-container {
+    /* Ini adalah wrapper yang akan dibuat oleh fungsi Python */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    padding: 10px 0;
+}
+
+.article-card-v3-2-3 {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e8e8e8;
+    margin-bottom: 0; /* Diatur oleh grid-gap */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden; /* Penting untuk image border-radius */
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column; /* Mengatur layout card */
+    height: 100%; /* Membuat kartu sama tinggi di grid */
+}
+.article-card-v3-2-3:hover {
+    box-shadow: 0 7px 20px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+}
+.article-image {
+    width: 100%;
+    height: 180px; /* Ukuran pas untuk card */
+    background-size: cover; /* GANTI DARI object-fit */
+    background-position: center center; /* TAMBAHKAN INI */
+    background-repeat: no-repeat; /* TAMBAHKAN INI */
+    border-bottom: 1px solid #eee;
+}
+.article-summary-content {
+    padding: 20px;
+    flex-grow: 1; /* Mendorong dropdown ke bawah */
+}
+.article-category {
+    display: inline-block;
+    background: #fff5f8;
+    color: #ff6b9d;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    border: 1px solid #ffdde5;
+}
+.article-title {
+    font-size: 18px; /* Ukuran pas untuk card mobile */
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 8px 0;
+    line-height: 1.4; /* Keterbacaan */
+}
+.article-summary {
+    font-size: 14px; /* Font mobile-friendly */
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+}
+.article-details-dropdown {
+    border-top: 1px solid #f0f0f0;
+    margin-top: auto; /* Mendorong ke bagian bawah card */
+}
+.article-details-toggle {
+    padding: 16px 20px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: #3498db;
+    list-style: none; /* Hapus panah default */
+    transition: background 0.2s ease;
+    display: block; /* Agar full width */
+    text-align: center;
+}
+.article-details-toggle:hover {
+    background: #f9f9f9;
+}
+/* Style panah custom (mudah dilihat) */
+.article-details-toggle::before {
+    content: '▼';
+    margin-right: 10px;
+    font-size: 12px;
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+.article-details-toggle {
+    list-style-type: none; /* Menghilangkan panah default di semua browser */
+}
+details[open] > .article-details-toggle::before {
+    transform: rotate(-180deg);
+}
+.article-full-content-wrapper {
+    padding: 0 20px 20px 20px;
+    line-height: 1.7; /* Font mudah dibaca */
+    color: #333;
+    font-size: 15px; /* Font mobile-friendly */
+    background: #fafafa;
+}
+.article-full-content-wrapper h2,
+.article-full-content-wrapper h3,
+.article-full-content-wrapper h4 {
+    color: #2c3e50;
+    margin-top: 20px;
+}
+.article-full-content-wrapper ul,
+.article-full-content-wrapper ol {
+    padding-left: 25px;
+}
+.article-full-content-wrapper li {
+    margin-bottom: 10px;
+}
+.article-full-content-wrapper strong {
+    color: #ff6b9d; /* Highlight poin penting */
+}
+.article-source {
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
+    display: block;
+    margin-top: 15px;
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* =================================================================== */
+/* PERPUSTAKAAN v3.2.4 - IMAGE URLS (STATIC IN CSS) */
+/* =================================================================== */
+.article-img-0 { background-image: url('https://images.unsplash.com/photo-1600857592429-06388147aa0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-1 { background-image: url('https://images.unsplash.com/photo-1544385191-a8d83c0c0910?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-2 { background-image: url('https://images.unsplash.com/photo-1519733224424-a78932641e1c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-3 { background-image: url('https://images.unsplash.com/photo-1591160623347-0622c71a3a2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-4 { background-image: url('https://images.unsplash.com/photo-1606823354313-a4f1232c4533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-5 { background-image: url('https://images.unsplash.com/photo-1589139121857-a5735161394a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-6 { background-image: url('https://images.unsplash.com/photo-1598993685548-e0420d75765d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-7 { background-image: url('https://images.unsplash.com/photo-1582235880501-f2e519c636ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-8 { background-image: url('https://images.unsplash.com/photo-1604719212028-a3d1d236369c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-9 { background-image: url('https://images.unsplash.com/photo-1558220938-f91d0a3311c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-10 { background-image: url('https://images.unsplash.com/photo-1518610368143-69091b3ab806?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-11 { background-image: url('https://images.unsplash.com/photo-1546015026-6132b138026d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-12 { background-image: url('https://images.unsplash.com/photo-1519062136015-659f0f633d3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-13 { background-image: url('https://images.unsplash.com/photo-1518717758339-39B3c607eb42?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-14 { background-image: url('https://images.unsplash.com/photo-1546820389-0822369cbf34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-15 { background-image: url('https://images.unsplash.com/photo-1519362351240-d69b552f5071?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-16 { background-image: url('https://images.unsplash.com/photo-1557941733-27d6dbb8b209?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-17 { background-image: url('https://plus.unsplash.com/premium_photo-1664301530062-83b33375b426?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-18 { background-image: url('https://images.unsplash.com/photo-1605681145151-c0b3d6c7104b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-19 { background-image: url('https://images.unsplash.com/photo-1599599933544-672e4798c807?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-20 { background-image: url('https://images.unsplash.com/photo-1620336214302-1a4c38d4c1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-21 { background-image: url('https://images.unsplash.com/photo-1554734867-bf3c00a49371?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-22 { background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80'); }
+.article-img-23 { background-image: url('https://plus.unsplash.com/premium_photo-1661766820235-3c96bc13f938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-24 { background-image: url('https://images.unsplash.com/photo-1606838837238-57688313508c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-25 { background-image: url('https://images.unsplash.com/photo-1584610356248-81d3d66b596f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-26 { background-image: url('https://images.unsplash.com/photo-1522889639-6B4912BA542A?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-27 { background-image: url('https://images.unsplash.com/photo-1566004100631-35d015d6a491?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-28 { background-image: url('https://images.unsplash.com/photo-1484665754824-1d8e1469956e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-29 { background-image: url('https://images.unsplash.com/photo-1472090278799-d7c2a7156d68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80'); }
+.article-img-30 { background-image: url('https://images.unsplash.com/photo-1499781350138-d0f31a207612?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-31 { background-image: url('https://images.unsplash.com/photo-1506869639733-11215c54f5c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-32 { background-image: url('https://images.unsplash.com/photo-1599522190924-d5f2a1d2112a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80'); }
+.article-img-33 { background-image: url('https://images.unsplash.com/photo-1596707849382-e56d4001150f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-34 { background-image: url('https://images.unsplash.com/photo-1574023240294-f2549f8a816a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-35 { background-image: url('https://images.unsplash.com/photo-1600813160814-1f3f615306e6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-36 { background-image: url('https://images.unsplash.com/photo-1610481977931-36f73357b10a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-37 { background-image: url('https://images.unsplash.com/photo-1590240472421-5a50e932fe40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-38 { background-image: url('https://images.unsplash.com/photo-1570228062259-e36c6c5188c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=871&q=80'); }
+.article-img-39 { background-image: url('https://images.unsplash.com/photo-1543083326-14c049e3a348?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+/* =================================================================== */
+/* AKHIR BLOK IMAGE URLS */
+/* =================================================================== */
+
+
+/* Dark Mode overrides for new card */
+@media (prefers-color-scheme: dark) {
+    .article-card-v3-2-3 {
+        background: #2d2d2d;
+        border-color: #505050;
+    }
+    .article-image { border-bottom-color: #505050; }
+    .article-category {
+        background: #4a3a41;
+        color: #ff9ac9;
+        border-color: #5c4a52;
+    }
+    .article-title { color: #ffffff; }
+    .article-summary { color: #e0e0e0; }
+    .article-details-dropdown { border-top-color: #505050; }
+    .article-details-toggle { color: #6db4ff; }
+    .article-details-toggle:hover { background: #3a3a3a; }
+    
+    .article-full-content-wrapper {
+        color: #e8e8e8;
+        background: #252525;
+    }
+    .article-full-content-wrapper h2,
+    .article-full-content-wrapper h3,
+    .article-full-content-wrapper h4 {
+        color: #ffffff;
+    }
+    .article-full-content-wrapper strong {
+        color: #ff9ac9; /* Highlight dark mode */
+    }
+    .article-source {
+        color: #b0b0b0;
+        background: #333333;
+    }
+}
+"""
+# ... (CUSTOM_CSS Anda berlanjut) ...
+
+
+print("✅ Custom CSS (v3.2.3) loaded: CSS Perpustakaan lama (penyebab error) telah dihapus.")
+
+# ===============================================================================
+# SECTION 10B-EXTRA: MISSING FUNCTIONS FOR KEJAR TUMBUH
+# (Ini adalah bagian dari SECTION 10B, tapi di file Anda diletakkan di sini)
+# ===============================================================================
+
+def toggle_kejar_tumbuh_mode(mode: str):
+    """Toggle input mode untuk Kalkulator Kejar Tumbuh"""
+    if mode == "Tanggal Lahir":
+        return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+    else:  # Usia Langsung
+        return gr.update(visible=False), gr.update(visible=True), gr.update(visible=True)
+
+
+def tambah_data_kejar_tumbuh(data_state, mode, dob, dom, usia_manual, bb, tb):
+    """
+    Menambahkan data pengukuran ke state untuk Kalkulator Kejar Tumbuh
+    
+    Args:
+        data_state: List data pengukuran yang sudah ada
+        mode: Mode input ("Tanggal Lahir" atau "Usia Langsung")
+        dob: Tanggal lahir
+        dom: Tanggal pengukuran
+        usia_manual: Usia dalam bulan (jika mode usia langsung)
+        bb: Berat badan (kg)
+        tb: Tinggi badan (cm)
+    
+    Returns:
+        Tuple: (updated_data_state, display_html, cleared_inputs...)
+    """
+    if data_state is None:
+        data_state = []
+    
+    # Validasi input
+    if bb is None or bb <= 0:
+        return data_state, "⚠️ Masukkan berat badan yang valid", None, None, None, None
+    
+    if tb is None or tb <= 0:
+        return data_state, "⚠️ Masukkan tinggi badan yang valid", None, None, None, None
+    
+    # Hitung usia
+    if mode == "Tanggal Lahir":
+        if not dob or not dom:
+            return data_state, "⚠️ Masukkan tanggal lahir dan tanggal pengukuran", None, None, None, None
+        
+        try:
+            # Gunakan 'parse_date' yang sudah Anda buat
+            dob_date = parse_date(dob) 
+            dom_date = parse_date(dom)
+            
+            if dob_date is None or dom_date is None:
+                raise ValueError("Format tanggal tidak valid (gunakan YYYY-MM-DD atau DD/MM/YYYY)")
+
+            if dom_date < dob_date:
+                return data_state, "⚠️ Tanggal pengukuran tidak boleh sebelum tanggal lahir", None, None, None, None
+            
+            # Hitung usia dalam bulan
+            age_days = (dom_date - dob_date).days
+            age_months = age_days / 30.4375
+        except Exception as e:
+            return data_state, f"⚠️ Error Tanggal: {e}", None, None, None, None
+    else:
+        if usia_manual is None or usia_manual < 0:
+            return data_state, "⚠️ Masukkan usia yang valid", None, None, None, None
+        age_months = usia_manual
+    
+    # Tambahkan data baru
+    new_data = {
+        'usia_bulan': round(age_months, 1),
+        'bb': round(bb, 2),
+        'tb': round(tb, 1)
+    }
+    
+    data_state.append(new_data)
+    
+    # Sort berdasarkan usia
+    data_state = sorted(data_state, key=lambda x: x['usia_bulan'])
+    
+    # Generate display HTML
+    display_html = "<div style='padding: 15px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 10px;'>"
+    display_html += f"<h4 style='margin-top: 0; color: #2c3e50;'>📊 Data Terinput: {len(data_state)} pengukuran</h4>"
+    display_html += "<table style='width: 100%; border-collapse: collapse;'>"
+    display_html += "<tr style='background: #3498db; color: white;'>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>No</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>Usia (bulan)</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>BB (kg)</th>"
+    display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>TB (cm)</th>"
+    display_html += "</tr>"
+    
+    for i, data in enumerate(data_state):
+        bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+        display_html += f"<tr style='background: {bg_color};'>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{i+1}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['usia_bulan']}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['bb']}</td>"
+        display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['tb']}</td>"
+        display_html += "</tr>"
+    
+    display_html += "</table>"
+    display_html += "<p style='margin-top: 10px; color: #27ae60; font-weight: bold;'>✅ Data berhasil ditambahkan!</p>"
+    display_html += "</div>"
+    
+    # Return updated state, display, and clear input fields
+    return data_state, display_html, None, None, None, None
+
+
+def hitung_kejar_tumbuh(data_state):
+    """
+    Menghitung laju pertumbuhan dari data yang sudah diinput
+    
+    Args:
+        data_state: List data pengukuran
+    
+    Returns:
+        HTML report dengan analisis laju pertumbuhan
+    """
+    if not data_state or len(data_state) < 2:
+        return "<p style='color: #e74c3c; padding: 20px;'>⚠️ Minimal 2 data pengukuran diperlukan untuk menghitung laju pertumbuhan.</p>"
+    
+    # Hitung velocity
+    results = []
+    for i in range(len(data_state) - 1):
+        data1 = data_state[i]
+        data2 = data_state[i + 1]
+        
+        delta_months = data2['usia_bulan'] - data1['usia_bulan']
+        delta_bb = data2['bb'] - data1['bb']
+        delta_tb = data2['tb'] - data1['tb']
+        
+        if delta_months > 0:
+            velocity_bb = delta_bb / delta_months  # kg/bulan
+            velocity_tb = delta_tb / delta_months  # cm/bulan
+            
+            results.append({
+                'periode': f"{data1['usia_bulan']:.1f} - {data2['usia_bulan']:.1f} bulan",
+                'delta_months': delta_months,
+                'velocity_bb': velocity_bb,
+                'velocity_tb': velocity_tb,
+                'delta_bb': delta_bb,
+                'delta_tb': delta_tb
+            })
+    
+    if not results:
+        return "<p style='color: #e74c3c; padding: 20px;'>⚠️ Data tidak memadai untuk menghitung laju pertumbuhan (perlu interval waktu positif).</p>"
+
+    # Generate HTML report
+    html = "<div style='padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>"
+    html += "<h3 style='color: #2c3e50; margin-top: 0;'>📈 Analisis Laju Pertumbuhan (Growth Velocity)</h3>"
+    
+    html += "<table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>"
+    html += "<tr style='background: #3498db; color: white;'>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Periode</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Durasi</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Δ BB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Velocity BB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Δ TB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Velocity TB</th>"
+    html += "<th style='padding: 10px; border: 1px solid #ddd;'>Status</th>"
+    html += "</tr>"
+    
+    for i, result in enumerate(results):
+        bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+        
+        # Evaluasi velocity BB (rule of thumb: 0.5-1 kg/bulan untuk bayi)
+        if result['velocity_bb'] < 0:
+            bb_status = "⚠️ Penurunan"
+            bb_color = "#e74c3c"
+        elif result['velocity_bb'] < 0.3:
+            bb_status = "⚠️ Lambat"
+            bb_color = "#f39c12"
+        elif result['velocity_bb'] <= 1.5:
+            bb_status = "✅ Normal"
+            bb_color = "#27ae60"
+        else:
+            bb_status = "ℹ️ Cepat"
+            bb_color = "#3498db"
+        
+        # Evaluasi velocity TB (rule of thumb: 2-3 cm/bulan untuk bayi)
+        if result['velocity_tb'] < 0:
+            tb_status = "⚠️ Penurunan"
+            tb_color = "#e74c3c"
+        elif result['velocity_tb'] < 1:
+            tb_status = "⚠️ Lambat"
+            tb_color = "#f39c12"
+        elif result['velocity_tb'] <= 4:
+            tb_status = "✅ Normal"
+            tb_color = "#27ae60"
+        else:
+            tb_status = "ℹ️ Cepat"
+            tb_color = "#3498db"
+        
+        overall_status = "✅ Baik" if "✅" in bb_status and "✅" in tb_status else "⚠️ Perlu Perhatian"
+        overall_color = "#27ae60" if "✅" in overall_status else "#f39c12"
+        
+        html += f"<tr style='background: {bg_color};'>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd;'>{result['periode']}</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_months']:.1f} bln</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_bb']:+.2f} kg</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {bb_color}; font-weight: bold;'>{result['velocity_bb']:.2f} kg/bln<br><small>{bb_status}</small></td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{result['delta_tb']:+.1f} cm</td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {tb_color}; font-weight: bold;'>{result['velocity_tb']:.2f} cm/bln<br><small>{tb_status}</small></td>"
+        html += f"<td style='padding: 10px; border: 1px solid #ddd; text-align: center; color: {overall_color}; font-weight: bold;'>{overall_status}</td>"
+        html += "</tr>"
+    
+    html += "</table>"
+    
+    # Summary statistics
+    avg_velocity_bb = sum(r['velocity_bb'] for r in results) / len(results)
+    avg_velocity_tb = sum(r['velocity_tb'] for r in results) / len(results)
+    
+    html += "<div style='background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;'>"
+    html += "<h4 style='color: #2c3e50; margin-top: 0;'>📊 Rata-rata Laju Pertumbuhan</h4>"
+    html += f"<p><strong>Berat Badan:</strong> {avg_velocity_bb:.2f} kg/bulan</p>"
+    html += f"<p><strong>Tinggi Badan:</strong> {avg_velocity_tb:.2f} cm/bulan</p>"
     html += "</div>"
+    
+    html += "<div style='background: #fff3cd; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffc107;'>"
+    html += "<p style='margin: 0;'><strong>ℹ️ Catatan:</strong> Interpretasi ini bersifat umum. Konsultasikan dengan dokter anak untuk evaluasi yang lebih akurat.</p>"
+    html += "</div>"
+    
+    html += "</div>"
+    
     return html
 
-def mode_mudah_logic(age, sex):
-    # Simulasi range normal WHO sederhana
-    w_min = 3 + (age * 0.5)
-    w_max = 5 + (age * 0.6)
-    return f"""
-    <div style='text-align:center; padding:30px;'>
-        <h3 style='color:#8B4513; font-size:24px;'>Usia {age} Bulan ({sex})</h3>
-        <div class="finding-card-grid" style="margin-top:20px;">
-            <div class="finding-card">
-                <div class="number">{w_min:.1f} - {w_max:.1f} kg</div>
-                <div class="label">Berat Normal</div>
-            </div>
-        </div>
-        <p style='color:#555;'>*Estimasi kasar rentang -2SD s/d +2SD</p>
-    </div>
+
+def reset_kejar_tumbuh():
+    """Reset semua data dan input Kalkulator Kejar Tumbuh"""
+    return [], "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data. Silakan tambahkan data pengukuran.</p>", None, None, None, None, ""
+
+
+def hapus_data_terakhir(data_state):
     """
-
-# --- 9. GRADIO UI CONSTRUCTION ---
-
-js_notif = """
-<script>
-function requestNotif() {
-    Notification.requestPermission().then(function(result) {
-        console.log("Notif permission: " + result);
-    });
-}
-</script>
-"""
-
-with gr.Blocks(
-    title=APP_TITLE,
-    theme=gr.themes.Soft(primary_hue="orange", secondary_hue="amber"), # Base theme modified by CSS
-    css=LIQUID_GLASS_CSS
-) as demo:
+    Menghapus data pengukuran terakhir dari Kalkulator Kejar Tumbuh
     
-    gr.HTML(js_notif)
-
-    # === HEADER ===
-    gr.HTML("""
-    <div class="custom-header">
-        <div style="position: relative; z-index: 2;">
-            <h1>Analisis Faktor Risiko Overweight dan Obesitas</h1>
-            <p>Aplikasi Antropometri HPK - Mahasiswa Kedokteran Universitas Jambi</p>
-        </div>
-    </div>
-    """)
-
-    # === MAIN NAVIGATION ===
-    with gr.Tabs() as tabs:
+    Args:
+        data_state: List data pengukuran
+    
+    Returns:
+        Tuple: (updated_data_state, updated_display_html)
+    """
+    if not data_state or len(data_state) == 0:
+        return [], "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data untuk dihapus.</p>"
+    
+    # Hapus data terakhir
+    data_state.pop()
+    
+    # Generate updated display
+    if len(data_state) == 0:
+        display_html = "<p style='color: #7f8c8d; padding: 20px;'>Tidak ada data. Silakan tambahkan data pengukuran.</p>"
+    else:
+        display_html = "<div style='padding: 15px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 10px;'>"
+        display_html += f"<h4 style='margin-top: 0; color: #2c3e50;'>📊 Data Terinput: {len(data_state)} pengukuran</h4>"
+        display_html += "<table style='width: 100%; border-collapse: collapse;'>"
+        display_html += "<tr style='background: #3498db; color: white;'>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>No</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>Usia (bulan)</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>BB (kg)</th>"
+        display_html += "<th style='padding: 8px; border: 1px solid #ddd;'>TB (cm)</th>"
+        display_html += "</tr>"
         
-        # TAB 1: KALKULATOR
-        with gr.TabItem("📊 Analisis Risiko", id=0):
-            with gr.Row():
-                # Input Column
-                with gr.Column(scale=1):
-                    gr.Markdown("### 📝 Data Anak")
-                    with gr.Group():
-                        name = gr.Textbox(label="Nama Anak")
-                        parent = gr.Textbox(label="Nama Orang Tua")
-                        sex = gr.Radio(["Laki-laki", "Perempuan"], label="Jenis Kelamin", value="Laki-laki")
-                    
-                    with gr.Group():
-                        age_mode = gr.Radio(["Tanggal", "Usia (bulan)"], label="Metode Usia", value="Tanggal")
-                        dob = gr.Textbox(label="Tanggal Lahir (YYYY-MM-DD)")
-                        dom = gr.Textbox(label="Tanggal Ukur (YYYY-MM-DD)", value=datetime.now().strftime("%Y-%m-%d"))
-                        age_man = gr.Number(label="Usia (Bulan)", visible=False)
-                    
-                    with gr.Group():
-                        w = gr.Number(label="Berat (kg)")
-                        h = gr.Number(label="Tinggi (cm)")
-                        hc = gr.Number(label="Lingkar Kepala (cm)")
-                    
-                    analyze_btn = gr.Button("🔬 Analisis Sekarang", variant="primary")
-
-                # Output Column
-                with gr.Column(scale=2):
-                    output_html = gr.HTML()
-                    with gr.Accordion("📈 Grafik Pertumbuhan Detail", open=True):
-                        with gr.Row():
-                            p1 = gr.Plot(label="BB/U")
-                            p2 = gr.Plot(label="TB/U")
-                        with gr.Row():
-                            p3 = gr.Plot(label="BB/TB")
-                            p4 = gr.Plot(label="LK/U")
-                        p5 = gr.Plot(label="Ringkasan")
-                    
-                    pdf_file = gr.File(label="Unduh Laporan PDF", visible=False)
-
-        # TAB 2: MODE MUDAH
-        with gr.TabItem("🎯 Mode Mudah", id=1):
-            gr.Markdown("### Referensi Cepat (Quick Check)")
-            with gr.Row():
-                with gr.Column(scale=1):
-                    mm_age = gr.Slider(0, 60, step=1, label="Usia (Bulan)", value=12)
-                    mm_sex = gr.Radio(["Laki-laki", "Perempuan"], label="Gender", value="Laki-laki")
-                    mm_btn = gr.Button("Cek Normal", variant="secondary")
-                with gr.Column(scale=2):
-                    mm_out = gr.HTML()
-            mm_btn.click(mode_mudah_logic, [mm_age, mm_sex], mm_out)
-
-        # TAB 3: KEJAR TUMBUH
-        with gr.TabItem("📈 Kejar Tumbuh", id=2):
-            gr.Markdown("### Monitoring Velocity")
-            # (Simplified for demo - full logic implies list state management)
-            kt_out_html = gr.HTML("<p>Fitur ini membutuhkan input data seri berkala.</p>")
-            kt_plot = gr.Image(label="Grafik Trend", visible=False)
-
-        # TAB 4: PERPUSTAKAAN
-        with gr.TabItem("📚 Perpustakaan", id=3) as lib_tab:
-            with gr.Row():
-                search = gr.Textbox(show_label=False, placeholder="🔍 Cari artikel kesehatan anak...")
-                cat = gr.Dropdown(["Semua Kategori", "Nutrisi & MPASI", "Tumbuh Kembang", "Kesehatan"], value="Semua Kategori", show_label=False)
-                find_btn = gr.Button("Cari", variant="primary")
-            
-            lib_out = gr.HTML()
-            find_btn.click(update_library, [search, cat], lib_out)
-            lib_tab.select(lambda: update_library("", "Semua Kategori"), None, lib_out)
-
-        # TAB 5: PENGATURAN & PREMIUM
-        with gr.TabItem("⚙️ Pengaturan", id=4):
-             gr.Markdown("### 🔔 Notifikasi")
-             notif_btn = gr.Button("Aktifkan Notifikasi Browser")
-             notif_btn.click(None, None, None, js="() => requestNotif()")
-             
-             gr.Markdown("### ⭐ Paket Premium")
-             gr.HTML("""
-             <div class="finding-card-grid">
-                <div class="finding-card" style="border-bottom: 4px solid silver;">
-                    <div class="label">Silver</div>
-                    <div class="number">Rp 10rb</div>
-                    <p>Bebas Iklan</p>
-                </div>
-                <div class="finding-card" style="border-bottom: 4px solid gold;">
-                    <div class="label">Gold</div>
-                    <div class="number">Rp 50rb</div>
-                    <p>Konsultasi Dokter</p>
-                </div>
-             </div>
-             """)
-
-    # === FOOTER ===
-    gr.HTML("""
-    <footer style="background: #2C3E50; color: white; padding: 40px 0; text-align: center; margin-top: 60px; border-radius: 20px 20px 0 0;">
-        <h3 style="color: #DEB887; margin-bottom: 10px;">AnthroHPK Research App</h3>
-        <p style="opacity: 0.8;">Mahasiswa Kedokteran Universitas Jambi Angkatan 2022-2024</p>
-        <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">
-            <i class="fas fa-code"></i> Developed by Habib Arsy
-        </p>
-    </footer>
-    """)
-
-    # Event Wiring (Logic Connections)
-    def toggle_age_vis(m):
-        return gr.update(visible=m=="Tanggal"), gr.update(visible=m=="Tanggal"), gr.update(visible=m!="Tanggal")
+        for i, data in enumerate(data_state):
+            bg_color = "#ecf0f1" if i % 2 == 0 else "#ffffff"
+            display_html += f"<tr style='background: {bg_color};'>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{i+1}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['usia_bulan']}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['bb']}</td>"
+            display_html += f"<td style='padding: 8px; border: 1px solid #ddd; text-align: center;'>{data['tb']}</td>"
+            display_html += "</tr>"
+        
+        display_html += "</table>"
+        display_html += "<p style='margin-top: 10px; color: #e67e22; font-weight: bold;'>🗑️ Data terakhir berhasil dihapus!</p>"
+        display_html += "</div>"
     
-    age_mode.change(toggle_age_vis, age_mode, [dob, dom, age_man])
-    
-    analyze_btn.click(
-        run_analysis,
-        inputs=[name, parent, sex, age_mode, dob, dom, age_man, w, h, hc],
-        outputs=[output_html, p1, p2, p3, p4, p5, pdf_file]
+    return data_state, display_html
+
+# =========================================
+# SECTION 10B – Extra
+# Plot Kejar Tumbuh (versi smooth)
+# =========================================
+
+def plot_kejar_tumbuh_trajectory(
+    data_list: List[Dict],
+    gender: str,
+    theme_name: str = "pink_pastel",
+) -> Optional[str]:
+    """
+    Versi baru plot Kejar Tumbuh:
+    - Tetap memakai kurva rujukan WHO (WFA & HFA).
+    - Trajectory anak digambar dengan garis SMOOTH (cubic spline)
+      sehingga bentuk kurva mendekati grafik referensi,
+      bukan garis patah-patah antar titik.
+    """
+    import numpy as np
+
+    if not data_list or len(data_list) < 2:
+        # Minimal 2 titik agar ada bentuk kurva
+        return None
+
+    theme = apply_matplotlib_theme(theme_name)
+    sex_code = "M" if gender.lower().startswith("l") else "F"
+
+    ages = np.array([float(d.get("usia_bulan", 0.0)) for d in data_list], dtype=float)
+    weights = np.array([float(d.get("bb", 0.0)) for d in data_list], dtype=float)
+    heights = np.array([float(d.get("tb", 0.0)) for d in data_list], dtype=float)
+
+    # Urutkan berdasarkan usia untuk mencegah garis bolak-balik
+    order = np.argsort(ages)
+    ages = ages[order]
+    weights = weights[order]
+    heights = heights[order]
+
+    # Batasi rentang usia agar tidak keluar jauh dari data anak
+    min_age = max(0.0, float(ages.min()) - 1.0)
+    max_age = min(60.0, float(ages.max()) + 1.0)
+    plot_age_grid = AGE_GRID[(AGE_GRID >= min_age) & (AGE_GRID <= max_age)]
+
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.8), sharex=True)
+    ax1, ax2 = axes
+
+    # --- Kurva rujukan WFA WHO ---
+    wfa_curves = {}
+    for sd in range(-3, 4):
+        x, y = generate_wfa_curve(sex_code, sd)
+        mask = (x >= min_age) & (x <= max_age)
+        wfa_curves[sd] = (x[mask], y[mask])
+
+    # --- Kurva rujukan HFA WHO ---
+    hfa_curves = {}
+    for sd in range(-3, 4):
+        x, y = generate_hfa_curve(sex_code, sd)
+        mask = (x >= min_age) & (x <= max_age)
+        hfa_curves[sd] = (x[mask], y[mask])
+
+    local_age_grid = plot_age_grid
+
+    # Zona WFA
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[-2][1], wfa_curves[-1][1],
+        "#FFEBEE", 0.55, "Sangat Kurus"
+    )
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[-1][1], wfa_curves[1][1],
+        "#E8F5E9", 0.35, "Normal"
+    )
+    _fill_zone_between_curves(
+        ax1, local_age_grid,
+        wfa_curves[1][1], wfa_curves[2][1],
+        "#FFF3CD", 0.35, "Risiko BB Lebih"
     )
 
-# --- 10. MOUNT TO FASTAPI & RUN ---
+    for sd, (x, y) in wfa_curves.items():
+        ax1.plot(
+            x, y,
+            linestyle="--" if abs(sd) == 2 else "-",
+            linewidth=1,
+            alpha=0.8,
+            label=f"BB z={sd}" if sd in (-2, 0, 2) else None,
+        )
 
-app_fastapi = FastAPI()
+    # Zona HFA
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[-2][1], hfa_curves[-1][1],
+        "#FFEBEE", 0.55, "Sangat Pendek"
+    )
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[-1][1], hfa_curves[2][1],
+        "#E8F5E9", 0.45, "Normal"
+    )
+    _fill_zone_between_curves(
+        ax2, local_age_grid,
+        hfa_curves[2][1],  hfa_curves[3][1],
+        "#FFF3CD", 0.35, "Tinggi"
+    )
 
+    for sd, (x, y) in hfa_curves.items():
+        ax2.plot(
+            x, y,
+            linestyle="--" if abs(sd) == 2 else "-",
+            linewidth=1,
+            alpha=0.8,
+            label=f"TB z={sd}" if sd in (-2, 0, 2) else None,
+        )
+
+    # --- Trajectory anak: smoothing dengan cubic spline ---
+    try:
+        from scipy.interpolate import make_interp_spline
+
+        # Pilih derajat spline sesuai jumlah titik
+        if len(ages) >= 4:
+            k = 3
+        elif len(ages) == 3:
+            k = 2
+        else:
+            k = 1  # fallback hampir linear (mirip garis biasa)
+
+        age_smooth = np.linspace(float(ages.min()), float(ages.max()), 200)
+
+        w_spline = make_interp_spline(ages, weights, k=k)
+        w_smooth = w_spline(age_smooth)
+
+        h_spline = make_interp_spline(ages, heights, k=k)
+        h_smooth = h_spline(age_smooth)
+    except Exception:
+        # Kalau SciPy tidak tersedia atau ada error lain → pakai garis biasa
+        age_smooth = ages
+        w_smooth = weights
+        h_smooth = heights
+
+    primary = theme.get("primary", "#ff6b9d")
+
+    # BB vs usia: garis smooth + titik pengukuran
+    ax1.plot(
+        age_smooth, w_smooth,
+        color=primary,
+        linewidth=2.4,
+        label="Trajectory BB (smooth)",
+        zorder=10,
+    )
+    ax1.scatter(
+        ages, weights,
+        color="#111827",
+        s=28,
+        zorder=11,
+    )
+
+    # TB vs usia: garis smooth + titik pengukuran
+    ax2.plot(
+        age_smooth, h_smooth,
+        color=primary,
+        linewidth=2.4,
+        label="Trajectory TB (smooth)",
+        zorder=10,
+    )
+    ax2.scatter(
+        ages, heights,
+        color="#111827",
+        s=28,
+        zorder=11,
+    )
+
+    # Label & grid
+    ax1.set_title("Kejar Tumbuh BB vs Usia")
+    ax1.set_xlabel("Usia (bulan)")
+    ax1.set_ylabel("Berat Badan (kg)")
+    ax1.grid(True, which="both", linestyle=":", alpha=0.4)
+
+    ax2.set_title("Kejar Tumbuh TB vs Usia")
+    ax2.set_xlabel("Usia (bulan)")
+    ax2.set_ylabel("Tinggi/Panjang Badan (cm)")
+    ax2.grid(True, which="both", linestyle=":", alpha=0.4)
+
+    ax1.legend(fontsize=7, loc="upper left")
+    ax2.legend(fontsize=7, loc="upper left")
+
+    fig.suptitle(f"Trajectory Kejar Tumbuh — {gender}", fontsize=11, y=0.98)
+
+    # Simpan gambar ke OUTPUTS_DIR
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"kejar_tumbuh_{timestamp}.png"
+    filepath = os.path.join(OUTPUTS_DIR, filename)
+    os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.savefig(filepath, dpi=160)
+    cleanup_matplotlib_figures(fig)
+
+    return filepath
+
+
+def kalkulator_kejar_tumbuh_handler(data_list: List[Dict], gender: str) -> Tuple[str, Optional[str]]:
+    """
+    (BARU DITAMBAHKAN)
+    Handler utama untuk Kalkulator Kejar Tumbuh.
+    Menghasilkan HTML analisis dan path ke plot.
+    """
+    if not data_list or len(data_list) < 2:
+        html = "<p style='color: #e74c3c; padding: 20px;'>⚠️ Minimal 2 data pengukuran diperlukan untuk menghitung laju pertumbuhan dan membuat grafik.</p>"
+        return html, None
+    
+    try:
+        # 1. Hitung analisis velocity (HTML)
+        html_report = hitung_kejar_tumbuh(data_list)
+        
+        # 2. Buat plot trajectory (PNG)
+        plot_path = plot_kejar_tumbuh_trajectory(data_list, gender)
+        
+        return html_report, plot_path
+        
+    except Exception as e:
+        print(f"❌ Error in kalkulator_kejar_tumbuh_handler: {e}")
+        traceback.print_exc()
+        return f"<p style='color: #e74c3c; padding: 20px;'>Terjadi error saat analisis: {e}</p>", None
+
+print("✅ Section 10B-Extra loaded: Kejar Tumbuh functions defined")
+
+# Build Gradio Interface
+with gr.Blocks(
+    title=APP_TITLE,
+    theme=gr.themes.Soft(
+        primary_hue="pink",
+        secondary_hue="teal",
+        neutral_hue="slate",
+        # --- PERBAIKAN DI BAWAH INI ---
+        font=[gr.themes.GoogleFont("Inter"), "system-ui", "sans-serif"],
+        font_mono=[gr.themes.GoogleFont("Fira Code"), "monospace"],
+        # --- AKHIR PERBAIKAN ---
+    ),
+    css=CUSTOM_CSS, 
+    analytics_enabled=False,
+) as demo:
+    
+    # =======================================================================
+    # HEADER (MODIFIED FOR v3.2.2)
+    # =======================================================================
+    
+    gr.Markdown(f"""
+    # 🏥 **{APP_TITLE} v3.2.2**
+    ### 💕 Monitor Pertumbuhan Anak Profesional Berbasis WHO Standards
+    
+    **Fitur Unggulan v3.2.2 (Revisi):**
+    - ✅ **Mode Mudah:** Referensi cepat rentang normal BB, TB, LK.
+    - ✅ **Kalkulator Kejar Tumbuh:** Monitor laju pertumbuhan (velocity) anak Anda.
+    - ✅ **Perpustakaan Interaktif:** Fitur baru dengan 40 artikel, search, filter, dan UI profesional.
+    - ✅ Bug Fix & Peningkatan UI.
+    - ✅ Standar WHO 2006 & Permenkes RI 2020.
+    
+    ---
+    
+    ⚠️ **PENTING**: Aplikasi ini untuk skrining awal. Konsultasikan hasil dengan tenaga kesehatan.
+    
+    📱 **Butuh bantuan?** WhatsApp: [+{CONTACT_WA}](https://wa.me/{CONTACT_WA})
+    
+    ---
+    """)
+    
+    # JavaScript for Browser Notifications (from v3.1)
+    # DIGABUNG dengan JavaScript Perpustakaan Interaktif (v3.2.2)
+    
+    # JavaScript for Browser Notifications (from v3.1)
+    # DIGABUNG dengan JavaScript Perpustakaan Interaktif (v3.2.2)
+    
+    # Define notification_js
+    notification_js = """
+<script>
+// Browser Notification System for AnthroHPK
+window.AnthroNotification = {
+    isSupported: function() {
+        return ('Notification' in window);
+    },
+    requestPermission: async function() {
+        if (!this.isSupported()) {
+            return Promise.resolve(false);
+        }
+        if (Notification.permission === 'granted') {
+            return Promise.resolve(true);
+        }
+        if (Notification.permission !== 'denied') {
+            const permission = await Notification.requestPermission();
+            return permission === 'granted';
+        }
+        return Promise.resolve(false);
+    },
+    send: function(title, options = {}) {
+        if (!this.isSupported() || Notification.permission !== 'granted') {
+            return null;
+        }
+        const defaultOptions = {
+            icon: '/static/icon.png',
+            badge: '/static/badge.png',
+            requireInteraction: false,
+            silent: false
+        };
+        const notificationOptions = { ...defaultOptions, ...options };
+        try {
+            return new Notification(title, notificationOptions);
+        } catch (error) {
+            console.error('Notification error:', error);
+            return null;
+        }
+    },
+    scheduleReminder: function(title, body, date) {
+        const now = new Date();
+        const scheduledTime = new Date(date);
+        const delay = scheduledTime - now;
+        if (delay > 0) {
+            setTimeout(() => {
+                this.send(title, { body: body });
+            }, delay);
+            return true;
+        }
+        return false;
+    },
+    getPermission: function() {
+        if (!this.isSupported()) {
+            return 'unsupported';
+        }
+        return Notification.permission;
+    }
+};
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('AnthroNotification initialized');
+});
+</script>
+"""
+    
+    combined_js = notification_js 
+    gr.HTML(combined_js)
+    
+    # State untuk menyimpan payload
+    state_payload = gr.State({})
+    
+    # =======================================================================
+    # MAIN TABS (MODIFIED FOR v3.2.2 - RE-ORDERED)
+    # =======================================================================
+    
+    with gr.Tabs() as main_tabs:
+        
+        # ===================================================================
+        # TAB 1: KALKULATOR GIZI WHO
+        # ===================================================================
+        
+        with gr.TabItem("📊 Kalkulator Gizi WHO", id=0):
+            gr.Markdown("## 🧮 Analisis Status Gizi Komprehensif")
+            
+            with gr.Row():
+                # LEFT COLUMN: INPUTS
+                with gr.Column(scale=6):
+                    gr.Markdown("### 📝 Data Anak")
+                    
+                    with gr.Group():
+                        nama_anak = gr.Textbox(
+                            label="Nama Anak",
+                            placeholder="Contoh: Budi Santoso",
+                            info="Nama lengkap anak (opsional)"
+                        )
+                        
+                        nama_ortu = gr.Textbox(
+                            label="Nama Orang Tua/Wali",
+                            placeholder="Contoh: Ibu Siti Aminah",
+                            info="Opsional, untuk identifikasi laporan"
+                        )
+                        
+                        sex = gr.Radio(
+                            choices=["Laki-laki", "Perempuan"],
+                            label="Jenis Kelamin",
+                            value="Laki-laki",
+                            info="PENTING: Standar WHO berbeda untuk laki-laki dan perempuan"
+                        )
+                    
+                    with gr.Group():
+                        gr.Markdown("### 📅 Usia")
+                        
+                        age_mode = gr.Radio(
+                            choices=["Tanggal", "Usia (bulan)"],
+                            label="Cara Input Usia",
+                            value="Tanggal",
+                            info="Pilih metode input yang paling mudah"
+                        )
+                        
+                        with gr.Column(visible=True) as date_inputs:
+                            dob = gr.Textbox(
+                                label="Tanggal Lahir",
+                                placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                                info="Contoh: 2023-01-15 atau 15/01/2023"
+                            )
+                            
+                            dom = gr.Textbox(
+                                label="Tanggal Pengukuran",
+                                value=datetime.now().strftime("%Y-%m-%d"),
+                                info="Hari ini atau tanggal pengukuran aktual"
+                            )
+                        
+                        with gr.Column(visible=False) as month_input:
+                            age_months = gr.Number(
+                                label="Usia (bulan)",
+                                value=6,
+                                minimum=0,
+                                maximum=60,
+                                info="Masukkan usia dalam bulan (0-60)"
+                            )
+                    
+                    with gr.Group():
+                        gr.Markdown("### 📏 Pengukuran Antropometri")
+                        
+                        weight = gr.Number(
+                            label="Berat Badan (kg)",
+                            value=None,
+                            minimum=1,
+                            maximum=30,
+                            info="Gunakan timbangan digital (presisi 0.1 kg)"
+                        )
+                        
+                        height = gr.Number(
+                            label="Panjang/Tinggi Badan (cm)",
+                            value=None,
+                            minimum=35,
+                            maximum=130,
+                            info="Panjang badan (< 24 bln) atau Tinggi badan (≥ 24 bln)"
+                        )
+                        
+                        head_circ = gr.Number(
+                            label="Lingkar Kepala (cm) - Opsional",
+                            value=None,
+                            minimum=20,
+                            maximum=60,
+                            info="Ukur lingkar terbesar kepala dengan meteran fleksibel"
+                        )
+                    
+                    with gr.Group():
+                        gr.Markdown("### 🎨 Tema Grafik")
+                        
+                        theme_choice = gr.Radio(
+                            choices=[
+                                "pink_pastel",
+                                "mint_pastel",
+                                "lavender_pastel"
+                            ],
+                            value="pink_pastel",
+                            label="Pilih Tema",
+                            info="Pilih warna grafik sesuai selera"
+                        )
+                    
+                    analyze_btn = gr.Button(
+                        "🔬 Analisis Sekarang",
+                        variant="primary",
+                        size="lg",
+                        elem_classes=["big-button"]
+                    )
+                
+                # RIGHT COLUMN: GUIDE
+                with gr.Column(scale=4):
+                    gr.Markdown("### 💡 Panduan Pengukuran Akurat")
+                    
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+                                padding: 25px; border-radius: 15px; 
+                                border-left: 6px solid #4caf50; 
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.1);'>
+                        
+                        <h4 style='color: #1b5e20; margin-top: 0; font-size: 18px;'>
+                            📏 Tips Pengukuran Profesional
+                        </h4>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>⚖️ Berat Badan:</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Timbang pagi hari sebelum makan</li>
+                                <li>Pakai timbangan digital (presisi 100g)</li>
+                                <li>Anak tanpa sepatu & pakaian tebal</li>
+                                <li>Bayi: timbangan bayi khusus</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>📐 Panjang (0-24 bulan):</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Gunakan <strong>infantometer</strong></li>
+                                <li>Bayi telentang, kepala menempel papan</li>
+                                <li>Butuh 2 orang: 1 kepala, 1 kaki</li>
+                                <li>Pastikan bayi rileks (tidak menangis)</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>📏 Tinggi (>24 bulan):</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Gunakan <strong>stadiometer</strong></li>
+                                <li>Anak berdiri tegak tanpa sepatu</li>
+                                <li>Punggung menempel dinding</li>
+                                <li>Pandangan lurus ke depan</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='margin: 20px 0;'>
+                            <strong style='color: #2e7d32; font-size: 15px;'>⭕ Lingkar Kepala:</strong>
+                            <ul style='margin: 8px 0; padding-left: 25px; color: #1b5e20;'>
+                                <li>Meteran <strong>fleksibel</strong> (non-stretch)</li>
+                                <li>Lingkar terbesar: atas alis & telinga</li>
+                                <li>Ulangi 3x, ambil rata-rata</li>
+                                <li>Penting untuk usia < 36 bulan</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='background: #fff8e1; padding: 15px; border-radius: 10px; 
+                                    margin-top: 20px; border-left: 4px solid #ffa000;'>
+                            <strong style='color: #ff6f00; font-size: 14px;'>⚠️ Penting:</strong>
+                            <p style='color: #e65100; margin: 8px 0 0 0; font-size: 13px;'>
+                                Kesalahan 0.5 cm pada tinggi = perbedaan Z-score signifikan!
+                                Akurasi pengukuran sangat menentukan hasil analisis.
+                            </p>
+                        </div>
+                    </div>
+                    """)
+                    
+                    gr.Markdown("### 🎯 Interpretasi Z-Score")
+                    
+                    gr.HTML("""
+                    <table style='width: 100%; border-collapse: collapse; 
+                                  margin-top: 15px; background: white; 
+                                  border-radius: 12px; overflow: hidden; 
+                                  box-shadow: 0 3px 10px rgba(0,0,0,0.1);'>
+                        <thead>
+                            <tr style='background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%); 
+                                       color: white;'>
+                                <th style='padding: 15px; text-align: center; font-weight: 700;'>Z-Score</th>
+                                <th style='padding: 15px; font-weight: 700;'>Kategori</th>
+                                <th style='padding: 15px; text-align: center; font-weight: 700;'>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style='border-bottom: 1px solid #f0f0f0;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>&lt; -3</td>
+                                <td style='padding: 12px;'>Sangat Kurang/Gizi Buruk</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🔴</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fff5f5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>-3 to -2</td>
+                                <td style='padding: 12px;'>Kurang/Stunted/Wasted</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟠</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>-2 to +1</td>
+                                <td style='padding: 12px;'><strong>Normal/Baik</strong></td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟢</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fffef5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>+1 to +2</td>
+                                <td style='padding: 12px;'>Kemungkinan Risiko Lebih</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟡</td>
+                            </tr>
+                            <tr style='border-bottom: 1px solid #f0f0f0; background: #fff5f5;'>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>+2 to +3</td>
+                                <td style='padding: 12px;'>Berisiko Gizi Lebih</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🟠</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 12px; text-align: center; font-weight: 600;'>&gt; +3</td>
+                                <td style='padding: 12px;'>Obesitas</td>
+                                <td style='padding: 12px; text-align: center; font-size: 22px;'>🔴</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    """)
+            
+            gr.Markdown("---")
+            gr.Markdown("## 📊 Hasil Analisis")
+            
+            result_interpretation = gr.Markdown(
+                "*Hasil interpretasi akan tampil di sini setelah analisis...*",
+                elem_classes=["status-success"]
+            )
+            
+            gr.Markdown("### 📈 Grafik Pertumbuhan")
+            
+            with gr.Row():
+                plot_wfa = gr.Plot(label="Berat menurut Umur (BB/U)")
+                plot_hfa = gr.Plot(label="Tinggi menurut Umur (TB/U)")
+            
+            with gr.Row():
+                plot_hcfa = gr.Plot(label="Lingkar Kepala (LK/U)")
+                plot_wfl = gr.Plot(label="Berat menurut Tinggi (BB/TB)")
+            
+            plot_bars = gr.Plot(label="📊 Ringkasan Z-Score Semua Indeks")
+            
+            gr.Markdown("### 💾 Export & Simpan Hasil")
+            
+            with gr.Row():
+                pdf_btn = gr.Button("📄 Download PDF Lengkap", variant="primary", size="lg")
+                csv_btn = gr.Button("📊 Download CSV Data", variant="secondary", size="lg")
+            
+            with gr.Row():
+                pdf_file = gr.File(label="PDF Report", visible=False)
+                csv_file = gr.File(label="CSV Data", visible=False)
+            
+            # Toggle age input visibility
+            def toggle_age_input(mode):
+                return (
+                    gr.update(visible=(mode == "Tanggal")),
+                    gr.update(visible=(mode == "Usia (bulan)"))
+                )
+            
+            age_mode.change(
+                toggle_age_input,
+                inputs=[age_mode],
+                outputs=[date_inputs, month_input]
+            )
+            
+            # Main analysis handler
+            analyze_btn.click(
+                run_comprehensive_analysis,
+                inputs=[
+                    nama_anak, nama_ortu, sex, age_mode,
+                    dob, dom, age_months,
+                    weight, height, head_circ,
+                    theme_choice
+                ],
+                outputs=[
+                    result_interpretation,
+                    plot_wfa, plot_hfa, plot_hcfa, plot_wfl, plot_bars,
+                    pdf_file, csv_file,
+                    state_payload
+                ]
+            )
+            
+            # PDF download (just update visibility)
+            pdf_btn.click(
+                lambda: gr.update(visible=True),
+                outputs=[pdf_file]
+            )
+            
+            # CSV download (just update visibility)
+            csv_btn.click(
+                lambda: gr.update(visible=True),
+                outputs=[csv_file]
+            )
+        
+        # ===================================================================
+        # TAB 2: MODE MUDAH (BARU v3.2)
+        # ===================================================================
+        
+        with gr.TabItem("🎯 Mode Mudah", id=1):
+            gr.Markdown("""
+            ### Mode Mudah - Referensi Cepat untuk Ibu
+            
+            Tidak perlu menghitung z-score yang rumit! Cukup masukkan **usia** dan **jenis kelamin** anak, 
+            dan kami akan menampilkan **rentang normal** untuk berat badan, tinggi badan, dan lingkar kepala.
+            
+            Sangat cocok untuk:
+            - ✅ Screening cepat di rumah
+            - ✅ Evaluasi awal sebelum ke posyandu
+            - ✅ Memahami standar pertumbuhan dengan mudah
+            """)
+            
+            with gr.Row():
+                with gr.Column(scale=1):
+                    mode_mudah_age = gr.Slider(
+                        minimum=0, maximum=60, step=1, value=12,
+                        label="Usia Anak (bulan)",
+                        info="Geser untuk memilih usia"
+                    )
+                    
+                    mode_mudah_gender = gr.Radio(
+                        choices=["Laki-laki", "Perempuan"],
+                        value="Laki-laki",
+                        label="Jenis Kelamin"
+                    )
+                    
+                    mode_mudah_btn = gr.Button(
+                        "🔍 Lihat Rentang Normal",
+                        variant="primary",
+                        size="lg"
+                    )
+                
+                with gr.Column(scale=2):
+                    mode_mudah_output = gr.HTML(
+                        label="Hasil Referensi Cepat",
+                        value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil akan tampil di sini...</p>"
+                    )
+            
+            # Connect handler
+            mode_mudah_btn.click(
+                fn=mode_mudah_handler,
+                inputs=[mode_mudah_age, mode_mudah_gender],
+                outputs=mode_mudah_output
+            )
+
+        # ===================================================================
+        # TAB 3: CHECKLIST SEHAT BULANAN (BUG FIX v3.2)
+        # ===================================================================
+        
+        with gr.TabItem("📋 Checklist Sehat Bulanan", id=2):
+            gr.Markdown("""
+            ## 🗓️ Panduan Checklist Bulanan (0-24 Bulan)
+            
+            Dapatkan rekomendasi **perkembangan**, **gizi**, **imunisasi**, dan **KPSP** yang disesuaikan dengan usia dan status gizi anak.
+            
+            💡 **Cara Pakai:**
+            1. Lakukan analisis di tab "Kalkulator Gizi" terlebih dahulu
+            2. Pilih bulan checklist yang diinginkan
+            3. Lihat rekomendasi lengkap, KPSP, dan **Video Edukasi** yang relevan
+            """)
+            
+            with gr.Row():
+                month_slider = gr.Slider(
+                    minimum=0,
+                    maximum=24,
+                    step=1,
+                    value=6,
+                    label="Pilih Bulan Checklist (0-24)",
+                    info="Geser untuk memilih bulan yang sesuai"
+                )
+                
+                generate_checklist_btn = gr.Button(
+                    "📋 Generate Checklist",
+                    variant="primary",
+                    size="lg"
+                )
+            
+            # --- BUG FIX (v3.2) ---
+            # Mengganti gr.Markdown menjadi gr.HTML untuk merender video card dengan benar
+            checklist_output = gr.HTML(
+                value="<p style='padding: 20px; text-align: center; color: #888;'>Pilih bulan dan klik tombol untuk melihat checklist...</p>"
+            )
+            
+            def generate_checklist_handler(month, payload):
+                """Handler untuk generate checklist (UPDATED for v3.1)"""
+                if not payload:
+                    return """
+<h2> ⚠️ Data Belum Tersedia</h2>
+<p style='padding: 20px;'>
+Silakan lakukan analisis di tab <strong>Kalkulator Gizi</strong> terlebih dahulu untuk mendapatkan 
+checklist yang disesuaikan dengan status gizi anak.
+</p>
+"""
+                
+                try:
+                    # Use the NEW function that includes videos
+                    recommendations_html = generate_checklist_with_videos(int(month), payload)
+                    return recommendations_html
+                except Exception as e:
+                    return f"<h2> ❌ Error</h2><p>Terjadi kesalahan: {str(e)}</p>"
+            
+            generate_checklist_btn.click(
+                generate_checklist_handler,
+                inputs=[month_slider, state_payload],
+                outputs=[checklist_output]
+            )
+        
+        # ===================================================================
+        # TAB 4: KALKULATOR TARGET KEJAR TUMBUH (BARU v3.2)
+        # ===================================================================
+        
+        with gr.TabItem("📈 Kalkulator Target Kejar Tumbuh", id=3):
+            gr.Markdown("""
+            ### Kalkulator Target Kejar Tumbuh (Growth Velocity)
+            
+            Monitor **laju pertumbuhan** anak Anda dengan standar internasional WHO! 
+            Fitur ini membantu Anda:
+            
+            - 📈 Memantau **velocity pertumbuhan** (kenaikan BB & TB per bulan)
+            - 🎯 Mengetahui apakah anak **mengejar kurva** atau **melambat**
+            - 💡 Mendapat **rekomendasi nutrisi** berdasarkan trajectory pertumbuhan
+            
+            ---
+            
+            #### 📝 Cara Menggunakan:
+            
+            1.  Pilih **Jenis Kelamin** dan **Mode Input** (Tanggal atau Usia).
+            2.  Jika mode "Tanggal", isi **Tanggal Lahir** (cukup sekali).
+            3.  Isi formulir **"Input Data Pengukuran"** (Tanggal/Usia, BB, TB).
+            4.  Klik **"Tambah Data"**. Ulangi untuk setiap pengukuran (minimal 2 data).
+            5.  Data yang Anda tambahkan akan muncul di tabel **"Data Terinput"**.
+            6.  Jika salah, klik **"Hapus Data Terakhir"**.
+            7.  Setelah semua data terisi, klik **"Analisis Pertumbuhan"**.
+            """)
+            
+            # State untuk menyimpan list data
+            kejar_tumbuh_data_state = gr.State([])
+            
+            with gr.Row():
+                with gr.Column(scale=1):
+                    gr.Markdown("#### 1. Informasi Dasar Anak")
+                    kejar_gender = gr.Radio(
+                        choices=["Laki-laki", "Perempuan"],
+                        value="Laki-laki",
+                        label="Jenis Kelamin Anak"
+                    )
+                    kejar_tumbuh_mode = gr.Radio(
+                        choices=["Tanggal", "Usia (bulan)"],
+                        value="Tanggal",
+                        label="Mode Input Data",
+                        info="Pilih cara Anda memasukkan data"
+                    )
+                    kejar_tumbuh_dob = gr.Textbox(
+                        label="Tanggal Lahir Anak (DOB)",
+                        placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                        info="Diperlukan jika mode 'Tanggal'",
+                        visible=True
+                    )
+                    
+                    gr.Markdown("#### 2. Input Data Pengukuran")
+                    with gr.Group():
+                        kejar_tumbuh_dom = gr.Textbox(
+                            label="Tanggal Pengukuran (DOM)",
+                            placeholder="YYYY-MM-DD atau DD/MM/YYYY",
+                            info="Tanggal saat anak diukur",
+                            visible=True
+                        )
+                        kejar_tumbuh_usia = gr.Number(
+                            label="Usia (bulan)",
+                            info="Usia anak saat diukur",
+                            visible=False
+                        )
+                        kejar_tumbuh_bb = gr.Number(
+                            label="Berat Badan (kg)",
+                        )
+                        kejar_tumbuh_tb = gr.Number(
+                            label="Panjang/Tinggi Badan (cm)",
+                        )
+                    
+                    with gr.Row():
+                        tambah_data_btn = gr.Button("➕ Tambah Data", variant="secondary")
+                        hapus_data_btn = gr.Button("🗑️ Hapus Data Terakhir")
+                    
+                    gr.Markdown("#### 3. Analisis")
+                    kejar_btn = gr.Button(
+                        "📊 Analisis Pertumbuhan",
+                        variant="primary",
+                        size="lg"
+                    )
+
+                with gr.Column(scale=2):
+                    gr.Markdown("#### Data Terinput")
+                    data_terinput_display = gr.HTML(
+                        "<p style='text-align: center; color: #888; padding: 10px;'>Belum ada data yang ditambahkan.</p>"
+                    )
+                    
+                    gr.Markdown("---")
+                    gr.Markdown("#### Hasil Analisis")
+                    
+                    kejar_output_html = gr.HTML(
+                        label="Hasil Analisis Velocity",
+                        value="<p style='padding: 20px; text-align: center; color: #888;'>Hasil analisis akan tampil di sini...</p>"
+                    )
+                    
+                    kejar_output_plot = gr.Image(
+                        label="Grafik Trajectory Pertumbuhan",
+                        type="filepath",
+                        visible=False
+                    )
+
+            # --- Handlers untuk UI Kejar Tumbuh ---
+            
+            # Toggle visibilitas input Tanggal vs Usia
+            def toggle_kejar_tumbuh_mode(mode):
+                is_tanggal_mode = (mode == "Tanggal")
+                return (
+                    gr.update(visible=is_tanggal_mode), # DOB
+                    gr.update(visible=is_tanggal_mode), # DOM
+                    gr.update(visible=not is_tanggal_mode) # Usia
+                )
+            
+            kejar_tumbuh_mode.change(
+                fn=toggle_kejar_tumbuh_mode,
+                inputs=[kejar_tumbuh_mode],
+                outputs=[kejar_tumbuh_dob, kejar_tumbuh_dom, kejar_tumbuh_usia]
+            )
+            
+            # Handler Tombol "Tambah Data"
+            tambah_data_btn.click(
+                fn=tambah_data_kejar_tumbuh,
+                inputs=[
+                    kejar_tumbuh_data_state, kejar_tumbuh_mode, kejar_tumbuh_dob,
+                    kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
+                ],
+                outputs=[
+                    kejar_tumbuh_data_state, data_terinput_display,
+                    kejar_tumbuh_dom, kejar_tumbuh_usia, kejar_tumbuh_bb, kejar_tumbuh_tb
+                ]
+            )
+            
+            # Handler Tombol "Hapus Data Terakhir"
+            hapus_data_btn.click(
+                fn=hapus_data_terakhir,
+                inputs=[kejar_tumbuh_data_state],
+                outputs=[kejar_tumbuh_data_state, data_terinput_display]
+            )
+            
+            # Handler Tombol "Analisis Pertumbuhan"
+            # Handler Tombol "Analisis Pertumbuhan"
+            def kejar_tumbuh_wrapper_fixed(data_list, gender):
+                """
+                Wrapper baru untuk memanggil handler yang benar dan mengatur visibilitas plot.
+                """
+                # Ini memanggil fungsi baru yang Anda tambahkan di Langkah 2
+                html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender) 
+                
+                if plot_path:
+                    # Jika plot berhasil dibuat, kirim HTML dan buat plot terlihat
+                    return html, gr.update(value=plot_path, visible=True)
+                else:
+                    # Jika plot gagal (misal < 2 data), kirim HTML error dan sembunyikan plot
+                    return html, gr.update(visible=False)
+
+            kejar_btn.click(
+                fn=kejar_tumbuh_wrapper_fixed,  # <-- Pastikan menggunakan nama fungsi wrapper yang baru
+                inputs=[kejar_tumbuh_data_state, kejar_gender],
+                outputs=[kejar_output_html, kejar_output_plot]
+            )
+            
+        # ===================================================================
+        # TAB 5: PERPUSTAKAAN IBU BALITA (REVISI TOTAL)
+        # ===================================================================
+       
+        with gr.TabItem("📚 Perpustakaan", id=4) as tab_perpustakaan: # ID diubah ke 4
+            gr.Markdown("""
+            ## 📚 Perpustakaan Ibu Balita
+            Temukan 40+ artikel terkurasi mengenai nutrisi, tumbuh kembang, dan kesehatan anak.
+            Gunakan filter di bawah untuk mencari artikel yang Anda butuhkan.
+            """)
+            
+            with gr.Row():
+                # Filter 1: Pencarian
+                library_search = gr.Textbox(
+                    label="🔍 Cari Artikel",
+                    placeholder="Ketik kata kunci (misal: stunting, MPASI, demam)..."
+                )
+                
+                # Filter 2: Kategori
+                library_category = gr.Dropdown(
+                    label="📁 Filter Kategori",
+                    choices=get_library_categories_list(), # Memanggil fungsi baru dari Langkah 2
+                    value="Semua Kategori"
+                )
+            
+            # Tombol untuk memicu pencarian
+            library_search_btn = gr.Button("Cari Artikel", variant="primary")
+            
+            gr.Markdown("---")
+            
+            # Area output untuk daftar artikel
+            # INI ADALAH PERBAIKAN DARI ERROR ANDA:
+            # Kita tidak bisa mengupdate 'children' dari 'gr.Column'
+            # Solusinya: Kita buat 'gr.Column' sebagai OUTPUT, dan fungsi Python
+            # akan mengembalikan 'gr.Column.update(...)'
+            
+# Area output untuk daftar artikel
+            # KEMBALIKAN ke gr.HTML
+            library_output = gr.HTML(
+                value="<p style='text-align: center; color: #888; padding: 20px;'>Silakan klik 'Cari Artikel' untuk memuat.</p>"
+            )
+
+            # --- Event Handlers untuk Tab Perpustakaan ---
+            
+            # 1. Memicu pencarian ketika tombol diklik
+            library_search_btn.click(
+                fn=update_library_display, # Memanggil fungsi baru dari Langkah 2
+                inputs=[library_search, library_category],
+                outputs=[library_output]
+            )
+            
+            # 2. (PENTING) Memuat semua artikel saat tab perpustakaan dipilih
+            tab_perpustakaan.select(
+                fn=load_initial_articles, # Memanggil fungsi baru dari Langkah 2
+                inputs=None,
+                outputs=[library_output]
+            )
+
+
+        # ===================================================================
+        # TAB 6: PREMIUM & NOTIFIKASI
+        # ===================================================================
+        
+        with gr.TabItem("⭐ Premium & Notifikasi", id=5):
+            gr.Markdown("""
+            ## 🎁 Upgrade ke Premium
+            
+            Nikmati fitur eksklusif untuk pemantauan pertumbuhan anak yang lebih optimal!
+            """)
+            
+            # PREMIUM PACKAGES
+            with gr.Row():
+                # SILVER PACKAGE
+                with gr.Column():
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #E8E8E8 0%, #F5F5F5 100%); 
+                                padding: 30px; border-radius: 20px; 
+                                border: 3px solid #C0C0C0;
+                                box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                                text-align: center;'>
+                        <h2 style='color: #555; margin-top: 0;'>
+                            🥈 Paket SILVER
+                        </h2>
+                        <div style='font-size: 48px; font-weight: bold; color: #333; margin: 20px 0;'>
+                            Rp 10.000
+                        </div>
+                        <div style='font-size: 14px; color: #666; margin-bottom: 20px;'>
+                            /bulan
+                        </div>
+                        <div style='text-align: left; background: white; padding: 20px; 
+                                    border-radius: 10px; margin: 20px 0;'>
+                            <h4 style='color: #333; margin-top: 0;'>✨ Fitur Silver:</h4>
+                            <ul style='list-style: none; padding: 0;'>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🚫 <strong>Bebas Iklan</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    📊 Semua fitur dasar
+                                </li>
+                                <li style='padding: 8px 0;'>
+                                    💾 Export unlimited
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    """)
+                    
+                    silver_btn = gr.Button(
+                        "💳 Upgrade ke Silver",
+                        variant="secondary",
+                        size="lg",
+                        elem_classes=["premium-silver", "big-button"]
+                    )
+                
+                # GOLD PACKAGE (RECOMMENDED)
+                with gr.Column():
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); 
+                                padding: 30px; border-radius: 20px; 
+                                border: 3px solid #DAA520;
+                                box-shadow: 0 12px 30px rgba(255, 215, 0, 0.4);
+                                text-align: center;
+                                position: relative;'>
+                        <div style='position: absolute; top: -15px; right: 20px; 
+                                    background: #FF4444; color: white; 
+                                    padding: 8px 20px; border-radius: 20px;
+                                    font-weight: bold; font-size: 12px;'>
+                            🔥 REKOMENDASI
+                        </div>
+                        
+                        <h2 style='color: #000; margin-top: 0;'>
+                            🥇 Paket GOLD
+                        </h2>
+                        <div style='font-size: 48px; font-weight: bold; color: #000; margin: 20px 0;'>
+                            Rp 50.000
+                        </div>
+                        <div style='font-size: 14px; color: #333; margin-bottom: 20px;'>
+                            /bulan - Hemat 50%!
+                        </div>
+                        
+                        <div style='text-align: left; background: white; padding: 20px; 
+                                    border-radius: 10px; margin: 20px 0;'>
+                            <h4 style='color: #333; margin-top: 0;'>⭐ Fitur Gold:</h4>
+                            <ul style='list-style: none; padding: 0;'>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🚫 <strong>Bebas Iklan</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    🔔 <strong>Notifikasi Browser Customizable</strong>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    💬 <strong>3x Konsultasi 30 menit</strong><br/>
+                                    <span style='font-size: 12px; color: #666;'>
+                                    via WhatsApp dengan Ahli Gizi
+                                    </span>
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    📊 Semua fitur dasar
+                                </li>
+                                <li style='padding: 8px 0; border-bottom: 1px solid #eee;'>
+                                    💾 Export unlimited
+                                </li>
+                                <li style='padding: 8px 0;'>
+                                    ⚡ Priority support
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    """)
+                    
+                    gold_btn = gr.Button(
+                        "👑 Upgrade ke Gold",
+                        variant="primary",
+                        size="lg",
+                        elem_classes=["premium-gold", "big-button"]
+                    )
+            
+            premium_status = gr.Markdown("", visible=False)
+            
+            gr.Markdown("---")
+            
+            # NOTIFICATION SYSTEM (MODIFIED for v3.1 - HOUR slider)
+            gr.Markdown("""
+            ## 🔔 Sistem Notifikasi Browser (Premium Gold)
+            
+            Dapatkan pengingat otomatis untuk jadwal MPASI, imunisasi, atau pemeriksaan bulanan.
+            """)
+            
+            with gr.Row():
+                with gr.Column(scale=6):
+                    gr.Markdown("### 🔐 Aktifkan Notifikasi Browser")
+                    
+                    enable_notif_btn = gr.Button(
+                        "🔔 Aktifkan Notifikasi",
+                        variant="primary",
+                        size="lg"
+                    )
+                    
+                    notif_status = gr.HTML("""
+                    <div id='notif-status' style='padding: 15px; background: #f0f0f0; 
+                                                   border-radius: 10px; margin: 15px 0;
+                                                   text-align: center;'>
+                        <p style='margin: 0; color: #666;'>
+                            ℹ️ Klik tombol di atas untuk mengaktifkan notifikasi browser
+                        </p>
+                    </div>
+                    """)
+                    
+                    gr.Markdown("### ⏰ Atur Reminder Custom")
+                    
+                    with gr.Group():
+                        reminder_title = gr.Textbox(
+                            label="Judul Reminder",
+                            placeholder="Contoh: Beri makan Si Kecil",
+                            value="Reminder Gizi SiKecil"
+                        )
+                        
+                        reminder_message = gr.Textbox(
+                            label="Pesan Reminder",
+                            placeholder="Contoh: Waktunya beri makan bubur bayi",
+                            lines=2
+                        )
+                        
+                        # --- MODIFIED SLIDER (v3.1) ---
+                        reminder_delay = gr.Slider(
+                            minimum=0.5,  # 30 menit minimum
+                            maximum=24,   # 24 jam maximum
+                            value=3,      # default 3 jam
+                            step=0.5,
+                            label="Delay (jam) ⏰",
+                            info="Notifikasi akan muncul setelah X jam"
+                        )
+                        # --- END MODIFIED SLIDER ---
+                        
+                        schedule_btn = gr.Button(
+                            "⏰ Jadwalkan Reminder",
+                            variant="secondary",
+                            size="lg"
+                        )
+                    
+                    reminder_status = gr.Markdown("", visible=False)
+                
+                with gr.Column(scale=4):
+                    gr.Markdown("### 💡 Panduan Notifikasi")
+                    
+                    gr.HTML("""
+                    <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                padding: 25px; border-radius: 15px; color: white;
+                                box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);'>
+                        
+                        <h4 style='color: white; margin-top: 0;'>
+                            📱 Cara Mengaktifkan:
+                        </h4>
+                        
+                        <ol style='margin: 15px 0; padding-left: 25px; line-height: 1.8;'>
+                            <li>Klik tombol "Aktifkan Notifikasi"</li>
+                            <li>Browser akan minta izin - klik <strong>Allow/Izinkan</strong></li>
+                            <li>Setelah aktif, Anda bisa atur reminder custom</li>
+                            <li>Notifikasi akan muncul otomatis sesuai jadwal</li>
+                        </ol>
+                        
+                        <div style='background: rgba(255,255,255,0.2); padding: 15px; 
+                                    border-radius: 10px; margin-top: 20px;'>
+                            <strong>⚠️ Penting:</strong>
+                            <ul style='margin: 10px 0; padding-left: 20px; font-size: 13px;'>
+                                <li>Browser harus support notifikasi (Chrome, Firefox, Edge)</li>
+                                <li>Jangan tutup tab browser jika ingin menerima notifikasi</li>
+                                <li>Pastikan notifikasi tidak di-block di pengaturan browser</li>
+                            </ul>
+                        </div>
+                    </div>
+                    """)
+                    
+                    gr.Markdown("### 🎁 Template Reminder")
+                    
+                    template_choice = gr.Dropdown(
+                        choices=[
+                            "Pemeriksaan Bulanan", "Jadwal Imunisasi",
+                            "Milestone Perkembangan", "Reminder Nutrisi", "Custom"
+                        ],
+                        value="Custom", label="Pilih Template", info="Pilih template untuk quick setup"
+                    )
+                    
+                    use_template_btn = gr.Button( "📋 Gunakan Template", variant="secondary")
+            
+            # JavaScript Handlers for Notifications
+            enable_notif_js = """
+            <script>
+            function enableNotifications() {
+                window.AnthroNotification.requestPermission().then(granted => {
+                    const statusDiv = document.getElementById('notif-status');
+                    if (granted) {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>✅ Notifikasi Berhasil Diaktifkan!</strong><br/>
+                                <span style='font-size: 13px;'>Anda akan menerima reminder sesuai jadwal</span>
+                            </div>
+                        `;
+                        setTimeout(() => {
+                            window.AnthroNotification.send(
+                                '🎉 Selamat!',
+                                'Notifikasi browser berhasil diaktifkan. Anda akan menerima reminder untuk tumbuh kembang anak.',
+                                '🔔'
+                            );
+                        }, 1000);
+                        return 'Notifikasi diaktifkan!';
+                    } else {
+                        statusDiv.innerHTML = `
+                            <div style='padding: 15px; background: #ff6b6b; 
+                                       border-radius: 10px; color: white; text-align: center;'>
+                                <strong>❌ Notifikasi Ditolak</strong><br/>
+                                <span style='font-size: 13px;'>
+                                    Mohon izinkan notifikasi di pengaturan browser Anda
+                                </span>
+                            </div>
+                        `;
+                        return 'Notifikasi ditolak.';
+                    }
+                });
+                return 'Memproses...';
+            }
+            </script>
+            """
+            gr.HTML(enable_notif_js)
+            
+            # Event Handlers
+            def handle_enable_notification():
+                return gr.HTML.update(value="""
+                <div style='padding: 15px; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                           border-radius: 10px; color: white; text-align: center; margin: 15px 0;'>
+                    <strong>✅ Notifikasi Browser Diaktifkan!</strong><br/>
+                    <span style='font-size: 13px;'>Browser notification sudah aktif.</span>
+                </div>
+                <script>enableNotifications();</script>
+                """)
+            
+            def handle_schedule_reminder_hours(title, message, delay_hours):
+                if not title or not message:
+                    return "❌ Judul dan pesan tidak boleh kosong!"
+                delay_minutes = int(delay_hours * 60)
+                js_code = f"""
+                <script>
+                window.AnthroNotification.schedule('{title}', '{message}', {delay_minutes}, '⏰');
+                alert('✅ Reminder dijadwalkan! Akan muncul dalam {delay_hours} jam.');
+                </script>
+                """
+                return (f"✅ **Reminder Dijadwalkan!**\n\n**Judul:** {title}\n\n**Pesan:** {message}\n\n"
+                        f"**Waktu:** {delay_hours} jam dari sekarang\n\n" + js_code)
+            
+            def handle_use_template(template):
+                templates = {
+                    "Pemeriksaan Bulanan": ("🩺 Pemeriksaan Bulanan", "Sudah saatnya pemeriksaan bulanan! Ukur berat, tinggi, dan lingkar kepala anak.", 8),
+                    "Jadwal Imunisasi": ("💉 Jadwal Imunisasi", "Jangan lupa jadwal imunisasi hari ini! Cek jadwal lengkap di aplikasi.", 1),
+                    "Milestone Perkembangan": ("🎯 Cek Milestone", "Waktunya cek milestone perkembangan anak. Lihat checklist KPSP.", 12),
+                    "Reminder Nutrisi": ("🍽️ Waktu Makan", "Saatnya memberi makan anak. Pastikan menu 4 bintang!", 3)
+                }
+                if template in templates:
+                    title, message, delay = templates[template]
+                    return title, message, delay
+                return "", "", 3
+            
+            def handle_premium_upgrade(package):
+                pkg_info = PREMIUM_PACKAGES.get(package, {})
+                price = pkg_info.get('price', 0)
+                price_formatted = f"Rp {price:,}".replace(',', '.')
+                wa_message = f"Halo PeduliGiziBalita, saya ingin upgrade ke paket {package.upper()} ({price_formatted}/bulan)" # MODIFIED
+                wa_link = f"httpska://wa.me/{CONTACT_WA}?text={wa_message.replace(' ', '%20')}"
+                return gr.Markdown.update(
+                    value=f"""
+## 🎉 Terima kasih telah memilih paket {package.upper()}!
+**Harga:** {price_formatted}/bulan
+**Langkah selanjutnya:**
+1. Klik tombol WhatsApp di bawah
+2. Konfirmasi pembelian dengan admin
+3. Lakukan pembayaran
+4. Akun premium akan diaktifkan dalam 5 menit
+<div style='text-align: center; margin: 30px 0;'>
+    <a href='{wa_link}' target='_blank'
+       style='display: inline-block; padding: 20px 40px; 
+              background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+              color: white; text-decoration: none; border-radius: 15px;
+              font-size: 18px; font-weight: bold;
+              box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);'>
+        💬 Hubungi Admin via WhatsApp
+    </a>
+</div>
+**Metode Pembayaran:** Transfer Bank (BCA, Mandiri, BRI), E-Wallet (GoPay, OVO, DANA), QRIS
+""", visible=True)
+            
+            # Connect event handlers
+            enable_notif_btn.click(fn=handle_enable_notification, outputs=[notif_status])
+            schedule_btn.click(
+                fn=handle_schedule_reminder_hours,
+                inputs=[reminder_title, reminder_message, reminder_delay],
+                outputs=[reminder_status]
+            ).then(lambda: gr.update(visible=True), outputs=[reminder_status])
+            use_template_btn.click(
+                fn=handle_use_template,
+                inputs=[template_choice],
+                outputs=[reminder_title, reminder_message, reminder_delay]
+            )
+            silver_btn.click(
+                fn=lambda: handle_premium_upgrade("silver"), outputs=[premium_status]
+            ).then(lambda: gr.update(visible=True), outputs=[premium_status])
+            gold_btn.click(
+                fn=lambda: handle_premium_upgrade("gold"), outputs=[premium_status]
+            ).then(lambda: gr.update(visible=True), outputs=[premium_status])
+
+        # ===================================================================
+        # TAB 7: TENTANG & BANTUAN
+        # ===================================================================
+        
+        with gr.TabItem("ℹ️ Tentang & Bantuan", id=6):
+            gr.Markdown(f"""
+            ## 🏥 Tentang {APP_TITLE}
+            
+            **{APP_TITLE}** adalah aplikasi pemantauan 
+            pertumbuhan anak berbasis standar WHO Child Growth Standards 2006 dan 
+            Permenkes RI No. 2 Tahun 2020.
+            
+            ### ✨ Fitur Utama (v3.2.2)
+            
+            1. **📊 Kalkulator Z-Score WHO**
+               - 5 indeks antropometri: WAZ, HAZ, WHZ, BAZ, HCZ
+               - Klasifikasi ganda: Permenkes & WHO
+            
+            2. **📈 Grafik Pertumbuhan Interaktif**
+               - Kurva WHO standar dengan zona warna
+               - Plot data anak dengan interpretasi visual
+            
+            3. **💾 Export Profesional**
+               - PDF laporan lengkap dengan QR code & CSV data
+            
+            4. **📋 Checklist Bulanan**
+               - Milestone perkembangan, KPSP, Gizi, Imunisasi
+               - Integrasi video edukasi
+            
+            5. **🎯 Fitur Baru (v3.2.2)**
+               - **Mode Mudah:** Referensi cepat rentang normal
+               - **Kalkulator Kejar Tumbuh:** Monitor laju/velocity pertumbuhan
+               - **Perpustakaan Interaktif:** 40 artikel dengan search & filter
+            
+            ### 📚 Referensi Ilmiah
+            
+            - **WHO Child Growth Standards 2006**
+            - **Permenkes RI No. 2 Tahun 2020**
+            - **Rekomendasi Ikatan Dokter Anak Indonesia (IDAI)**
+            
+            ### ⚠️ Disclaimer
+            
+            Aplikasi ini adalah **alat skrining awal**, BUKAN pengganti konsultasi medis.
+            Hasil analisis harus dikonsultasikan dengan dokter spesialis anak, ahli gizi, atau tenaga kesehatan terlatih.
+            
+            ### 📱 Kontak & Dukungan
+            
+            **WhatsApp:** [+{CONTACT_WA}](https://wa.me/{CONTACT_WA})  
+            **Website:** {BASE_URL}  
+            **Versi:** {APP_VERSION}
+            
+            ### 👨‍💻 Developer
+            
+            Dikembangkan oleh **Habib Arsy** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
+            
+            ---
+            
+            © 2024-2025 {APP_TITLE}. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
+            """)
+
+# === REVISI: PERBAIKAN LOGIKA INISIALISASI TAB ===
+    # (Handler perpustakaan (id=4) telah dipindahkan ke dalam
+    # definisi TabItem-nya sendiri menggunakan tab_perpustakaan.select()
+    # untuk logika yang lebih bersih dan terisolasi)
+    
+# === AKHIR BLOK REVISI ===
+
+    
+# Footer (MODIFIED)
+    gr.Markdown(f"""
+    ---
+    
+    <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
+    border-top: 2px solid #ffdde5;'>
+        <p style='margin: 0; color: #555; font-size: 14px;'>
+            {APP_TITLE} v{APP_VERSION} © 2024-2025 | Dibuat oleh <strong>Habib Arsy</strong>
+        </p>
+        <p style='margin: 5px 0 0 0; color: #888; font-size: 12px;'>
+            Bukan pengganti konsultasi medis. Selalu konfirmasi dengan tenaga kesehatan.
+        </p>
+    </div>
+    """) # <-- INI ADALAH PENUTUP YANG HILANG
+
+print("✅ Section 11 (Gradio UI) dimodifikasi: Perpustakaan Interaktif v3.2.2 terintegrasi.")
+
+
+
+# ===============================================================================
+# SECTION 12: FASTAPI INTEGRATION (MODIFIED FOR v3.2.2)
+# ===============================================================================
+
+# Initialize FastAPI
+app_fastapi = FastAPI(
+    title=f"{APP_TITLE} API", # MODIFIED
+    description=APP_DESCRIPTION,
+    version="3.2.2", # MODIFIED
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+)
+
+# -------------------------------------------------------------------
+# Helper: Filter artikel perpustakaan untuk API JSON
+# -------------------------------------------------------------------
+
+def _filter_library_items_for_api(
+    q: str = "",
+    kategori: str = "",
+    sumber: str = "",
+) -> List[Dict[str, Any]]:
+    """
+    Filter ARTIKEL_LOKAL_DATABASE untuk keperluan endpoint JSON.
+
+    q        : keyword bebas (judul, ringkasan, isi)
+    kategori : harus persis sama dengan field 'kategori' (jika diisi)
+    sumber   : harus cocok dengan salah satu elemen pada 'source' (dipisah '|')
+    """
+    q = (q or "").strip().lower()
+    kategori = (kategori or "").strip()
+    sumber = (sumber or "").strip()
+
+    results: List[Dict[str, Any]] = []
+
+    for idx, art in enumerate(ARTIKEL_LOKAL_DATABASE):
+        title = str(art.get("title", ""))
+        summary = str(art.get("summary", ""))
+        full_content = str(art.get("full_content", ""))
+        art_kategori = str(art.get("kategori", ""))
+        art_source_raw = str(art.get("source", ""))
+
+        # Filter kategori (jika diminta)
+        if kategori and art_kategori != kategori:
+            continue
+
+        # Filter sumber (jika diminta)
+        if sumber:
+            sources = [
+                s.strip()
+                for s in art_source_raw.split("|")
+                if s.strip()
+            ]
+            if sumber not in sources:
+                continue
+
+        # Filter keyword (judul / summary / full)
+        if q:
+            combined = " ".join([title, summary, full_content]).lower()
+            if q not in combined:
+                continue
+
+        # Untuk API list, kita tidak kirim full_content (biar ringkas)
+        results.append(
+            {
+                "id": idx,
+                "title": title,
+                "kategori": art_kategori,
+                "source": art_source_raw,
+                "summary": summary,
+            }
+        )
+
+    return results
+
+
+# CORS middleware
+app_fastapi.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Mount static files
 if os.path.exists(STATIC_DIR):
-    app_fastapi.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-if os.path.exists(OUTPUTS_DIR):
-    app_fastapi.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
+    try:
+        app_fastapi.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+        print(f"✅ Static files mounted: /static -> {STATIC_DIR}")
+    except Exception as e:
+        print(f"⚠️ Static mount warning: {e}")
 
-app = gr.mount_gradio_app(app_fastapi, demo, path="/")
+if os.path.exists(OUTPUTS_DIR):
+    try:
+        app_fastapi.mount("/outputs", StaticFiles(directory=OUTPUTS_DIR), name="outputs")
+        print(f"✅ Outputs files mounted: /outputs -> {OUTPUTS_DIR}")
+    except Exception as e:
+        print(f"⚠️ Outputs mount warning: {e}")
+
+# Health check endpoint
+@app_fastapi.get("/health")
+async def health_check():
+    """API health check endpoint"""
+    return {
+        "status": "healthy",
+        "version": "3.2.2", # MODIFIED
+        "timestamp": datetime.now().isoformat(),
+        "calculator_status": "operational" if calc else "unavailable",
+        "features": {
+            "who_standards": True,
+            "permenkes_2020": True,
+            "growth_charts": True,
+            "pdf_export": True,
+            "csv_export": True,
+            "kpsp_screening": True,
+            "video_integration": True,
+            "mode_mudah": True, 
+            "growth_velocity": True, 
+            "interactive_library_v3_2_2": True, # MODIFIED
+        },
+        "endpoints": {
+            "main_app": "/",
+            "api_docs": "/api/docs",
+            "health": "/health",
+        }
+    }
+
+# -------------------------------------------------------------------
+# Pydantic Models untuk API Kejar Tumbuh
+# -------------------------------------------------------------------
+
+class KejarTumbuhDataPoint(BaseModel):
+    usia_bulan: float
+    bb: float
+    tb: float
+
+
+class KejarTumbuhRequest(BaseModel):
+    gender: str  # "Laki-laki" atau "Perempuan"
+    data: List[KejarTumbuhDataPoint]
+    theme: Optional[str] = "pink_pastel"
+
+
+# -------------------------------------------------------------------
+# Endpoint API: Perpustakaan Ibu Balita (JSON)
+# -------------------------------------------------------------------
+
+@app_fastapi.get("/api/library/meta")
+async def library_meta():
+    """
+    Metadata singkat Perpustakaan Ibu Balita:
+    - jumlah artikel
+    - daftar kategori
+    - daftar sumber
+    """
+    try:
+        kategori_list, sumber_list = get_local_library_filters()
+        kategori_unik = sorted(set(kategori_list))
+        sumber_unik = sorted(set(sumber_list))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Gagal membaca metadata perpustakaan: {e}",
+        )
+
+    return {
+        "jumlah_artikel": len(ARTIKEL_LOKAL_DATABASE),
+        "kategori": kategori_unik,
+        "sumber": sumber_unik,
+    }
+
+
+@app_fastapi.get("/api/library")
+async def library_list(
+    q: str = Query("", alias="q", description="Kata kunci bebas (judul, ringkasan, isi)"),
+    kategori: str = Query("", alias="kategori", description="Filter kategori (opsional)"),
+    sumber: str = Query("", alias="sumber", description="Filter sumber (opsional, persis teks sumber)"),
+):
+    """
+    Mengembalikan daftar artikel Perpustakaan Ibu Balita dalam bentuk JSON.
+
+    Contoh:
+      - /api/library             -> semua artikel
+      - /api/library?q=stunting  -> semua artikel yang mengandung kata 'stunting'
+      - /api/library?kategori=Gizi
+      - /api/library?sumber=Kemenkes RI
+    """
+    try:
+        items = _filter_library_items_for_api(q=q, kategori=kategori, sumber=sumber)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Gagal memproses filter perpustakaan: {e}",
+        )
+
+    return {
+        "count": len(items),
+        "items": items,
+    }
+
+
+@app_fastapi.get("/api/library/{item_id}")
+async def library_detail(item_id: int):
+    """
+    Ambil detail satu artikel perpustakaan berdasarkan index (0-based).
+
+    Catatan:
+    - `item_id` di sini sama dengan index yang dipakai di front-end (kartu).
+    """
+    try:
+        art = ARTIKEL_LOKAL_DATABASE[item_id]
+    except (IndexError, TypeError):
+        raise HTTPException(
+            status_code=404,
+            detail="Artikel perpustakaan tidak ditemukan",
+        )
+
+    return {
+        "id": item_id,
+        "title": art.get("title", ""),
+        "kategori": art.get("kategori", ""),
+        "source": art.get("source", ""),
+        "summary": art.get("summary", ""),
+        "full_content": art.get("full_content", ""),
+    }
+
+# -------------------------------------------------------------------
+# Endpoint API: Kalkulator Kejar Tumbuh
+# -------------------------------------------------------------------
+
+@app_fastapi.post("/api/kejar-tumbuh/analyze")
+async def kejar_tumbuh_analyze(payload: KejarTumbuhRequest):
+    """
+    Analisis Kejar Tumbuh via API.
+    
+    Body (JSON) contoh:
+    {
+      "gender": "Laki-laki",
+      "theme": "pink_pastel",
+      "data": [
+        {"usia_bulan": 6.0, "bb": 7.2, "tb": 66.0},
+        {"usia_bulan": 9.0, "bb": 7.8, "tb": 70.0}
+      ]
+    }
+    """
+    # Konversi Pydantic → list dict seperti yang digunakan kalkulator
+    data_list = [
+        {
+            "usia_bulan": float(p.usia_bulan),
+            "bb": float(p.bb),
+            "tb": float(p.tb),
+        }
+        for p in payload.data
+    ]
+
+    if len(data_list) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Minimal diperlukan 2 pengukuran untuk analisis Kejar Tumbuh."
+        )
+
+    gender = payload.gender
+    # Handler UI sudah menggunakan gender dalam bahasa Indonesia ("Laki-laki"/"Perempuan")
+    html, plot_path = kalkulator_kejar_tumbuh_handler(data_list, gender)
+
+    return {
+        "gender": gender,
+        "theme": payload.theme or "pink_pastel",
+        "poin_pengukuran": len(data_list),
+        "html": html,
+        "plot_path": plot_path,  # path relatif di server (jika ingin diakses via /outputs)
+    }
+
+
+@app_fastapi.post("/api/kejar-tumbuh/plot")
+async def kejar_tumbuh_plot(payload: KejarTumbuhRequest):
+    """
+    Menghasilkan file PNG grafik Kejar Tumbuh via API.
+
+    Menggunakan fungsi plot_kejar_tumbuh_trajectory() yang sudah ada
+    (versi CURVE SMOOTH yang kamu pasang di Part 1).
+    """
+    data_list = [
+        {
+            "usia_bulan": float(p.usia_bulan),
+            "bb": float(p.bb),
+            "tb": float(p.tb),
+        }
+        for p in payload.data
+    ]
+
+    if len(data_list) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Minimal diperlukan 2 pengukuran untuk membuat grafik Kejar Tumbuh."
+        )
+
+    gender = payload.gender
+    theme = payload.theme or "pink_pastel"
+
+    # Memakai fungsi plot yang sudah ada (tidak mengubah logic internal)
+    plot_path = plot_kejar_tumbuh_trajectory(data_list, gender, theme_name=theme)
+
+    if not plot_path or not os.path.exists(plot_path):
+        raise HTTPException(
+            status_code=500,
+            detail="Gagal menghasilkan grafik Kejar Tumbuh."
+        )
+
+    filename = os.path.basename(plot_path)
+
+    return FileResponse(
+        plot_path,
+        media_type="image/png",
+        filename=filename,
+    )
+
+
+# API info endpoint
+@app_fastapi.get("/api/info")
+async def api_info():
+    """Get API information"""
+    return {
+        "app_name": APP_TITLE,
+        "version": "3.2.2", # MODIFIED
+        "description": APP_DESCRIPTION,
+        "author": "Habib Arsy - FKIK Universitas Jambi",
+        "contact": f"+{CONTACT_WA}",
+        "base_url": BASE_URL,
+        "standards": {
+            "who": "Child Growth Standards 2006",
+            "permenkes": "No. 2 Tahun 2020"
+        },
+        "supported_indices": ["WAZ", "HAZ", "WHZ", "BAZ", "HCZ"],
+        "age_range": "0-60 months",
+        "features": [
+            "WHO z-score calculation",
+            "Permenkes 2020 classification",
+            "Growth charts visualization",
+            "PDF report export",
+            "CSV data export",
+            "KPSP screening",
+            "Monthly checklist recommendations",
+            "YouTube Video Integration",
+            "Mode Mudah (v3.2)",
+            "Kalkulator Kejar Tumbuh (v3.2)",
+            "Perpustakaan Artikel Interaktif (v3.2.2)" # MODIFIED
+        ]
+    }
+
+# Root redirect
+@app_fastapi.get("/api")
+async def api_root():
+    """API root endpoint"""
+    return {
+        "message": f"Selamat datang di {APP_TITLE} API",
+        "version": "3.2.2", # MODIFIED
+        "docs": "/api/docs",
+        "health": "/health",
+        "main_app": "/"
+    }
+
+print("✅ Section 12 (FastAPI) dimodifikasi: API info v3.2.2 terkonfigurasi.")
+
+
+# ===============================================================================
+# SECTION 13: APPLICATION STARTUP (MODIFIED FOR v3.2.2)
+# ===============================================================================
+
+# Mount Gradio to FastAPI
+try:
+    app = gr.mount_gradio_app(
+        app=app_fastapi,
+        blocks=demo,
+        path="/"
+    )
+    print("✅ Gradio app successfully mounted to FastAPI at root path '/'")
+except Exception as e:
+    print(f"⚠️ Gradio mount failed, using FastAPI only: {e}")
+    app = app_fastapi
+
+# Print startup banner (MODIFIED)
+print("")
+print("=" * 80)
+print(f"🚀 {APP_TITLE} v3.2.2 - READY FOR DEPLOYMENT".center(80))
+print("=" * 80)
+print(f"📊 WHO Calculator: {'✅ Operational' if calc else '❌ Unavailable'}")
+print(f"🌐 Base URL: {BASE_URL}")
+print(f"📱 Contact: +{CONTACT_WA}")
+print(f"🎨 Themes: {len(UI_THEMES)} available")
+print(f"💉 Immunization: {len(IMMUNIZATION_SCHEDULE)} schedules")
+print(f"🧠 KPSP: {len(KPSP_QUESTIONS)} question sets")
+print(f"📚 Perpustakaan Ibu Balita: {len(ARTIKEL_LOKAL_DATABASE)} artikel lokal")  # MODIFIED
+print(f"🎥 Videos: {len(KPSP_YOUTUBE_VIDEOS) + sum(len(v) for v in MPASI_YOUTUBE_VIDEOS.values())} video links (v3.1)")
+print("=" * 80)
+print("▶️  Run Command: uvicorn app:app --host 0.0.0.0 --port $PORT")
+print("=" * 80)
+print("")
 
 if __name__ == "__main__":
     import uvicorn
-    print("🚀 Starting AnthroHPK Liquid Edition...")
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    
+    port = int(os.environ.get("PORT", 8000))
+    
+    print(f"🚀 Starting server on port {port}...")
+    
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=port,
+        log_level="info",
+        access_log=True
+    )
+
