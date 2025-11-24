@@ -7829,6 +7829,55 @@ checklist yang disesuaikan dengan status gizi anak.
                 fn=lambda: handle_premium_upgrade("gold"), outputs=[premium_status]
             ).then(lambda: gr.update(visible=True), outputs=[premium_status])
 
+# ===================================================================
+        # TAB 8: KUESIONER FEEDBACK (MASUKKAN DI SINI)
+        # ===================================================================
+        with gr.TabItem("📝 Kuesioner & Feedback", id=8):
+            gr.Markdown("""
+            ## 🗳️ Evaluasi & Masukan Pengguna
+            Bantu kami meningkatkan kualitas aplikasi dengan mengisi kuesioner singkat ini.
+            """)
+            
+            with gr.Row():
+                with gr.Column():
+                    q_performa = gr.Radio(
+                        ["1 (Buruk)", "2", "3", "4", "5 (Sangat Baik)"],
+                        label="Bagaimana performa (kecepatan) aplikasi?",
+                        value="5 (Sangat Baik)"
+                    )
+                    q_manfaat = gr.Radio(
+                        ["1 (Kurang)", "2", "3", "4", "5 (Sangat Bermanfaat)"],
+                        label="Seberapa besar dampak/manfaat aplikasi ini?",
+                        value="5 (Sangat Bermanfaat)"
+                    )
+                    q_profesi = gr.Dropdown(
+                        ["Dokter", "Bidan", "Ahli Gizi", "Kader Posyandu", "Orang Tua", "Mahasiswa", "Lainnya"],
+                        label="Profesi Anda",
+                        value="Orang Tua"
+                    )
+                
+                with gr.Column():
+                    q_kendala = gr.Textbox(
+                        label="Kendala yang ditemui",
+                        placeholder="Ceritakan jika ada error atau kesulitan...",
+                        lines=3
+                    )
+                    q_saran = gr.Textbox(
+                        label="Saran Pengembangan",
+                        placeholder="Fitur apa yang perlu ditambahkan?",
+                        lines=3
+                    )
+                    
+                    submit_feedback_btn = gr.Button("✉️ Kirim Masukan", variant="primary", size="lg")
+                    feedback_status = gr.Markdown("")
+            
+            # Event Handler (Menghubungkan Tombol dengan Fungsi Logika di atas)
+            submit_feedback_btn.click(
+                fn=submit_feedback_to_cloud,  # Pastikan fungsi ini sudah dibuat di Langkah 1
+                inputs=[q_performa, q_manfaat, q_profesi, q_kendala, q_saran],
+                outputs=[feedback_status]
+            )
+
         # ===================================================================
         # TAB 7: TENTANG & BANTUAN
         # ===================================================================
