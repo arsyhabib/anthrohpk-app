@@ -96,7 +96,6 @@ oauth2client
 pandas
 plotly
 datetime
-pip install gspread oauth2client plotly pandas
 
 # ───────────────────────────────────────────────────────────────────
 # NOTES:
