@@ -5838,9 +5838,12 @@ import pandas as pd
 import plotly.express as px
 from oauth2client.service_account import ServiceAccountCredentials
 
-# --- KONFIGURASI DATABASE ---
+# --- KONFIGURASI DATABASE / CLOUD ---
+# False = mode offline (tanpa koneksi Google Sheets)
+# True  = mode online (Google Sheets aktif, kalau credentials + share sudah benar)
+USE_CLOUD = False
+
 SHEET_NAME = "AnthroHPK_DB"  # Nama file Google Sheet Anda
-MAX_HISTORY_ROWS = 50  # boleh kamu ganti 30/100, tapi makin kecil makin ringan
 GOOGLE_CREDS_FILE = "credentials.json"  # Nama file kunci JSON Anda
 SHEET_SCOPE = [
     "https://spreadsheets.google.com/feeds",
@@ -5854,6 +5857,11 @@ def get_google_sheet_client():
     Fungsi helper untuk membuat koneksi aman ke Google Sheets.
     Mengembalikan objek client gspread jika berhasil, atau None jika gagal.
     """
+    # 🔹 MODE OFFLINE: jangan coba konek apa pun
+    if not USE_CLOUD:
+        print("ℹ️ USE_CLOUD=False → fitur Cloud dimatikan (mode offline).")
+        return None
+
     try:
         # Cek apakah file credentials ada
         if not os.path.exists(GOOGLE_CREDS_FILE):
@@ -5867,11 +5875,19 @@ def get_google_sheet_client():
         print(f"❌ Error koneksi Google Sheets: {e}")
         return None
 
+
 def save_analysis_to_cloud(payload):
     """
     Menyimpan hasil analisis kalkulator gizi ke Google Sheets (Tab 'logs').
     Dipanggil otomatis setiap kali tombol 'Analisis' ditekan.
     """
+
+
+    if not USE_CLOUD:
+        # Bisa dikosongkan atau print log ringan
+        print("ℹ️ save_analysis_to_cloud dilewati (mode offline).")
+        return
+      
     client = get_google_sheet_client()
     if not client: 
         return
@@ -5915,6 +5931,12 @@ def get_history_charts():
     Mengambil data riwayat dari tab 'logs' dan membuat visualisasi grafik.
     Dibatasi hanya MAX_HISTORY_ROWS data terbaru supaya aplikasi lebih ringan.
     """
+
+    if not USE_CLOUD:
+        msg = "Fitur riwayat / dashboard cloud sementara dimatikan (mode offline)."
+        # hist_plot1, hist_plot2 → None; hist_table → DataFrame dengan pesan
+        return None, None, pd.DataFrame({"Status": [msg]})
+
     client = get_google_sheet_client()
     if not client:
         return None, None, pd.DataFrame({"Status": ["Gagal koneksi database"]})
@@ -5974,6 +5996,11 @@ def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
     Menyimpan data kuesioner ke Google Sheets (Tab 'feedback').
     Digunakan untuk Tab Kuesioner.
     """
+
+    if not USE_CLOUD:
+        return "ℹ️ Saat ini aplikasi berjalan dalam mode offline, sehingga masukan Anda tidak dikirim ke server. Fitur utama tetap bisa digunakan."
+
+    
     client = get_google_sheet_client()
     if not client: 
         return "❌ Gagal koneksi ke server database. Cek file credentials."
