@@ -58,6 +58,30 @@ from datetime import datetime, date, timedelta
 from functools import lru_cache
 from typing import Dict, List, Tuple, Optional, Any, Union
 from pydantic import BaseModel
+import gspread
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from oauth2client.service_account import ServiceAccountCredentials
+
+# --- KONFIGURASI GOOGLE SHEETS (Tambahkan di Section 2 Global Config) ---
+SHEET_NAME = "AnthroHPK_DB" # Pastikan nama file Google Sheet Anda sesuai ini
+GOOGLE_CREDS_FILE = "credentials.json"
+SHEET_SCOPE = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
+               "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+
+def get_google_sheet_client():
+    """Helper untuk koneksi aman ke Google Sheets"""
+    try:
+        if not os.path.exists(GOOGLE_CREDS_FILE):
+            print("⚠️ File credentials.json tidak ditemukan. Fitur Cloud non-aktif.")
+            return None
+        creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDS_FILE, SHEET_SCOPE)
+        client = gspread.authorize(creds)
+        return client
+    except Exception as e:
+        print(f"❌ Error koneksi Google Sheets: {e}")
+        return None
 
 
 # Suppress warnings for cleaner logs
@@ -2551,7 +2575,105 @@ def create_interpretation_text(payload: Dict) -> str:
     
     return "\n".join(lines)
 
+# --- FUNGSI BARU: LOGIKA CLOUD STORAGE ---
 
+def save_analysis_to_cloud(payload):
+    """Menyimpan hasil analisis ke Google Sheets (Tab 'logs')"""
+    client = get_google_sheet_client()
+    if not client: return
+    
+    try:
+        sheet = client.open(SHEET_NAME)
+        # Coba akses tab 'logs', jika tidak ada buat baru (opsional, manual lebih aman)
+        try:
+            worksheet = sheet.worksheet("logs")
+        except:
+            print("⚠️ Tab 'logs' tidak ditemukan di Google Sheet.")
+            return
+
+        # Data privasi terjaga (Tanpa Nama Anak/Ortu)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        z_scores = payload.get('z', {})
+        
+        row_data = [
+            timestamp,
+            "Kalkulator Gizi",              # Fitur
+            payload.get('sex', '-'),        # Gender Code (M/F)
+            payload.get('age_mo', 0),       # Umur Bulan
+            payload.get('w', 0),            # Berat
+            payload.get('h', 0),            # Tinggi
+            payload.get('hc', 0),           # Lingkar Kepala
+            format_zscore(z_scores.get('waz')), # WAZ
+            format_zscore(z_scores.get('haz')), # HAZ
+            format_zscore(z_scores.get('whz'))  # WHZ
+        ]
+        worksheet.append_row(row_data)
+        print("✅ Data tersimpan di Cloud")
+    except Exception as e:
+        print(f"❌ Gagal simpan ke cloud: {e}")
+
+def get_history_charts():
+    """Mengambil data riwayat dan membuat grafik Plotly"""
+    client = get_google_sheet_client()
+    if not client:
+        return None, None, "<p>Gagal koneksi database.</p>"
+    
+    try:
+        sheet = client.open(SHEET_NAME)
+        worksheet = sheet.worksheet("logs")
+        data = worksheet.get_all_records()
+        df = pd.DataFrame(data)
+        
+        if df.empty:
+            return None, None, "<p>Belum ada data riwayat.</p>"
+
+        # Filter: Pastikan kolom angka terbaca sebagai numerik
+        df['Berat (kg)'] = pd.to_numeric(df['Berat (kg)'], errors='coerce')
+        df['Umur (Bulan)'] = pd.to_numeric(df['Umur (Bulan)'], errors='coerce')
+        
+        # Grafik 1: Sebaran Berat Badan vs Umur
+        fig1 = px.scatter(
+            df, x='Umur (Bulan)', y='Berat (kg)', color='Jenis Kelamin',
+            title='Sebaran Populasi Pengguna (BB/Umur)',
+            template='plotly_white',
+            labels={'Jenis Kelamin': 'Gender'}
+        )
+        
+        # Grafik 2: Histogram Status Gizi (Perlu parsing kolom hasil jika ada, disini contoh sederhana)
+        # Kita pakai distribusi umur saja sebagai contoh data yang pasti ada
+        fig2 = px.histogram(
+            df, x='Umur (Bulan)', color='Jenis Kelamin',
+            title='Distribusi Usia Anak Pengguna Aplikasi',
+            template='plotly_white'
+        )
+        
+        # Tabel Data (Tanpa Nama - Privasi Aman)
+        # Ambil 50 data terakhir saja agar ringan
+        df_display = df.tail(50).iloc[::-1] 
+        
+        return fig1, fig2, df_display
+        
+    except Exception as e:
+        print(f"Error history: {e}")
+        return None, None, f"<p>Error memuat data: {e}</p>"
+
+def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
+    """Menyimpan kuesioner ke Google Sheets (Tab 'feedback')"""
+    client = get_google_sheet_client()
+    if not client: return "❌ Gagal koneksi ke server database."
+    
+    try:
+        sheet = client.open(SHEET_NAME)
+        worksheet = sheet.worksheet("feedback")
+        
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        row_data = [timestamp, performa, manfaat, profesi, kendala, saran]
+        
+        worksheet.append_row(row_data)
+        return "✅ Terima kasih! Masukan Anda telah tersimpan dan sangat berharga bagi kami."
+    except Exception as e:
+        return f"❌ Terjadi kesalahan saat menyimpan: {e}"
+        
 def run_comprehensive_analysis(
     name_child: str,
     name_parent: str,
@@ -2768,6 +2890,12 @@ Silakan:
 
 Jika masalah berlanjut, hubungi: +{CONTACT_WA}
 """
+
+interpretation = create_interpretation_text(payload)
+    
+    # === TAMBAHKAN KODE INI (INTEGRASI CLOUD) ===
+    # Simpan data ke Google Sheet secara otomatis (background process)
+    save_analysis_to_cloud(payload)
         
         return (
             error_msg,
@@ -7261,6 +7389,87 @@ checklist yang disesuaikan dengan status gizi anak.
                 fn=load_initial_articles, # Memanggil fungsi baru dari Langkah 2
                 inputs=None,
                 outputs=[library_output]
+            )
+
+
+# ===================================================================
+        # TAB 5: RIWAYAT PENGGUNAAN (CLOUD) - BARU
+        # ===================================================================
+        with gr.TabItem("📈 Riwayat & Statistik", id=5):
+            gr.Markdown("""
+            ## 📊 Dashboard Riwayat Penggunaan (Cloud)
+            Data di bawah ini diambil secara *real-time* dari database Google Sheets.
+            **Privasi Terjamin:** Data ditampilkan tanpa nama anak maupun orang tua.
+            """)
+            
+            with gr.Row():
+                refresh_history_btn = gr.Button("🔄 Muat / Segarkan Data", variant="primary")
+            
+            with gr.Row():
+                hist_plot1 = gr.Plot(label="Analisis Sebaran Pertumbuhan")
+                hist_plot2 = gr.Plot(label="Demografi Pengguna")
+            
+            gr.Markdown("### 📋 Tabel Data Terakhir (Anonymized)")
+            hist_table = gr.Dataframe(
+                headers=["Timestamp", "Fitur", "Gender", "Umur", "BB", "TB", "Z-Score..."],
+                datatype=["str", "str", "str", "number", "number", "number", "str"],
+                interactive=False
+            )
+            
+            # Event Handler
+            refresh_history_btn.click(
+                fn=get_history_charts,
+                inputs=[],
+                outputs=[hist_plot1, hist_plot2, hist_table]
+            )
+
+        # ===================================================================
+        # TAB 6: KUESIONER FEEDBACK - BARU
+        # ===================================================================
+        with gr.TabItem("📝 Kuesioner & Feedback", id=6):
+            gr.Markdown("""
+            ## 🗳️ Evaluasi & Masukan Pengguna
+            Bantu kami meningkatkan kualitas aplikasi dengan mengisi kuesioner singkat ini.
+            """)
+            
+            with gr.Row():
+                with gr.Column():
+                    q_performa = gr.Radio(
+                        ["1 (Buruk)", "2", "3", "4", "5 (Sangat Baik)"],
+                        label="Bagaimana performa (kecepatan) aplikasi?",
+                        value="5 (Sangat Baik)"
+                    )
+                    q_manfaat = gr.Radio(
+                        ["1 (Kurang)", "2", "3", "4", "5 (Sangat Bermanfaat)"],
+                        label="Seberapa besar dampak/manfaat aplikasi ini?",
+                        value="5 (Sangat Bermanfaat)"
+                    )
+                    q_profesi = gr.Dropdown(
+                        ["Dokter", "Bidan", "Ahli Gizi", "Kader Posyandu", "Orang Tua", "Mahasiswa", "Lainnya"],
+                        label="Profesi Anda",
+                        value="Orang Tua"
+                    )
+                
+                with gr.Column():
+                    q_kendala = gr.Textbox(
+                        label="Kendala yang ditemui",
+                        placeholder="Ceritakan jika ada error atau kesulitan...",
+                        lines=3
+                    )
+                    q_saran = gr.Textbox(
+                        label="Saran Pengembangan",
+                        placeholder="Fitur apa yang perlu ditambahkan?",
+                        lines=3
+                    )
+                    
+                    submit_feedback_btn = gr.Button("✉️ Kirim Masukan", variant="primary", size="lg")
+                    feedback_status = gr.Markdown("")
+            
+            # Event Handler
+            submit_feedback_btn.click(
+                fn=submit_feedback_to_cloud,
+                inputs=[q_performa, q_manfaat, q_profesi, q_kendala, q_saran],
+                outputs=[feedback_status]
             )
 
 
