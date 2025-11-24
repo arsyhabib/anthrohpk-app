@@ -5858,9 +5858,7 @@ def get_google_sheet_client():
     Mengembalikan objek client gspread jika berhasil, atau None jika gagal.
     """
     # 🔹 MODE OFFLINE: jangan coba konek apa pun
-    if not USE_CLOUD:
-        print("ℹ️ USE_CLOUD=True → fitur Cloud dimatikan (mode offline).")
-        return None
+   
 
     try:
         # Cek apakah file credentials ada
