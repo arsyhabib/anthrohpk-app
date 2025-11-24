@@ -2903,12 +2903,12 @@ interpretation = create_interpretation_text(payload)
     # Simpan data ke Google Sheet secara otomatis (background process)
 save_analysis_to_cloud(payload)
         
-        return (
-            error_msg,
-            None, None, None, None, None,
-            gr.update(visible=False), gr.update(visible=False),
-            {}
-        )
+return (
+    error_msg,
+    None, None, None, None, None,
+    gr.update(visible=False), gr.update(visible=False),
+    {}
+)
 
 
 print("✅ Section 9 loaded: Analysis handler & interpretation engine")
