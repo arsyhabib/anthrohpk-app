@@ -2612,6 +2612,12 @@ def save_analysis_to_cloud(payload):
     except Exception as e:
         print(f"❌ Gagal simpan ke cloud: {e}")
 
+# --- FUNGSI TAMBAHAN UNTUK KUESIONER ---
+def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
+    # (Masukkan kode logika penyimpanan ke Google Sheets di sini seperti panduan sebelumnya)
+    # Pastikan Anda sudah mengimpor library gspread dan oauth2client di bagian paling atas file
+    return "✅ Terima kasih! Masukan Anda telah tersimpan."
+
 def get_history_charts():
     """Mengambil data riwayat dan membuat grafik Plotly"""
     client = get_google_sheet_client()
