@@ -5841,7 +5841,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 # --- KONFIGURASI DATABASE / CLOUD ---
 # False = mode offline (tanpa koneksi Google Sheets)
 # True  = mode online (Google Sheets aktif, kalau credentials + share sudah benar)
-USE_CLOUD = False
+USE_CLOUD = True
 
 SHEET_NAME = "AnthroHPK_DB"  # Nama file Google Sheet Anda
 GOOGLE_CREDS_FILE = "credentials.json"  # Nama file kunci JSON Anda
@@ -5859,7 +5859,7 @@ def get_google_sheet_client():
     """
     # 🔹 MODE OFFLINE: jangan coba konek apa pun
     if not USE_CLOUD:
-        print("ℹ️ USE_CLOUD=False → fitur Cloud dimatikan (mode offline).")
+        print("ℹ️ USE_CLOUD=True → fitur Cloud dimatikan (mode offline).")
         return None
 
     try:
@@ -5883,10 +5883,7 @@ def save_analysis_to_cloud(payload):
     """
 
 
-    if not USE_CLOUD:
-        # Bisa dikosongkan atau print log ringan
-        print("ℹ️ save_analysis_to_cloud dilewati (mode offline).")
-        return
+   
       
     client = get_google_sheet_client()
     if not client: 
@@ -5932,10 +5929,7 @@ def get_history_charts():
     Dibatasi hanya MAX_HISTORY_ROWS data terbaru supaya aplikasi lebih ringan.
     """
 
-    if not USE_CLOUD:
-        msg = "Fitur riwayat / dashboard cloud sementara dimatikan (mode offline)."
-        # hist_plot1, hist_plot2 → None; hist_table → DataFrame dengan pesan
-        return None, None, pd.DataFrame({"Status": [msg]})
+    
 
     client = get_google_sheet_client()
     if not client:
@@ -5997,8 +5991,7 @@ def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
     Digunakan untuk Tab Kuesioner.
     """
 
-    if not USE_CLOUD:
-        return "ℹ️ Saat ini aplikasi berjalan dalam mode offline, sehingga masukan Anda tidak dikirim ke server. Fitur utama tetap bisa digunakan."
+   
 
     
     client = get_google_sheet_client()
@@ -7643,7 +7636,7 @@ checklist yang disesuaikan dengan status gizi anak.
         # ===================================================================
         # TAB 5: RIWAYAT PENGGUNAAN (CLOUD) - RINGKAS TANPA GRAFIK
         # ===================================================================
-        with gr.TabItem("📈 Riwayat & Statistik", id=5):
+        """with gr.TabItem("📈 Riwayat & Statistik", id=5):
             gr.Markdown("""
             ## 📊 Ringkasan Riwayat Penggunaan (Cloud, Tanpa Grafik)
             Data di bawah ini diambil secara *real-time* dari database Google Sheets.
@@ -7672,7 +7665,7 @@ checklist yang disesuaikan dengan status gizi anak.
                 fn=get_history_charts,
                 inputs=[],
                 outputs=[hist_summary_md, hist_zscore_md, hist_table]
-            )
+            )"""
 
 
         # ===================================================================
