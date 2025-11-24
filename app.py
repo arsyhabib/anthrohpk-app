@@ -51,6 +51,7 @@ import io
 import csv
 import math
 import json
+import threading
 import random
 import traceback
 import warnings
@@ -2612,6 +2613,22 @@ def save_analysis_to_cloud(payload):
     except Exception as e:
         print(f"❌ Gagal simpan ke cloud: {e}")
 
+def save_analysis_to_cloud_background(payload):
+    """
+    Menjalankan save_analysis_to_cloud di background thread,
+    supaya respon ke user lebih cepat (spinner tidak kelamaan).
+    """
+    try:
+        t = threading.Thread(
+            target=save_analysis_to_cloud,
+            args=(payload,),
+            daemon=True
+        )
+        t.start()
+    except Exception as e:
+        print(f"⚠️ Gagal menjalankan logging di background: {e}")
+
+
 # --- FUNGSI TAMBAHAN UNTUK KUESIONER ---
 def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
     # (Masukkan kode logika penyimpanan ke Google Sheets di sini seperti panduan sebelumnya)
@@ -2914,7 +2931,7 @@ Jika masalah berlanjut, hubungi: +{CONTACT_WA}
         
         # === TAMBAHKAN KODE INI (INTEGRASI CLOUD) ===
         # Simpan data ke Google Sheet secara otomatis (background process)
-        save_analysis_to_cloud(payload)
+        save_analysis_to_cloud_background(payload)
                 
         return (
             error_msg,
@@ -5769,6 +5786,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 # --- KONFIGURASI DATABASE ---
 SHEET_NAME = "AnthroHPK_DB"  # Nama file Google Sheet Anda
+MAX_HISTORY_ROWS = 50  # boleh kamu ganti 30/100, tapi makin kecil makin ringan
 GOOGLE_CREDS_FILE = "credentials.json"  # Nama file kunci JSON Anda
 SHEET_SCOPE = [
     "https://spreadsheets.google.com/feeds",
@@ -5840,8 +5858,8 @@ def save_analysis_to_cloud(payload):
 
 def get_history_charts():
     """
-    Mengambil seluruh data riwayat dari tab 'logs' dan membuat visualisasi grafik.
-    Digunakan untuk Tab Riwayat (Dashboard Admin).
+    Mengambil data riwayat dari tab 'logs' dan membuat visualisasi grafik.
+    Dibatasi hanya MAX_HISTORY_ROWS data terbaru supaya aplikasi lebih ringan.
     """
     client = get_google_sheet_client()
     if not client:
@@ -5852,50 +5870,50 @@ def get_history_charts():
         worksheet = sheet.worksheet("logs")
         data = worksheet.get_all_records()
         
-        # Masukkan ke Pandas DataFrame
         df = pd.DataFrame(data)
-        
         if df.empty:
             return None, None, pd.DataFrame({"Status": ["Belum ada data riwayat"]})
 
-        # Pastikan kolom numerik terbaca sebagai angka (bukan string) agar grafik valid
-        # Sesuaikan nama kolom dengan Header yang dibuat di fungsi save_analysis_to_cloud
+        # 🔹 BATAS MAKSIMAL: hanya MAX_HISTORY_ROWS data terakhir
+        df = df.tail(MAX_HISTORY_ROWS).copy()
+
+        # Pastikan kolom numerik terbaca sebagai angka
         numeric_cols = ['BB (kg)', 'Umur (Bulan)', 'TB (cm)']
         for col in numeric_cols:
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce')
-        
-        # Grafik 1: Scatter Plot (Sebaran Pertumbuhan Populasi)
+
+        # Buat dataframe untuk grafik (buang baris yang kosong)
+        df_plot = df.dropna(subset=['Umur (Bulan)', 'BB (kg)'])
+
+        # Grafik 1: Sebaran Berat Badan vs Umur
         fig1 = px.scatter(
-            df, 
-            x='Umur (Bulan)', 
-            y='BB (kg)', 
+            df_plot,
+            x='Umur (Bulan)',
+            y='BB (kg)',
             color='Gender',
             title='Sebaran Populasi Pengguna (Berat Badan vs Umur)',
             template='plotly_white',
             labels={'Gender': 'Jenis Kelamin'},
-            color_discrete_map={'M': '#3498db', 'F': '#e91e63'} # Biru & Pink
         )
-        
-        # Grafik 2: Histogram (Distribusi Usia Pengguna)
+
+        # Grafik 2: Histogram Distribusi Usia
         fig2 = px.histogram(
-            df, 
-            x='Umur (Bulan)', 
+            df_plot,
+            x='Umur (Bulan)',
             color='Gender',
             title='Distribusi Usia Anak Pengguna Aplikasi',
             template='plotly_white',
-            nbins=20,
-            color_discrete_map={'M': '#3498db', 'F': '#e91e63'}
         )
-        
-        # Tabel Data untuk ditampilkan (Ambil 50 data terbaru saja agar ringan)
-        df_display = df.tail(50).iloc[::-1] 
-        
+
+        # Tabel ditampilkan dengan data terbaru di atas
+        df_display = df.iloc[::-1]
+
         return fig1, fig2, df_display
-        
+
     except Exception as e:
         print(f"Error history: {e}")
-        return None, None, pd.DataFrame({"Error": [str(e)]})
+        return None, None, pd.DataFrame({"Status": [f"Error memuat data: {e}"]})
 
 def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
     """
