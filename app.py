@@ -2897,18 +2897,18 @@ Silakan:
 Jika masalah berlanjut, hubungi: +{CONTACT_WA}
 """
 
-interpretation = create_interpretation_text(payload)
-    
-    # === TAMBAHKAN KODE INI (INTEGRASI CLOUD) ===
-    # Simpan data ke Google Sheet secara otomatis (background process)
-save_analysis_to_cloud(payload)
+        interpretation = create_interpretation_text(payload)
         
-return (
-    error_msg,
-    None, None, None, None, None,
-    gr.update(visible=False), gr.update(visible=False),
-    {}
-)
+        # === TAMBAHKAN KODE INI (INTEGRASI CLOUD) ===
+        # Simpan data ke Google Sheet secara otomatis (background process)
+        save_analysis_to_cloud(payload)
+                
+        return (
+            error_msg,
+            None, None, None, None, None,
+            gr.update(visible=False), gr.update(visible=False),
+            {}
+        )
 
 
 print("✅ Section 9 loaded: Analysis handler & interpretation engine")
