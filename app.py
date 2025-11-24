@@ -7629,41 +7629,7 @@ checklist yang disesuaikan dengan status gizi anak.
             )
 
 
-# ===================================================================
-        # TAB 5: RIWAYAT PENGGUNAAN (CLOUD) - BARU
-        # ===================================================================
-        # TAB 5: RIWAYAT PENGGUNAAN (CLOUD) - RINGKAS TANPA GRAFIK
-        # ===================================================================
-        """with gr.TabItem("📈 Riwayat & Statistik", id=5):
-            gr.Markdown("""
-            ## 📊 Ringkasan Riwayat Penggunaan (Cloud, Tanpa Grafik)
-            Data di bawah ini diambil secara *real-time* dari database Google Sheets.
-            **Privasi Terjamin:** Data ditampilkan tanpa nama anak maupun orang tua.
-            """)
 
-            with gr.Row():
-                refresh_history_btn = gr.Button(
-                    "🔄 Muat / Segarkan Data",
-                    variant="primary"
-                )
-
-            # Ringkasan angka & Z-score (tidak pakai grafik)
-            with gr.Row():
-                hist_summary_md = gr.Markdown("Belum ada data riwayat yang dimuat.")
-            with gr.Row():
-                hist_zscore_md = gr.Markdown("")
-
-            gr.Markdown("### 📋 Tabel Data Terakhir (Anonim)")
-            hist_table = gr.Dataframe(
-                interactive=False
-            )
-
-            # Event Handler: sekarang output → 2 Markdown + 1 Dataframe
-            refresh_history_btn.click(
-                fn=get_history_charts,
-                inputs=[],
-                outputs=[hist_summary_md, hist_zscore_md, hist_table]
-            )"""
 
 
         # ===================================================================
