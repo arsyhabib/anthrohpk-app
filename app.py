@@ -2895,7 +2895,7 @@ interpretation = create_interpretation_text(payload)
     
     # === TAMBAHKAN KODE INI (INTEGRASI CLOUD) ===
     # Simpan data ke Google Sheet secara otomatis (background process)
-    save_analysis_to_cloud(payload)
+save_analysis_to_cloud(payload)
         
         return (
             error_msg,
