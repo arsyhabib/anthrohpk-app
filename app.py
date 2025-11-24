@@ -2619,7 +2619,7 @@ def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
     return "✅ Terima kasih! Masukan Anda telah tersimpan."
 
 def get_history_charts():
-    """Mengambil data riwayat dan membuat grafik Plotly"""
+    """Mengambil data riwayat dan membuat grafik Plotly (dibatasi 100 data terakhir)"""
     client = get_google_sheet_client()
     if not client:
         return None, None, "<p>Gagal koneksi database.</p>"
@@ -2633,35 +2633,48 @@ def get_history_charts():
         if df.empty:
             return None, None, "<p>Belum ada data riwayat.</p>"
 
-        # Filter: Pastikan kolom angka terbaca sebagai numerik
-        df['Berat (kg)'] = pd.to_numeric(df['Berat (kg)'], errors='coerce')
-        df['Umur (Bulan)'] = pd.to_numeric(df['Umur (Bulan)'], errors='coerce')
-        
+        # 🔹 BATAS MAKSIMAL: hanya 100 data terakhir
+        df = df.tail(100).copy()
+
+        # Filter: pastikan kolom angka terbaca sebagai numerik
+        if 'Berat (kg)' in df.columns:
+            df['Berat (kg)'] = pd.to_numeric(df['Berat (kg)'], errors='coerce')
+        if 'Umur (Bulan)' in df.columns:
+            df['Umur (Bulan)'] = pd.to_numeric(df['Umur (Bulan)'], errors='coerce')
+
+        # Buat dataframe khusus untuk grafik (buang baris yang nggak punya umur/berat)
+        df_plot = df.dropna(subset=['Umur (Bulan)', 'Berat (kg)'])
+
         # Grafik 1: Sebaran Berat Badan vs Umur
         fig1 = px.scatter(
-            df, x='Umur (Bulan)', y='Berat (kg)', color='Jenis Kelamin',
+            df_plot,
+            x='Umur (Bulan)',
+            y='Berat (kg)',
+            color='Jenis Kelamin',
             title='Sebaran Populasi Pengguna (BB/Umur)',
             template='plotly_white',
             labels={'Jenis Kelamin': 'Gender'}
         )
         
-        # Grafik 2: Histogram Status Gizi (Perlu parsing kolom hasil jika ada, disini contoh sederhana)
-        # Kita pakai distribusi umur saja sebagai contoh data yang pasti ada
+        # Grafik 2: Histogram distribusi usia anak pengguna
         fig2 = px.histogram(
-            df, x='Umur (Bulan)', color='Jenis Kelamin',
+            df_plot,
+            x='Umur (Bulan)',
+            color='Jenis Kelamin',
             title='Distribusi Usia Anak Pengguna Aplikasi',
             template='plotly_white'
         )
         
-        # Tabel Data (Tanpa Nama - Privasi Aman)
-        # Ambil 50 data terakhir saja agar ringan
-        df_display = df.tail(50).iloc[::-1] 
-        
+        # Tabel data (tanpa nama) – tampilkan semua yang tersisa (maks 100),
+        # dibalik supaya yang terbaru di atas
+        df_display = df.iloc[::-1]
+
         return fig1, fig2, df_display
         
     except Exception as e:
         print(f"Error history: {e}")
         return None, None, f"<p>Error memuat data: {e}</p>"
+
 
 def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
     """Menyimpan kuesioner ke Google Sheets (Tab 'feedback')"""
