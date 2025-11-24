@@ -2636,61 +2636,115 @@ def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
     return "✅ Terima kasih! Masukan Anda telah tersimpan."
 
 def get_history_charts():
-    """Mengambil data riwayat dan membuat grafik Plotly (dibatasi 100 data terakhir)"""
+    """
+    Mengambil data riwayat dari tab 'logs' dan membuat ringkasan numerik
+    TANPA grafik. Output:
+      1) summary_md   -> ringkasan dasar (jumlah data, rata-rata umur, BB, TB, dll)
+      2) zscore_md    -> ringkasan Z-score kalau ada kolomnya
+      3) df_display   -> tabel data terakhir (maks 100 entri, terbaru di atas)
+    """
     client = get_google_sheet_client()
     if not client:
-        return None, None, "<p>Gagal koneksi database.</p>"
-    
+        # Kembalikan teks error + tabel kosong
+        return "❌ Gagal koneksi ke server database.", "", pd.DataFrame()
+
     try:
         sheet = client.open(SHEET_NAME)
         worksheet = sheet.worksheet("logs")
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
-        
-        if df.empty:
-            return None, None, "<p>Belum ada data riwayat.</p>"
 
-        # 🔹 BATAS MAKSIMAL: hanya 100 data terakhir
+        if df.empty:
+            return "Belum ada data riwayat tersimpan.", "", pd.DataFrame()
+
+        # 🔹 BATAS MAKSIMAL: hanya 100 data terakhir supaya tetap ringan
         df = df.tail(100).copy()
 
-        # Filter: pastikan kolom angka terbaca sebagai numerik
-        if 'Berat (kg)' in df.columns:
-            df['Berat (kg)'] = pd.to_numeric(df['Berat (kg)'], errors='coerce')
-        if 'Umur (Bulan)' in df.columns:
-            df['Umur (Bulan)'] = pd.to_numeric(df['Umur (Bulan)'], errors='coerce')
+        # Helper untuk cari nama kolom berdasarkan kata kunci
+        def find_col(patterns):
+            patterns = [p.lower() for p in patterns]
+            for col in df.columns:
+                low = col.lower()
+                if any(p in low for p in patterns):
+                    return col
+            return None
 
-        # Buat dataframe khusus untuk grafik (buang baris yang nggak punya umur/berat)
-        df_plot = df.dropna(subset=['Umur (Bulan)', 'Berat (kg)'])
+        # Deteksi kolom-kolom utama (nama bisa kamu sesuaikan dengan header di Sheet)
+        col_age   = find_col(["umur", "age"])
+        col_bb    = find_col(["berat", "bb"])
+        col_tb    = find_col(["tinggi", "tb"])
+        col_lk    = find_col(["lingkar kepala", "head", "lk"])
 
-        # Grafik 1: Sebaran Berat Badan vs Umur
-        fig1 = px.scatter(
-            df_plot,
-            x='Umur (Bulan)',
-            y='Berat (kg)',
-            color='Jenis Kelamin',
-            title='Sebaran Populasi Pengguna (BB/Umur)',
-            template='plotly_white',
-            labels={'Jenis Kelamin': 'Gender'}
-        )
-        
-        # Grafik 2: Histogram distribusi usia anak pengguna
-        fig2 = px.histogram(
-            df_plot,
-            x='Umur (Bulan)',
-            color='Jenis Kelamin',
-            title='Distribusi Usia Anak Pengguna Aplikasi',
-            template='plotly_white'
-        )
-        
-        # Tabel data (tanpa nama) – tampilkan semua yang tersisa (maks 100),
-        # dibalik supaya yang terbaru di atas
+        # Konversi ke numerik (kalau ada)
+        for col in [col_age, col_bb, col_tb, col_lk]:
+            if col and col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        # Deteksi kolom z-score (WAZ, HAZ, WHZ, dll)
+        z_cols = []
+        for patterns in [["waz"], ["haz"], ["whz"], ["z-score", "zscore", "z score"]]:
+            col = find_col(patterns)
+            if col and col not in z_cols:
+                z_cols.append(col)
+
+        # ---------- Ringkasan dasar ----------
+        n = len(df)
+        summary_lines = [f"**Total entri tersimpan:** `{n}`"]
+
+        if col_age:
+            summary_lines.append(
+                f"- Rata-rata umur: **{df[col_age].mean():.1f} bulan** "
+                f"(min: {df[col_age].min():.1f}, max: {df[col_age].max():.1f})"
+            )
+        if col_bb:
+            summary_lines.append(
+                f"- Rata-rata berat: **{df[col_bb].mean():.2f} kg** "
+                f"(min: {df[col_bb].min():.2f}, max: {df[col_bb].max():.2f})"
+            )
+        if col_tb:
+            summary_lines.append(
+                f"- Rata-rata tinggi/panjang: **{df[col_tb].mean():.1f} cm** "
+                f"(min: {df[col_tb].min():.1f}, max: {df[col_tb].max():.1f})"
+            )
+        if col_lk:
+            summary_lines.append(
+                f"- Rata-rata lingkar kepala: **{df[col_lk].mean():.1f} cm** "
+                f"(min: {df[col_lk].min():.1f}, max: {df[col_lk].max():.1f})"
+            )
+
+        summary_md = "### 📊 Ringkasan Dasar Riwayat Penggunaan\n" + "\n".join(summary_lines)
+
+        # ---------- Ringkasan Z-score ----------
+        if z_cols:
+            z_lines = ["### 📈 Ringkasan Z-Score Pertumbuhan (jika tersedia di riwayat)"]
+            for col in z_cols:
+                s = pd.to_numeric(df[col], errors="coerce").dropna()
+                if s.empty:
+                    continue
+                z_lines.append(
+                    f"- **{col}** → rata-rata: `{s.mean():+.2f}`, "
+                    f"min: `{s.min():+.2f}`, max: `{s.max():+.2f}`"
+                )
+            if len(z_lines) == 1:
+                z_lines.append("- Data Z-score belum tersedia di riwayat.")
+            zscore_md = "\n".join(z_lines)
+        else:
+            zscore_md = "### 📈 Ringkasan Z-Score\n- Tidak ada kolom Z-score yang terdeteksi di data riwayat."
+
+        # Tabel: urutkan terbaru di atas
         df_display = df.iloc[::-1]
 
-        return fig1, fig2, df_display
-        
+        return summary_md, zscore_md, df_display
+
     except Exception as e:
         print(f"Error history: {e}")
-        return None, None, f"<p>Error memuat data: {e}</p>"
+        # Tampilkan error di UI dalam bentuk teks, tabel kosong
+        return (
+            "❌ Error memuat data riwayat.",
+            f"`{e}`",
+            pd.DataFrame()
+        )
+
 
 
 def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
@@ -7560,33 +7614,39 @@ checklist yang disesuaikan dengan status gizi anak.
 # ===================================================================
         # TAB 5: RIWAYAT PENGGUNAAN (CLOUD) - BARU
         # ===================================================================
+        # TAB 5: RIWAYAT PENGGUNAAN (CLOUD) - RINGKAS TANPA GRAFIK
+        # ===================================================================
         with gr.TabItem("📈 Riwayat & Statistik", id=5):
             gr.Markdown("""
-            ## 📊 Dashboard Riwayat Penggunaan (Cloud)
+            ## 📊 Ringkasan Riwayat Penggunaan (Cloud, Tanpa Grafik)
             Data di bawah ini diambil secara *real-time* dari database Google Sheets.
             **Privasi Terjamin:** Data ditampilkan tanpa nama anak maupun orang tua.
             """)
-            
+
             with gr.Row():
-                refresh_history_btn = gr.Button("🔄 Muat / Segarkan Data", variant="primary")
-            
+                refresh_history_btn = gr.Button(
+                    "🔄 Muat / Segarkan Data",
+                    variant="primary"
+                )
+
+            # Ringkasan angka & Z-score (tidak pakai grafik)
             with gr.Row():
-                hist_plot1 = gr.Plot(label="Analisis Sebaran Pertumbuhan")
-                hist_plot2 = gr.Plot(label="Demografi Pengguna")
-            
-            gr.Markdown("### 📋 Tabel Data Terakhir (Anonymized)")
+                hist_summary_md = gr.Markdown("Belum ada data riwayat yang dimuat.")
+            with gr.Row():
+                hist_zscore_md = gr.Markdown("")
+
+            gr.Markdown("### 📋 Tabel Data Terakhir (Anonim)")
             hist_table = gr.Dataframe(
-                headers=["Timestamp", "Fitur", "Gender", "Umur", "BB", "TB", "Z-Score..."],
-                datatype=["str", "str", "str", "number", "number", "number", "str"],
                 interactive=False
             )
-            
-            # Event Handler
+
+            # Event Handler: sekarang output → 2 Markdown + 1 Dataframe
             refresh_history_btn.click(
                 fn=get_history_charts,
                 inputs=[],
-                outputs=[hist_plot1, hist_plot2, hist_table]
+                outputs=[hist_summary_md, hist_zscore_md, hist_table]
             )
+
 
         # ===================================================================
         # TAB 6: KUESIONER FEEDBACK - BARU
