@@ -51,7 +51,6 @@ import io
 import csv
 import math
 import json
-import threading
 import random
 import traceback
 import warnings
@@ -59,11 +58,7 @@ from datetime import datetime, date, timedelta
 from functools import lru_cache
 from typing import Dict, List, Tuple, Optional, Any, Union
 from pydantic import BaseModel
-import gspread
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from oauth2client.service_account import ServiceAccountCredentials
+
 
 # --- KONFIGURASI GOOGLE SHEETS (Tambahkan di Section 2 Global Config) ---
 SHEET_NAME = "AnthroHPK_DB" # Pastikan nama file Google Sheet Anda sesuai ini
