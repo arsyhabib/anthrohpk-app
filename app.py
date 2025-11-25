@@ -60,26 +60,6 @@ from typing import Dict, List, Tuple, Optional, Any, Union
 from pydantic import BaseModel
 
 
-# --- KONFIGURASI GOOGLE SHEETS (Tambahkan di Section 2 Global Config) ---
-SHEET_NAME = "AnthroHPK_DB" # Pastikan nama file Google Sheet Anda sesuai ini
-GOOGLE_CREDS_FILE = "credentials.json"
-SHEET_SCOPE = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
-               "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
-
-def get_google_sheet_client():
-    """Helper untuk koneksi aman ke Google Sheets"""
-    try:
-        if not os.path.exists(GOOGLE_CREDS_FILE):
-            print("⚠️ File credentials.json tidak ditemukan. Fitur Cloud non-aktif.")
-            return None
-        creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDS_FILE, SHEET_SCOPE)
-        client = gspread.authorize(creds)
-        return client
-    except Exception as e:
-        print(f"❌ Error koneksi Google Sheets: {e}")
-        return None
-
-
 # Suppress warnings for cleaner logs
 warnings.filterwarnings('ignore')
 
@@ -2571,194 +2551,7 @@ def create_interpretation_text(payload: Dict) -> str:
     
     return "\n".join(lines)
 
-# --- FUNGSI BARU: LOGIKA CLOUD STORAGE ---
 
-def save_analysis_to_cloud(payload):
-    """Menyimpan hasil analisis ke Google Sheets (Tab 'logs')"""
-    client = get_google_sheet_client()
-    if not client: return
-    
-    try:
-        sheet = client.open(SHEET_NAME)
-        # Coba akses tab 'logs', jika tidak ada buat baru (opsional, manual lebih aman)
-        try:
-            worksheet = sheet.worksheet("logs")
-        except:
-            print("⚠️ Tab 'logs' tidak ditemukan di Google Sheet.")
-            return
-
-        # Data privasi terjaga (Tanpa Nama Anak/Ortu)
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        z_scores = payload.get('z', {})
-        
-        row_data = [
-            timestamp,
-            "Kalkulator Gizi",              # Fitur
-            payload.get('sex', '-'),        # Gender Code (M/F)
-            payload.get('age_mo', 0),       # Umur Bulan
-            payload.get('w', 0),            # Berat
-            payload.get('h', 0),            # Tinggi
-            payload.get('hc', 0),           # Lingkar Kepala
-            format_zscore(z_scores.get('waz')), # WAZ
-            format_zscore(z_scores.get('haz')), # HAZ
-            format_zscore(z_scores.get('whz'))  # WHZ
-        ]
-        worksheet.append_row(row_data)
-        print("✅ Data tersimpan di Cloud")
-    except Exception as e:
-        print(f"❌ Gagal simpan ke cloud: {e}")
-
-def save_analysis_to_cloud_background(payload):
-    """
-    Menjalankan save_analysis_to_cloud di background thread,
-    supaya respon ke user lebih cepat (spinner tidak kelamaan).
-    """
-    try:
-        t = threading.Thread(
-            target=save_analysis_to_cloud,
-            args=(payload,),
-            daemon=True
-        )
-        t.start()
-    except Exception as e:
-        print(f"⚠️ Gagal menjalankan logging di background: {e}")
-
-
-# --- FUNGSI TAMBAHAN UNTUK KUESIONER ---
-def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
-    # (Masukkan kode logika penyimpanan ke Google Sheets di sini seperti panduan sebelumnya)
-    # Pastikan Anda sudah mengimpor library gspread dan oauth2client di bagian paling atas file
-    return "✅ Terima kasih! Masukan Anda telah tersimpan."
-
-def get_history_charts():
-    """
-    Mengambil data riwayat dari tab 'logs' dan membuat ringkasan numerik
-    TANPA grafik. Output:
-      1) summary_md   -> ringkasan dasar (jumlah data, rata-rata umur, BB, TB, dll)
-      2) zscore_md    -> ringkasan Z-score kalau ada kolomnya
-      3) df_display   -> tabel data terakhir (maks 100 entri, terbaru di atas)
-    """
-    client = get_google_sheet_client()
-    if not client:
-        # Kembalikan teks error + tabel kosong
-        return "❌ Gagal koneksi ke server database.", "", pd.DataFrame()
-
-    try:
-        sheet = client.open(SHEET_NAME)
-        worksheet = sheet.worksheet("logs")
-        data = worksheet.get_all_records()
-        df = pd.DataFrame(data)
-
-        if df.empty:
-            return "Belum ada data riwayat tersimpan.", "", pd.DataFrame()
-
-        # 🔹 BATAS MAKSIMAL: hanya 100 data terakhir supaya tetap ringan
-        df = df.tail(100).copy()
-
-        # Helper untuk cari nama kolom berdasarkan kata kunci
-        def find_col(patterns):
-            patterns = [p.lower() for p in patterns]
-            for col in df.columns:
-                low = col.lower()
-                if any(p in low for p in patterns):
-                    return col
-            return None
-
-        # Deteksi kolom-kolom utama (nama bisa kamu sesuaikan dengan header di Sheet)
-        col_age   = find_col(["umur", "age"])
-        col_bb    = find_col(["berat", "bb"])
-        col_tb    = find_col(["tinggi", "tb"])
-        col_lk    = find_col(["lingkar kepala", "head", "lk"])
-
-        # Konversi ke numerik (kalau ada)
-        for col in [col_age, col_bb, col_tb, col_lk]:
-            if col and col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors="coerce")
-
-        # Deteksi kolom z-score (WAZ, HAZ, WHZ, dll)
-        z_cols = []
-        for patterns in [["waz"], ["haz"], ["whz"], ["z-score", "zscore", "z score"]]:
-            col = find_col(patterns)
-            if col and col not in z_cols:
-                z_cols.append(col)
-
-        # ---------- Ringkasan dasar ----------
-        n = len(df)
-        summary_lines = [f"**Total entri tersimpan:** `{n}`"]
-
-        if col_age:
-            summary_lines.append(
-                f"- Rata-rata umur: **{df[col_age].mean():.1f} bulan** "
-                f"(min: {df[col_age].min():.1f}, max: {df[col_age].max():.1f})"
-            )
-        if col_bb:
-            summary_lines.append(
-                f"- Rata-rata berat: **{df[col_bb].mean():.2f} kg** "
-                f"(min: {df[col_bb].min():.2f}, max: {df[col_bb].max():.2f})"
-            )
-        if col_tb:
-            summary_lines.append(
-                f"- Rata-rata tinggi/panjang: **{df[col_tb].mean():.1f} cm** "
-                f"(min: {df[col_tb].min():.1f}, max: {df[col_tb].max():.1f})"
-            )
-        if col_lk:
-            summary_lines.append(
-                f"- Rata-rata lingkar kepala: **{df[col_lk].mean():.1f} cm** "
-                f"(min: {df[col_lk].min():.1f}, max: {df[col_lk].max():.1f})"
-            )
-
-        summary_md = "### 📊 Ringkasan Dasar Riwayat Penggunaan\n" + "\n".join(summary_lines)
-
-        # ---------- Ringkasan Z-score ----------
-        if z_cols:
-            z_lines = ["### 📈 Ringkasan Z-Score Pertumbuhan (jika tersedia di riwayat)"]
-            for col in z_cols:
-                s = pd.to_numeric(df[col], errors="coerce").dropna()
-                if s.empty:
-                    continue
-                z_lines.append(
-                    f"- **{col}** → rata-rata: `{s.mean():+.2f}`, "
-                    f"min: `{s.min():+.2f}`, max: `{s.max():+.2f}`"
-                )
-            if len(z_lines) == 1:
-                z_lines.append("- Data Z-score belum tersedia di riwayat.")
-            zscore_md = "\n".join(z_lines)
-        else:
-            zscore_md = "### 📈 Ringkasan Z-Score\n- Tidak ada kolom Z-score yang terdeteksi di data riwayat."
-
-        # Tabel: urutkan terbaru di atas
-        df_display = df.iloc[::-1]
-
-        return summary_md, zscore_md, df_display
-
-    except Exception as e:
-        print(f"Error history: {e}")
-        # Tampilkan error di UI dalam bentuk teks, tabel kosong
-        return (
-            "❌ Error memuat data riwayat.",
-            f"`{e}`",
-            pd.DataFrame()
-        )
-
-
-
-def submit_feedback_to_cloud(performa, manfaat, profesi, kendala, saran):
-    """Menyimpan kuesioner ke Google Sheets (Tab 'feedback')"""
-    client = get_google_sheet_client()
-    if not client: return "❌ Gagal koneksi ke server database."
-    
-    try:
-        sheet = client.open(SHEET_NAME)
-        worksheet = sheet.worksheet("feedback")
-        
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        row_data = [timestamp, performa, manfaat, profesi, kendala, saran]
-        
-        worksheet.append_row(row_data)
-        return "✅ Terima kasih! Masukan Anda telah tersimpan dan sangat berharga bagi kami."
-    except Exception as e:
-        return f"❌ Terjadi kesalahan saat menyimpan: {e}"
-        
 def run_comprehensive_analysis(
     name_child: str,
     name_parent: str,
@@ -2975,13 +2768,7 @@ Silakan:
 
 Jika masalah berlanjut, hubungi: +{CONTACT_WA}
 """
-
-        interpretation = create_interpretation_text(payload)
         
-        # === TAMBAHKAN KODE INI (INTEGRASI CLOUD) ===
-        # Simpan data ke Google Sheet secara otomatis (background process)
-        save_analysis_to_cloud_background(payload)
-                
         return (
             error_msg,
             None, None, None, None, None,
@@ -5785,6 +5572,7 @@ def update_library_display(search_term: str, category: str):
         html_output_list.append(f"""
         <div class="article-card-v3-2-3">
             
+            <div class="article-image article-img-{idx}"></div>
             
             <div class="article-summary-content">
                 <span class="article-category">{kategori_safe}</span>
@@ -6033,7 +5821,14 @@ blockquote {
     box-shadow: 0 7px 20px rgba(0,0,0,0.08);
     transform: translateY(-3px);
 }
-
+.article-image {
+    width: 100%;
+    height: 180px; /* Ukuran pas untuk card */
+    background-size: cover; /* GANTI DARI object-fit */
+    background-position: center center; /* TAMBAHKAN INI */
+    background-repeat: no-repeat; /* TAMBAHKAN INI */
+    border-bottom: 1px solid #eee;
+}
 .article-summary-content {
     padding: 20px;
     flex-grow: 1; /* Mendorong dropdown ke bawah */
@@ -6131,7 +5926,46 @@ details[open] > .article-details-toggle::before {
 /* =================================================================== */
 /* PERPUSTAKAAN v3.2.4 - IMAGE URLS (STATIC IN CSS) */
 /* =================================================================== */
-
+.article-img-0 { background-image: url('https://images.unsplash.com/photo-1600857592429-06388147aa0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-1 { background-image: url('https://images.unsplash.com/photo-1544385191-a8d83c0c0910?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-2 { background-image: url('https://images.unsplash.com/photo-1519733224424-a78932641e1c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-3 { background-image: url('https://images.unsplash.com/photo-1591160623347-0622c71a3a2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-4 { background-image: url('https://images.unsplash.com/photo-1606823354313-a4f1232c4533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-5 { background-image: url('https://images.unsplash.com/photo-1589139121857-a5735161394a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-6 { background-image: url('https://images.unsplash.com/photo-1598993685548-e0420d75765d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-7 { background-image: url('https://images.unsplash.com/photo-1582235880501-f2e519c636ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-8 { background-image: url('https://images.unsplash.com/photo-1604719212028-a3d1d236369c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-9 { background-image: url('https://images.unsplash.com/photo-1558220938-f91d0a3311c3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-10 { background-image: url('https://images.unsplash.com/photo-1518610368143-69091b3ab806?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-11 { background-image: url('https://images.unsplash.com/photo-1546015026-6132b138026d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-12 { background-image: url('https://images.unsplash.com/photo-1519062136015-659f0f633d3b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-13 { background-image: url('https://images.unsplash.com/photo-1518717758339-39B3c607eb42?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-14 { background-image: url('https://images.unsplash.com/photo-1546820389-0822369cbf34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-15 { background-image: url('https://images.unsplash.com/photo-1519362351240-d69b552f5071?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-16 { background-image: url('https://images.unsplash.com/photo-1557941733-27d6dbb8b209?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-17 { background-image: url('https://plus.unsplash.com/premium_photo-1664301530062-83b33375b426?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-18 { background-image: url('https://images.unsplash.com/photo-1605681145151-c0b3d6c7104b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-19 { background-image: url('https://images.unsplash.com/photo-1599599933544-672e4798c807?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-20 { background-image: url('https://images.unsplash.com/photo-1620336214302-1a4c38d4c1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-21 { background-image: url('https://images.unsplash.com/photo-1554734867-bf3c00a49371?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-22 { background-image: url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80'); }
+.article-img-23 { background-image: url('https://plus.unsplash.com/premium_photo-1661766820235-3c96bc13f938?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-24 { background-image: url('https://images.unsplash.com/photo-1606838837238-57688313508c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-25 { background-image: url('https://images.unsplash.com/photo-1584610356248-81d3d66b596f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-26 { background-image: url('https://images.unsplash.com/photo-1522889639-6B4912BA542A?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-27 { background-image: url('https://images.unsplash.com/photo-1566004100631-35d015d6a491?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-28 { background-image: url('https://images.unsplash.com/photo-1484665754824-1d8e1469956e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-29 { background-image: url('https://images.unsplash.com/photo-1472090278799-d7c2a7156d68?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80'); }
+.article-img-30 { background-image: url('https://images.unsplash.com/photo-1499781350138-d0f31a207612?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-31 { background-image: url('https://images.unsplash.com/photo-1506869639733-11215c54f5c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-32 { background-image: url('https://images.unsplash.com/photo-1599522190924-d5f2a1d2112a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=869&q=80'); }
+.article-img-33 { background-image: url('https://images.unsplash.com/photo-1596707849382-e56d4001150f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-34 { background-image: url('https://images.unsplash.com/photo-1574023240294-f2549f8a816a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-35 { background-image: url('https://images.unsplash.com/photo-1600813160814-1f3f615306e6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-36 { background-image: url('https://images.unsplash.com/photo-1610481977931-36f73357b10a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-37 { background-image: url('https://images.unsplash.com/photo-1590240472421-5a50e932fe40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
+.article-img-38 { background-image: url('https://images.unsplash.com/photo-1570228062259-e36c6c5188c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=871&q=80'); }
+.article-img-39 { background-image: url('https://images.unsplash.com/photo-1543083326-14c049e3a348?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80'); }
 /* =================================================================== */
 /* AKHIR BLOK IMAGE URLS */
 /* =================================================================== */
@@ -7430,11 +7264,6 @@ checklist yang disesuaikan dengan status gizi anak.
             )
 
 
-
-
-
-
-
         # ===================================================================
         # TAB 6: PREMIUM & NOTIFIKASI
         # ===================================================================
@@ -7785,55 +7614,6 @@ checklist yang disesuaikan dengan status gizi anak.
                 fn=lambda: handle_premium_upgrade("gold"), outputs=[premium_status]
             ).then(lambda: gr.update(visible=True), outputs=[premium_status])
 
-# ===================================================================
-        # TAB 8: KUESIONER FEEDBACK (MASUKKAN DI SINI)
-        # ===================================================================
-        with gr.TabItem("📝 Kuesioner & Feedback", id=8):
-            gr.Markdown("""
-            ## 🗳️ Evaluasi & Masukan Pengguna
-            Bantu kami meningkatkan kualitas aplikasi dengan mengisi kuesioner singkat ini.
-            """)
-            
-            with gr.Row():
-                with gr.Column():
-                    q_performa = gr.Radio(
-                        ["1 (Buruk)", "2", "3", "4", "5 (Sangat Baik)"],
-                        label="Bagaimana performa (kecepatan) aplikasi?",
-                        value="5 (Sangat Baik)"
-                    )
-                    q_manfaat = gr.Radio(
-                        ["1 (Kurang)", "2", "3", "4", "5 (Sangat Bermanfaat)"],
-                        label="Seberapa besar dampak/manfaat aplikasi ini?",
-                        value="5 (Sangat Bermanfaat)"
-                    )
-                    q_profesi = gr.Dropdown(
-                        ["Dokter", "Bidan", "Ahli Gizi", "Kader Posyandu", "Orang Tua", "Mahasiswa", "Lainnya"],
-                        label="Profesi Anda",
-                        value="Orang Tua"
-                    )
-                
-                with gr.Column():
-                    q_kendala = gr.Textbox(
-                        label="Kendala yang ditemui",
-                        placeholder="Ceritakan jika ada error atau kesulitan...",
-                        lines=3
-                    )
-                    q_saran = gr.Textbox(
-                        label="Saran Pengembangan",
-                        placeholder="Fitur apa yang perlu ditambahkan?",
-                        lines=3
-                    )
-                    
-                    submit_feedback_btn = gr.Button("✉️ Kirim Masukan", variant="primary", size="lg")
-                    feedback_status = gr.Markdown("")
-            
-            # Event Handler (Menghubungkan Tombol dengan Fungsi Logika di atas)
-            submit_feedback_btn.click(
-                fn=submit_feedback_to_cloud,  # Pastikan fungsi ini sudah dibuat di Langkah 1
-                inputs=[q_performa, q_manfaat, q_profesi, q_kendala, q_saran],
-                outputs=[feedback_status]
-            )
-
         # ===================================================================
         # TAB 7: TENTANG & BANTUAN
         # ===================================================================
@@ -7887,7 +7667,7 @@ checklist yang disesuaikan dengan status gizi anak.
             
             ### 👨‍💻 Developer
             
-            Dikembangkan oleh **Habib Arsy dan TIM** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
+            Dikembangkan oleh **Habib Arsy** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
             
             ---
             
@@ -7909,7 +7689,7 @@ checklist yang disesuaikan dengan status gizi anak.
     <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
     border-top: 2px solid #ffdde5;'>
         <p style='margin: 0; color: #555; font-size: 14px;'>
-            {APP_TITLE} v{APP_VERSION} © 2024-2025 | Dibuat oleh <strong>Habib Arsy dan TIM</strong>
+            {APP_TITLE} v{APP_VERSION} © 2024-2025 | Dibuat oleh <strong>Habib Arsy</strong>
         </p>
         <p style='margin: 5px 0 0 0; color: #888; font-size: 12px;'>
             Bukan pengganti konsultasi medis. Selalu konfirmasi dengan tenaga kesehatan.
@@ -8248,7 +8028,7 @@ async def api_info():
         "app_name": APP_TITLE,
         "version": "3.2.2", # MODIFIED
         "description": APP_DESCRIPTION,
-        "author": "Habib Arsy dan TIM - FKIK Universitas Jambi",
+        "author": "Habib Arsy - FKIK Universitas Jambi",
         "contact": f"+{CONTACT_WA}",
         "base_url": BASE_URL,
         "standards": {
