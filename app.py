@@ -7667,7 +7667,7 @@ checklist yang disesuaikan dengan status gizi anak.
             
             ### 👨‍💻 Developer
             
-            Dikembangkan oleh **Habib Arsy** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
+            Dikembangkan oleh **Habib Arsy dan TIM** (Fakultas Kedokteran dan Ilmu Kesehatan - Universitas Jambi)
             
             ---
             
@@ -7689,7 +7689,7 @@ checklist yang disesuaikan dengan status gizi anak.
     <div style='text-align: center; padding: 20px; background: linear-gradient(135deg, #fff5f8 0%, #ffe8f0 100%); 
     border-top: 2px solid #ffdde5;'>
         <p style='margin: 0; color: #555; font-size: 14px;'>
-            {APP_TITLE} v{APP_VERSION} © 2024-2025 | Dibuat oleh <strong>Habib Arsy</strong>
+            {APP_TITLE} v{APP_VERSION} © 2024-2025 | Dibuat oleh <strong>Habib Arsy dan TIM</strong>
         </p>
         <p style='margin: 5px 0 0 0; color: #888; font-size: 12px;'>
             Bukan pengganti konsultasi medis. Selalu konfirmasi dengan tenaga kesehatan.
@@ -8028,7 +8028,7 @@ async def api_info():
         "app_name": APP_TITLE,
         "version": "3.2.2", # MODIFIED
         "description": APP_DESCRIPTION,
-        "author": "Habib Arsy - FKIK Universitas Jambi",
+        "author": "Habib Arsy dan TIM - FKIK Universitas Jambi",
         "contact": f"+{CONTACT_WA}",
         "base_url": BASE_URL,
         "standards": {
