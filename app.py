@@ -40,6 +40,34 @@ RUN: uvicorn app:app --host 0.0.0.0 --port $PORT
 # SECTION 1: IMPORTS & ENVIRONMENT SETUP
 # ===============================================================================
 
+# ==========================================
+# [BARU] INTEGRASI FITUR TAMBAHAN
+# ==========================================
+from config import (
+    APP_VERSION, APP_TITLE, APP_DESCRIPTION, CONTACT_WA,
+    UI_THEMES, FIRST_1000_DAYS_PHASES, MPASI_YOUTUBE_VIDEOS
+)
+
+# Utilities
+from modules.utilities import as_float, parse_date
+
+# MPASI Modules
+from modules.mpasi import (
+    generate_mpasi_overview_html, generate_mpasi_by_month_html,
+    generate_allergy_guide_html, generate_recipes_html
+)
+
+# 1000 Hari Modules
+from modules.first1000days import (
+    generate_1000_days_dashboard, generate_1000_days_timeline
+)
+
+# Mother Modules
+from modules.mother import (
+    generate_mother_nutrition_html, generate_laktasi_guide_html,
+    generate_mental_health_html
+)
+
 import sys
 import os
 
@@ -6510,6 +6538,41 @@ def kalkulator_kejar_tumbuh_handler(data_list: List[Dict], gender: str) -> Tuple
 
 print("✅ Section 10B-Extra loaded: Kejar Tumbuh functions defined")
 
+# ==========================================
+# [BARU] HANDLERS FITUR TAMBAHAN
+# ==========================================
+
+# --- Handlers MPASI ---
+def mpasi_by_month_handler(usia_bulan: str) -> str:
+    try:
+        age = as_float(usia_bulan)
+        if age is None or age < 6:
+            return "⚠️ MPASI dimulai pada usia 6 bulan. ASI Eksklusif disarankan untuk 0-6 bulan."
+        return generate_mpasi_by_month_html(int(age))
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
+def mpasi_recipe_handler(usia_bulan: str) -> str:
+    try:
+        age = as_float(usia_bulan) or 6
+        return generate_recipes_html(int(age))
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
+# --- Handlers 1000 HPK ---
+def first1000days_handler(tgl_lahir: str) -> str:
+    try:
+        dob = parse_date(tgl_lahir)
+        if not dob:
+            return "⚠️ Format tanggal salah. Gunakan YYYY-MM-DD (Contoh: 2023-05-20)"
+        return generate_1000_days_dashboard(dob)
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
+# --- Handlers Fitur Ibu ---
+def mother_nutrition_handler(fase: str) -> str:
+    return generate_mother_nutrition_html(fase)
+
 # Build Gradio Interface
 with gr.Blocks(
     title=APP_TITLE,
@@ -7673,6 +7736,77 @@ checklist yang disesuaikan dengan status gizi anak.
             
             © 2024-2025 {APP_TITLE}. Dibuat dengan ❤️ untuk kesehatan anak Indonesia.
             """)
+
+    # ==========================================
+        # [BARU] UI TABS FITUR TAMBAHAN
+        # ==========================================
+
+        # --- TAB 1: PANDUAN MPASI ---
+        with gr.TabItem("🍽️ Panduan MPASI", id="mpasi"):
+            gr.Markdown("### 🍽️ Panduan & Resep MPASI Lengkap")
+            with gr.Tabs():
+                with gr.TabItem("📚 Pengantar"):
+                    gr.HTML(value=generate_mpasi_overview_html())
+                
+                with gr.TabItem("📅 Panduan Per Bulan"):
+                    with gr.Row():
+                        mpasi_usia = gr.Slider(minimum=6, maximum=24, step=1, value=6, 
+                                              label="Geser Usia Anak (bulan)")
+                        mpasi_btn = gr.Button("Lihat Panduan", variant="primary")
+                    mpasi_result = gr.HTML()
+                    mpasi_btn.click(fn=mpasi_by_month_handler, 
+                                   inputs=[mpasi_usia], outputs=mpasi_result)
+                
+                with gr.TabItem("🍳 Ide Resep"):
+                    with gr.Row():
+                        recipe_usia = gr.Slider(minimum=6, maximum=24, step=1, value=6,
+                                               label="Geser Usia Anak (bulan)")
+                        recipe_btn = gr.Button("Lihat Resep", variant="primary")
+                    recipe_result = gr.HTML()
+                    recipe_btn.click(fn=mpasi_recipe_handler,
+                                    inputs=[recipe_usia], outputs=recipe_result)
+                
+                with gr.TabItem("⚠️ Info Alergi"):
+                    gr.HTML(value=generate_allergy_guide_html())
+
+        # --- TAB 2: 1000 HARI PERTAMA (HPK) ---
+        with gr.TabItem("🌟 1000 HPK", id="first1000"):
+            gr.Markdown("""
+            ### 🌟 1000 Hari Pertama Kehidupan
+            Pantau periode emas tumbuh kembang anak dari kandungan hingga usia 2 tahun.
+            """)
+            with gr.Tabs():
+                with gr.TabItem("📊 Dashboard Anak"):
+                    with gr.Row():
+                        f1000_tgl = gr.Textbox(label="Tanggal Lahir Anak", placeholder="YYYY-MM-DD")
+                        f1000_btn = gr.Button("Cek Status HPK", variant="primary")
+                    f1000_result = gr.HTML()
+                    f1000_btn.click(fn=first1000days_handler, inputs=[f1000_tgl], outputs=f1000_result)
+                
+                with gr.TabItem("📅 Timeline & Fase"):
+                    gr.HTML(value=generate_1000_days_timeline())
+
+        # --- TAB 3: KESEHATAN IBU ---
+        with gr.TabItem("👩 Kesehatan Ibu", id="mother"):
+            gr.Markdown("### 👩 Pojok Kesehatan & Nutrisi Ibu")
+            with gr.Tabs():
+                with gr.TabItem("🍎 Panduan Nutrisi"):
+                    mother_fase = gr.Radio(
+                        choices=["menyusui", "hamil1", "hamil2", "hamil3"],
+                        label="Fase Ibu Saat Ini",
+                        value="menyusui",
+                        info="Pilih fase untuk melihat kebutuhan nutrisi spesifik"
+                    )
+                    mother_nut_btn = gr.Button("Lihat Panduan Nutrisi", variant="primary")
+                    mother_nut_result = gr.HTML()
+                    mother_nut_btn.click(fn=mother_nutrition_handler, 
+                                        inputs=[mother_fase], outputs=mother_nut_result)
+                
+                with gr.TabItem("🤱 Manajemen Laktasi"):
+                    gr.HTML(value=generate_laktasi_guide_html())
+                
+                with gr.TabItem("💜 Kesehatan Mental (Postpartum)"):
+                    gr.HTML(value=generate_mental_health_html())
 
 # === REVISI: PERBAIKAN LOGIKA INISIALISASI TAB ===
     # (Handler perpustakaan (id=4) telah dipindahkan ke dalam
