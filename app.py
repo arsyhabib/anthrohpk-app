@@ -87,6 +87,11 @@ from functools import lru_cache
 from typing import Dict, List, Tuple, Optional, Any, Union
 from pydantic import BaseModel
 
+# --- fix Figure annotation error ---
+from __future__ import annotations          # tunda evaluasi seluruh anotasi tipe
+from matplotlib.figure import Figure        # sediakan nama Figure di global scope
+# ------------------------------------
+
 
 # Suppress warnings for cleaner logs
 warnings.filterwarnings('ignore')
