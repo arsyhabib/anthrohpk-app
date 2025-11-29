@@ -105,29 +105,11 @@ import numpy as np
 from scipy.special import erf
 import pandas as pd
 
-# Visualization
-import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend for server
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-plt.ioff()  # Disable interactive mode
-plt.rcParams.update({
-    'figure.max_open_warning': 0,  # Prevent memory leak warnings
-    'figure.dpi': 100,
-    'savefig.dpi': 150,
-    'savefig.bbox': 'tight',
-})
 
 # Image Processing
 from PIL import Image
-import qrcode
 
-# PDF Generation
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-from reportlab.lib import colors as rl_colors
-from reportlab.lib.units import cm
+
 
 # Web Framework
 from fastapi import FastAPI, HTTPException, Request, Query
@@ -142,6 +124,23 @@ import gradio as gr
 import requests
 
 print("✅ All imports successful")
+
+def _init_matplotlib():
+    """Lazy initialization of matplotlib - only when needed"""
+    global matplotlib, plt, Figure
+    if 'matplotlib' not in globals():
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        from matplotlib.figure import Figure
+        plt.ioff()
+        plt.rcParams.update({
+            'figure.max_open_warning': 0,
+            'figure.dpi': 80,
+            'savefig.dpi': 100,
+            'savefig.bbox': 'tight',
+        })
+    return plt
 
 # ===============================================================================
 # SECTION 2: GLOBAL CONFIGURATION
@@ -1145,6 +1144,7 @@ def invert_zscore_function(z_func, target_z: float, lo: float, hi: float, sample
     # Return best approximation if no bracket found
     return float(best_x if best_x is not None else (lo + hi) / 2.0)
 
+from functools import lru_cache
 
 @lru_cache(maxsize=128)
 def generate_wfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -1175,6 +1175,7 @@ def generate_wfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray
     
     return AGE_GRID.copy(), np.array(weights)
 
+from functools import lru_cache
 
 @lru_cache(maxsize=128)
 def generate_hfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -1205,6 +1206,7 @@ def generate_hfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray
     
     return AGE_GRID.copy(), np.array(heights)
 
+from functools import lru_cache
 
 @lru_cache(maxsize=128)
 def generate_hcfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -1235,6 +1237,7 @@ def generate_hcfa_curve(sex: str, z_score: float) -> Tuple[np.ndarray, np.ndarra
     
     return AGE_GRID.copy(), np.array(head_circs)
 
+from functools import lru_cache
 
 @lru_cache(maxsize=128)
 def generate_wfl_curve(sex: str, age_months: float, z_score: float) -> Tuple[np.ndarray, np.ndarray]:
@@ -1285,6 +1288,9 @@ def apply_matplotlib_theme(theme_name: str = "pink_pastel") -> Dict[str, str]:
     Returns:
         Theme dictionary
     """
+
+    plt = _init_matplotlib()
+
     theme = UI_THEMES.get(theme_name, UI_THEMES["pink_pastel"])
     
     plt.style.use('default')
@@ -1321,6 +1327,9 @@ def apply_matplotlib_theme(theme_name: str = "pink_pastel") -> Dict[str, str]:
 def _fill_zone_between_curves(ax, x: np.ndarray, lower: np.ndarray, upper: np.ndarray, 
                               color: str, alpha: float, label: str):
     """Helper to fill colored zones between SD curves"""
+
+    plt = _init_matplotlib()
+
     try:
         ax.fill_between(
             x, lower, upper,
@@ -1346,6 +1355,8 @@ def plot_weight_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figur
     Returns:
         Matplotlib Figure object
     """
+    plt = _init_matplotlib()
+
     theme = apply_matplotlib_theme(theme_name)
     
     sex = payload['sex']
@@ -1455,14 +1466,13 @@ def plot_weight_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figur
     )
     
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
-    ax.legend(
-        loc='upper left',
-        framealpha=0.95,
-        edgecolor=theme['border'],
-        fancybox=True,
-        shadow=True,
-        fontsize=9
-    )
+ax.legend(
+    loc='upper left',
+    framealpha=0.95,
+    edgecolor=theme['border'],
+    fancybox=True,
+    fontsize=9
+)
     
     ax.set_xlim(-1, 62)
     ax.set_ylim(0, None)
@@ -1483,6 +1493,9 @@ def plot_height_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figur
     Returns:
         Matplotlib Figure object
     """
+
+    plt = _init_matplotlib()
+
     theme = apply_matplotlib_theme(theme_name)
     
     sex = payload['sex']
@@ -1608,6 +1621,9 @@ def plot_head_circumference_for_age(payload: Dict, theme_name: str = "pink_paste
     Returns:
         Matplotlib Figure object
     """
+
+    plt = _init_matplotlib()
+
     theme = apply_matplotlib_theme(theme_name)
     
     sex = payload['sex']
@@ -1743,6 +1759,9 @@ def plot_weight_for_length(payload: Dict, theme_name: str = "pink_pastel") -> Fi
     Returns:
         Matplotlib Figure object
     """
+
+    plt = _init_matplotlib()
+
     theme = apply_matplotlib_theme(theme_name)
     
     sex = payload['sex']
@@ -1881,6 +1900,9 @@ def plot_zscore_summary_bars(payload: Dict, theme_name: str = "pink_pastel") -> 
     Returns:
         Matplotlib Figure object
     """
+
+    plt = _init_matplotlib()
+
     theme = apply_matplotlib_theme(theme_name)
     
     z_scores = payload.get('z', {})
@@ -2004,7 +2026,12 @@ print("✅ Section 7B loaded: WFL plotting, bar chart & figure cleanup")
 def generate_qr_code(text: str = None) -> Optional[io.BytesIO]:
     """
     Generate QR code for WhatsApp contact or sharing
-    
+
+    try:
+        import qrcode  # Lazy import
+        if text is None:
+            text = f"https://wa.me/{CONTACT_WA}?text=Halo%20PeduliGiziBalita,%20saya%20tertarik%20dengan%20aplikasi%20ini"
+
     Args:
         text: Text to encode in QR (defaults to WhatsApp contact)
         
@@ -2027,6 +2054,8 @@ def generate_qr_code(text: str = None) -> Optional[io.BytesIO]:
         img = qr.make_image(fill_color="black", back_color="white")
         
         buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=100, bbox_inches='tight', facecolor='white')  # Was 150 DPI
+
         img.save(buf, format='PNG')
         buf.seek(0)
         
@@ -2129,7 +2158,13 @@ def export_to_csv(payload: Dict, filename: str) -> Optional[str]:
 def export_to_pdf(payload: Dict, figures: List[Figure], filename: str) -> Optional[str]:
     """
     Export comprehensive PDF report with all charts and analysis
-    
+
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas as pdf_canvas
+    from reportlab.lib.utils import ImageReader
+    from reportlab.lib import colors as rl_colors
+    from reportlab.lib.units import cm
+
     Args:
         payload: Analysis data dictionary
         figures: List of matplotlib figures [WFA, HFA, HCFA, WFL, Bars]
