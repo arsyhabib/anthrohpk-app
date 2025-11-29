@@ -1343,8 +1343,9 @@ def _fill_zone_between_curves(ax, x: np.ndarray, lower: np.ndarray, upper: np.nd
     except Exception as e:
         print(f"Fill zone warning: {e}")
 
+import matplotlib.figure as mf
 
-def plot_weight_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figure:
+def plot_weight_for_age(payload: Dict, theme_name: str = "pink_pastel") -> mf.Figure:
     """
     Plot Weight-for-Age growth chart with child's data point
     
