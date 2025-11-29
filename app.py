@@ -33,8 +33,10 @@ PREVIOUS v3.0 FEATURES:
 ✅ Comprehensive checklist wizard with KPSP
 ✅ Deployment-optimized for Render.com
 
+
 RUN: uvicorn app:app --host 0.0.0.0 --port $PORT
 """
+from __future__ import annotations          # tunda evaluasi seluruh anotasi tipe
 
 # ===============================================================================
 # SECTION 1: IMPORTS & ENVIRONMENT SETUP
@@ -88,8 +90,8 @@ from typing import Dict, List, Tuple, Optional, Any, Union
 from pydantic import BaseModel
 
 # --- fix Figure annotation error ---
-from __future__ import annotations          # tunda evaluasi seluruh anotasi tipe
-from matplotlib.figure import Figure        # sediakan nama Figure di global scope
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure        # ← biarkan di sini
 # ------------------------------------
 
 
