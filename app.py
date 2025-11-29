@@ -1466,13 +1466,13 @@ def plot_weight_for_age(payload: Dict, theme_name: str = "pink_pastel") -> Figur
     )
     
     ax.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
-ax.legend(
-    loc='upper left',
-    framealpha=0.95,
-    edgecolor=theme['border'],
-    fancybox=True,
-    fontsize=9
-)
+    ax.legend(
+        loc='upper left',
+        framealpha=0.95,
+        edgecolor=theme['border'],
+        fancybox=True,
+        fontsize=9
+    )
     
     ax.set_xlim(-1, 62)
     ax.set_ylim(0, None)
