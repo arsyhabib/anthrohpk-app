@@ -2166,13 +2166,7 @@ def export_to_csv(payload: Dict, filename: str) -> Optional[str]:
 def export_to_pdf(payload: Dict, figures: List[Figure], filename: str) -> Optional[str]:
     """
     Export comprehensive PDF report with all charts and analysis
-
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas as pdf_canvas
-    from reportlab.lib.utils import ImageReader
-    from reportlab.lib import colors as rl_colors
-    from reportlab.lib.units import cm
-
+    
     Args:
         payload: Analysis data dictionary
         figures: List of matplotlib figures [WFA, HFA, HCFA, WFL, Bars]
@@ -2181,9 +2175,16 @@ def export_to_pdf(payload: Dict, figures: List[Figure], filename: str) -> Option
     Returns:
         Filepath if successful, None otherwise
     """
+    # Import reportlab modules (HARUS DI LUAR DOCSTRING!)
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas as pdf_canvas
+    from reportlab.lib.utils import ImageReader
+    from reportlab.lib import colors as rl_colors
+    from reportlab.lib.units import cm
+    
     try:
         filepath = os.path.join(OUTPUTS_DIR, filename)
-        c = canvas.Canvas(filepath, pagesize=A4)
+        c = pdf_canvas.Canvas(filepath, pagesize=A4)  # PERBAIKAN: pdf_canvas.Canvas bukan canvas.Canvas
         W, H = A4
         
         theme = UI_THEMES.get(payload.get('theme', 'pink_pastel'), UI_THEMES['pink_pastel'])
@@ -2196,7 +2197,7 @@ def export_to_pdf(payload: Dict, figures: List[Figure], filename: str) -> Option
         
         c.setFillColor(rl_colors.white)
         c.setFont("Helvetica-Bold", 18)
-        c.drawString(30, H - 30, "PeduliGiziBalita - Laporan Analisis Pertumbuhan Anak") # MODIFIED
+        c.drawString(30, H - 30, "PeduliGiziBalita - Laporan Analisis Pertumbuhan Anak")
         
         c.setFont("Helvetica", 10)
         c.drawRightString(W - 30, H - 30, datetime.now().strftime("%d %B %Y, %H:%M WIB"))
@@ -2391,9 +2392,6 @@ def export_to_pdf(payload: Dict, figures: List[Figure], filename: str) -> Option
         print(f"❌ PDF export error: {e}")
         traceback.print_exc()
         return None
-
-
-print("✅ Section 8 loaded: Export functions (PDF & CSV with QR codes)")
 
 # ===============================================================================
 # SECTION 9: ANALYSIS HANDLER & INTERPRETATION (from v3.0/v3.1)
